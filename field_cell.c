@@ -66,3 +66,35 @@ int check_field_cell_math(field_cell *a, field_cell *b) {
 
     return res;
 }
+
+
+void serialize_field_cell(field_cell *cell, FILE* file) {
+    short tmp;
+
+    tmp = cell->value +
+        cell->is_available * 128 +
+        cell->is_highlited * 64 +
+        cell->is_selected * 32;
+    
+    fwrite(&tmp, sizeof(short) / 2, 1, file);
+}
+
+field_cell deserialize_field_cell(FILE* file) {
+    field_cell res;
+    short tmp;
+
+    res.is_selected = 0;
+
+    if (!fread(&tmp, sizeof(short) / 2, 1, file)) {
+        res.value = 0;
+        res.is_available = 0;
+        res.is_highlited = 0;
+    } else {
+        res.value = tmp & 15;
+        res.is_available = tmp / 128;
+        res.is_highlited = tmp / 64 & 1;
+        res.is_selected = tmp / 32 & 1;
+    }
+    
+    return res;
+}

@@ -19,11 +19,54 @@ struct field_cell {
 
 typedef struct field_cell field_cell;
 
+/* 
+    Creates a new field cell structure.
 
+    input:    value - the numeric value assigned to the cell
+    output:   field_cell structure with the given value, marked as available and unselected
+*/
 field_cell create_field_cell(short value);
+/* 
+    Displays a field cell with appropriate color and formatting.
 
+    input:    cell - field_cell structure to display
+    output:   prints the cell to the console with its current visual state
+*/
 void display_field_cell(field_cell cell);
+/*  
+    Checks if two field cells form a valid match according to NumberMatch rules.
 
+    input:  
+        a - pointer to the first field_cell structure  
+        b - pointer to the second field_cell structure  
+
+    output:  
+        returns 1 if the cells can be matched (their values are equal or sum to 10,  
+        and both cells are available and distinct), otherwise returns 0  
+*/
 int check_field_cell_math(field_cell *a, field_cell *b);
+/*  
+    Saves a single field cell to a file in a compact format.
+
+    input:  
+        cell - pointer to the field_cell structure to serialize  
+        file - pointer to an open file for writing  
+
+    output:  
+        returns 1 if the cell was successfully written,  
+        0 otherwise  
+*/
+int serialize_field_cell(field_cell *cell, FILE* file);
+/*  
+    Loads a single field cell from a file.
+
+    input:  
+        file - pointer to an open file for reading  
+
+    output:  
+        returns a field_cell structure with values read from the file,  
+        or a default empty cell if reading fails  
+*/
+field_cell deserialize_field_cell(FILE* file);
 
 #endif
