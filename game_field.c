@@ -7,14 +7,18 @@
 game_field* create_new_game_field(short width) {
     game_field *res;
 
-    res = (game_field*)malloc(sizeof(game_field));
+    if (width > 0) {
+        res = (game_field*)malloc(sizeof(game_field));
 
-    res->score = 0;
-    res->count = 0;
-    res->stage = 0;
+        res->score = 0;
+        res->count = 0;
+        res->stage = 0;
     
-    res->width = width;
-    res->height = 0;
+        res->width = width;
+        res->height = 0;
+    } else {
+        res = NULL;
+    }
 
     return res;
 }
@@ -22,21 +26,22 @@ game_field* create_new_game_field(short width) {
 void add_values_game_field(game_field *field, short *values, int number) {
     int i, y, x;
 
-    for(i = 0; i < number; i++) {
-        y = field->count / field->width;
-        x = field->count % field->width;
+    if (field != NULL) {
+        for(i = 0; i < number; i++) {
+            y = field->count / field->width;
+            x = field->count % field->width;
 
-        field->table[y][x] = create_field_cell(values[i]);
-        field->count++;
+            field->table[y][x] = create_field_cell(values[i]);
+            field->count++;
+        }
+    
+        field->height = field->count / field->width +
+            (field->count % field->width > 0 ? 1 : 0);
     }
-
-    field->height = field->count / field->width +
-        (field->count % field->width > 0 ? 1 : 0);
 }
 
 int remove_game_field_row(game_field *field, int index) {
     int res, i, j, next_row_size;
-
 
     if (index < 0 || index >= field->height) {
         res = 0;
@@ -59,6 +64,77 @@ int remove_game_field_row(game_field *field, int index) {
         field->count -= field->width;
     }
     
+    return res;
+}
+
+
+int serialize_game_field(game_field* field, const char* file_name) {
+    FILE* file;
+    int res, i, x, y;
+
+    if ((file = fopen(file_name, "w")) == NULL) {
+        printf("Error while serializing game file\nCant write in file: %s\n", file_name);
+        res = 0;
+    } else {
+        res = 1;
+      
+        fwrite(&field->width, sizeof(unsigned short), 1, file);
+        fwrite(&field->height, sizeof(unsigned short), 1, file);
+        fwrite(&field->stage, sizeof(unsigned short), 1, file);
+        fwrite(&field->count, sizeof(int) / 2, 1, file);
+
+        for (i = 0; i < field->count; i++) {
+            y = i / field->width;
+            x = i % field->width;
+            
+            serialize_field_cell(field->table[y] + x, file);
+        }
+
+        fclose(file);
+    }
+
+    return res;
+}
+
+
+game_field* deserialize_game_field(const char* file_name) {
+    FILE* file;
+    game_field* res;
+    size_t file_size;
+    int i, x, y;
+
+    res = NULL;
+    if ((file = fopen(file_name, "r")) == NULL) {
+        printf("Error while deserializing game file\nCant read from file: %s\n", file_name);
+    } else {
+
+        fseek(file, 0, SEEK_END);
+        file_size = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        
+        if (file_size >= 8) {
+
+            res = (game_field*) malloc(sizeof(game_field));
+
+            if (!fread(&res->width, sizeof(unsigned short), 1, file) ||
+                !fread(&res->height, sizeof(unsigned short), 1, file) ||
+                !fread(&res->stage, sizeof(unsigned short), 1, file) ||
+                !fread(&res->count, sizeof(int) / 2, 1, file) ||
+                (size_t)res->count + 8 != file_size) {
+                free(res);
+                res = NULL;
+            } else {
+                for (i = 0; i < res->count; i++) {
+                    y = i / res->width;
+                    x = i % res->width;
+                    res->table[y][x] = deserialize_field_cell(file);
+                }
+            }
+        }
+
+        fclose(file);
+    }
+
     return res;
 }
 
@@ -352,6 +428,20 @@ int check_game_field_is_clear(game_field *field) {
         tmp = create_vector2i(j, field->height - 1);
         if (get_available_game_field_cell(field, tmp))
                 res = 0;
+    }
+
+    return res;
+}
+
+int check_game_is_over(game_field *field) {
+    int res;
+    vector2i start, end;
+
+    if (check_game_field_is_clear(field) ||
+        find_match(field, &start, &end)) {
+        res = 1;
+    } else {
+        res = 0;
     }
 
     return res;
