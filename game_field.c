@@ -67,6 +67,21 @@ int remove_game_field_row(game_field *field, int index) {
     return res;
 }
 
+void expand_game_field(game_field *field) {
+    int i, x, y, old_count = field->count;
+    short tmp;
+
+    for (i = 0; i < old_count; i++) {
+        x = i % field->width;
+        y = i / field->width;
+
+        if (field->table[y][x].is_available) {
+            tmp = field->table[y][x].value;
+            add_values_game_field(field, &tmp, 1);
+        }
+    }
+    
+}
 
 int serialize_game_field(game_field* field, const char* file_name) {
     FILE* file;

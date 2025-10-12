@@ -27,6 +27,7 @@ struct game_field {
 
 typedef struct game_field game_field;
 
+
 /*  
     Creates and initializes a new game field with the specified width.
 
@@ -39,6 +40,7 @@ typedef struct game_field game_field;
         returns NULL if the provided width is invalid  
 */
 game_field* create_new_game_field(short width);
+
 /*  
     Adds new cell values to the game field sequentially.
 
@@ -54,6 +56,7 @@ game_field* create_new_game_field(short width);
         (does nothing if field is NULL)  
 */
 void add_values_game_field(game_field *field, short *values, int number);
+
 /*  
     Removes a row from the game field by its index.
 
@@ -67,6 +70,14 @@ void add_values_game_field(game_field *field, short *values, int number);
 */
 int remove_game_field_row(game_field *field, int index);
 
+/*  
+    Expands the game field by duplicating all available cells  
+    and appending their values to the end of the field.
+
+    input:  
+        field - pointer to the game_field structure to expand
+*/
+void expand_game_field(game_field *field);
 
 
 /*  
@@ -81,6 +92,7 @@ int remove_game_field_row(game_field *field, int index);
         0 if the file could not be opened for writing  
 */
 int serialize_game_field(game_field* field, const char* file_name);
+
 /*  
     Loads a saved game field state from a file.
 
@@ -107,6 +119,7 @@ game_field* deserialize_game_field(const char* file_name);
         or 0 if the index is invalid  
 */
 int get_game_field_row_size(game_field *field, int index);
+
 /*  
     Checks whether a specific cell in the game field is available.
 
@@ -119,6 +132,7 @@ int get_game_field_row_size(game_field *field, int index);
         otherwise returns 0  
 */
 field_cell* get_game_field_cell(game_field *field, vector2i pos);
+
 /*  
     Checks whether a specific cell in the game field is available.
 
@@ -147,6 +161,7 @@ int get_available_game_field_cell(game_field *field, vector2i pos);
         otherwise returns 0  
 */
 int set_highlight_game_field_cell(game_field *field, vector2i pos, int value);
+
 /*  
     Sets the selection state of a specific cell in the game field.
 
@@ -160,6 +175,7 @@ int set_highlight_game_field_cell(game_field *field, vector2i pos, int value);
         otherwise returns 0  
 */
 int set_selection_game_field_cell(game_field *field, vector2i pos, int value);
+
 /*  
     Sets the availability state of a specific cell in the game field.
 
@@ -203,6 +219,7 @@ int find_match(game_field *field, vector2i *start_p, vector2i *end_p);
         0 if the cells cannot be matched according to the rules  
 */
 int check_match(game_field *field, vector2i start_p, vector2i end_p);
+
 /*  
     Checks if a specific row in the game field is completely cleared.
 
@@ -215,6 +232,7 @@ int check_match(game_field *field, vector2i start_p, vector2i end_p);
         0 if any cell is still available or index is invalid  
 */
 int check_game_row_is_clear(game_field *field, int index);
+
 /*  
     Checks if the entire game field is cleared (no available cells).
 
@@ -226,6 +244,7 @@ int check_game_row_is_clear(game_field *field, int index);
         0 if any cell is still available  
 */
 int check_game_field_is_clear(game_field *field);
+
 /*  
     Checks if the game is over.
 
@@ -237,6 +256,7 @@ int check_game_field_is_clear(game_field *field);
         0 otherwise  
 */
 int check_game_is_over(game_field *field);
+
 /*  
     Displays the entire game field on the console.
 
