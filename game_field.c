@@ -37,6 +37,8 @@ void add_values_game_field(game_field *field, short *values, int number) {
     
         field->height = field->count / field->width +
             (field->count % field->width > 0 ? 1 : 0);
+    } else {
+        printf("Warning! add_values_game_field argument field is NULL\n");
     }
 }
 
@@ -453,7 +455,7 @@ int check_game_is_over(game_field *field) {
     vector2i start, end;
 
     if (check_game_field_is_clear(field) ||
-        find_match(field, &start, &end)) {
+        !find_match(field, &start, &end)) {
         res = 1;
     } else {
         res = 0;
