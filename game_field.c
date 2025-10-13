@@ -37,6 +37,8 @@ void add_values_game_field(game_field *field, short *values, int number) {
     
         field->height = field->count / field->width +
             (field->count % field->width > 0 ? 1 : 0);
+    } else {
+        printf("Warning! add_values_game_field argument field is NULL\n");
     }
 }
 
@@ -67,6 +69,21 @@ int remove_game_field_row(game_field *field, int index) {
     return res;
 }
 
+void expand_game_field(game_field *field) {
+    int i, x, y, old_count = field->count;
+    short tmp;
+
+    for (i = 0; i < old_count; i++) {
+        x = i % field->width;
+        y = i / field->width;
+
+        if (field->table[y][x].is_available) {
+            tmp = field->table[y][x].value;
+            add_values_game_field(field, &tmp, 1);
+        }
+    }
+    
+}
 
 int serialize_game_field(game_field* field, const char* file_name) {
     FILE* file;
@@ -438,7 +455,7 @@ int check_game_is_over(game_field *field) {
     vector2i start, end;
 
     if (check_game_field_is_clear(field) ||
-        find_match(field, &start, &end)) {
+        !find_match(field, &start, &end)) {
         res = 1;
     } else {
         res = 0;
