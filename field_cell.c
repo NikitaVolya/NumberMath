@@ -17,10 +17,10 @@ field_cell create_field_cell(short value) {
 void display_field_cell(field_cell cell) {
     const char *color;
 
-    if (!cell.is_available)
-        color = UNENABLE_COLOR;
-    else if (cell.is_highlited)
+    if (cell.is_highlited)
         color = HIGHLITED_COLOR;
+    else if (!cell.is_available)
+        color = UNENABLE_COLOR;
     else
         color = ENABLE_COLOR;
 
