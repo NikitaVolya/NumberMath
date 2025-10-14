@@ -6,6 +6,8 @@ int execute(int position, int *exit) {
     int res = 1;
     switch (position) {
     case 0:
+        if (system("clear") != 0)
+            printf("Error while console clearing\n");
         start_game();
         break;
     case 1:
@@ -32,13 +34,12 @@ int game_menu() {
     while (!exit) {
         if (system("clear") != 0)
             printf("Error while console clearing\n");
-        printf("=== GAME MENU ===\n\n");
+        printf("\n====================================================\n █▄░█ █░█ █▀▄▀█ █▄▄ █▀▀ █▀█   █▀▄▀█ ▄▀█ ▀█▀ █▀▀ █░█     \n █░▀█ █▄█ █░▀░█ █▄█ ██▄ █▀▄   █░▀░█ █▀█ ░█░ █▄▄ █▀█\n====================================================\n");
         for (i = 0; i < n; i++) {
-            if (i == sel) printf(" > %s <\n", items[i]);
-            else printf(" %s\n", items[i]);
+            if (i == sel) printf(" >%s<\n", items[i]);
+            else printf("  %s\n", items[i]);
         }
-        printf("Utiliser les Fléches haut et bas pour naviguer!\n");
-        printf("> ");
+        printf("\n====================================================\n Utiliser les Fléches haut et bas pour naviguer!\n====================================================\n");
         fflush(stdout);
 
         key = get_game_key();
