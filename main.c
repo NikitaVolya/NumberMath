@@ -1,12 +1,10 @@
 #include<stdlib.h>
 #include<stdio.h>
-#include<time.h>
-#include"game.h"
 
+#include"game_menu.h"
 
 int main() {
-
-    start_game();
-    
+    printf("\e[1;1H\e[2J");
+    game_menu();
     exit(EXIT_SUCCESS);
 }
