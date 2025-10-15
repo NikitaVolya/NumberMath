@@ -1,7 +1,9 @@
-main : vector2i.o field_cell.o game_field.o game.o main.o
-	gcc -o main vector2i.o field_cell.o game_field.o game.o main.o
+main : vector2i.o field_cell.o game_field.o game.o game_menu.o main.o
+	gcc -o main vector2i.o field_cell.o game_field.o game.o game_menu.o main.o
 main.o : main.c game_menu.h
 	gcc -o main.o  -W -Wall -std=c89 -O2 -pedantic -c main.c
+game_menu.o : game_menu.c game_menu.h game.h
+	gcc -o game_menu.o  -W -Wall -std=c89 -O2 -pedantic -c game_menu.c
 game.o : game.c game.h game_field.h
 	gcc -o game.o  -W -Wall -std=c89 -O2 -pedantic -c game.c
 game_field.o : game_field.c game_field.h field_cell.h vector2i.h
