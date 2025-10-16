@@ -6,7 +6,6 @@
 #define UNENABLE_COLOR  "\033[35m"
 #define HIGHLITED_COLOR "\033[36m"
 
-
 #define BASE_PRINT "%s %d \033[0m"
 #define SELECTED_PRINT "%s[%d]\033[0m"
 #define CURSOR_PRINT "%s\033[4m %d \033[0m"

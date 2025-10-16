@@ -5,6 +5,9 @@
 
 #include"game.h"
 
+#define HORISONTAL_LINE_PATTERN "==="
+#define MIN_FIELD_DISPLAY_HEIGHT 15
+
 
 int get_key() {
     struct termios oldt, newt;
@@ -27,13 +30,19 @@ GAME_KEY get_game_key() {
     int key;
 
     key = get_key();
-
     switch(key) {
-    case 10:
+    case ENTER:
         res = ENTER;
         break;
+    case HELP:
+        res = HELP;
+        break;
+    case ADD_LINE:
+        res = ADD_LINE;
+        break;
     case 27:
-        if (get_key() == 91) {
+        key = get_key();
+        if (key == 91) {
             switch (get_key()) {
             case 'A':
                 res = UP;
@@ -59,7 +68,6 @@ GAME_KEY get_game_key() {
         res = NONE;
     }
     
-    
     return res;
     
 }
@@ -83,22 +91,27 @@ void init_game(game_field *field) {
 void user_game_select(vector2i *cursor,
                       vector2i *selected_pos,
                       game_field *field) {
-    printf("%d\n", selected_pos->x);
     if (selected_pos->x != -1) {
         set_selection_game_field_cell(field, *selected_pos, 0);
 
-        if (check_match(field, *selected_pos, *cursor)) {
+        if (cursor->x == selected_pos->x && cursor->y == selected_pos->y) {
+            selected_pos->x = -1;
+        } else if (check_match(field, *selected_pos, *cursor)) {
             set_available_game_field_cell(field, *selected_pos, 0);
             set_available_game_field_cell(field, *cursor, 0);
 
-            if (selected_pos->y == cursor->y && check_game_row_is_clear(field, cursor->y)) {
+            if (check_game_row_is_clear(field, cursor->y)) {
                 remove_game_field_row(field, cursor->y);
-            } else if (selected_pos->y != cursor->y){
-                if (check_game_row_is_clear(field, cursor->y))
-                    remove_game_field_row(field, cursor->y);
-                if (check_game_row_is_clear(field, selected_pos->y))
-                    remove_game_field_row(field, selected_pos->y);
+                cursor->y--;
             }
+            
+            if (selected_pos->y != cursor->y &&
+                check_game_row_is_clear(field, selected_pos->y)) {
+                remove_game_field_row(field, selected_pos->y);
+                cursor->y--;
+            }
+
+            if (cursor->y < 0) cursor->y = 0;
 
             selected_pos->x = -1;
         } else {
@@ -145,7 +158,33 @@ void user_game_input(vector2i *cursor,
     }
 }
 
+void display_game_screen(game_field *field, vector2i cursor) {
+    int i;
 
+    if (system("clear") != 0)
+        printf("Error while console clearing\n");
+
+    printf("Score: %d\n", field->score);
+    printf("Stage: %d\n", field->stage);
+
+    printf("Get help: %c | Add line: %c\n", HELP + ('A' - 'a'), ADD_LINE + ('A' - 'a'));
+
+    for (i = 0; i < field->width; i++)
+        printf(HORISONTAL_LINE_PATTERN);
+    printf("\n");
+    
+    set_cursor_game_field_cell(field, cursor, 1);
+    display_game_field(field);
+    set_cursor_game_field_cell(field, cursor, 0);
+
+    for (i = field->height; i < MIN_FIELD_DISPLAY_HEIGHT; i++)
+        printf("\n");
+
+    for (i = 0; i < field->width; i++)
+        printf(HORISONTAL_LINE_PATTERN);
+    printf("\n");
+
+}
 
 void start_game() {
     game_field *field = create_new_game_field(9);
@@ -153,26 +192,25 @@ void start_game() {
     
     selected_pos.x = -1;
 
-    printf("Start game\n");
-
     init_game(field);
 
     cursor = create_vector2i(0, 0);
-    
-    display_game_field(field);
 
     do {
+        
+        display_game_screen(field, cursor);
+        
         user_game_input(&cursor, &selected_pos, field);
 
-        
-        if (system("clear") != 0)
-           printf("Error while console clearing\n");
-        
-        set_highlight_game_field_cell(field, cursor, 1);
-        display_game_field(field);
-        set_highlight_game_field_cell(field, cursor, 0);
-
-
      } while (!check_game_is_over(field));
+
+    display_game_screen(field, cursor);
+    printf("GAME OVER!!!\n");
+
+    sleep(4);
+
+    printf("Type any key for continue...\n");
+    get_game_key();
+    
     free(field);
 }
