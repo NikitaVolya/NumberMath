@@ -28,6 +28,8 @@ short randshort(short start, short end);
 
 void init_game(game_field *field);
 
+void user_game_select(vector2i *cursor, vector2i *selected_pos, game_field *field);
+
 void user_game_input(vector2i *cursor,
                      vector2i *selected_pos,
                      game_field *field);

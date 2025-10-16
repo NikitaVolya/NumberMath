@@ -80,13 +80,42 @@ void init_game(game_field *field) {
     add_values_game_field(field, values, NUMBERS);
 }
 
+void user_game_select(vector2i *cursor,
+                      vector2i *selected_pos,
+                      game_field *field) {
+    printf("%d\n", selected_pos->x);
+    if (selected_pos->x != -1) {
+        set_selection_game_field_cell(field, *selected_pos, 0);
+
+        if (check_match(field, *selected_pos, *cursor)) {
+            set_available_game_field_cell(field, *selected_pos, 0);
+            set_available_game_field_cell(field, *cursor, 0);
+
+            if (selected_pos->y == cursor->y && check_game_row_is_clear(field, cursor->y)) {
+                remove_game_field_row(field, cursor->y);
+            } else if (selected_pos->y != cursor->y){
+                if (check_game_row_is_clear(field, cursor->y))
+                    remove_game_field_row(field, cursor->y);
+                if (check_game_row_is_clear(field, selected_pos->y))
+                    remove_game_field_row(field, selected_pos->y);
+            }
+
+            selected_pos->x = -1;
+        } else {
+            *selected_pos = *cursor;
+            set_selection_game_field_cell(field, *selected_pos, 1);         
+        }
+    } else {
+        *selected_pos = *cursor;
+        set_selection_game_field_cell(field, *selected_pos, 1);
+    }
+}
+
 void user_game_input(vector2i *cursor,
                      vector2i *selected_pos,
                      game_field *field) {
     GAME_KEY key;
-    int row_size, select_block;
-
-    select_block = 0;
+    int row_size;
     
     key = get_game_key();
     switch (key) {
@@ -109,31 +138,8 @@ void user_game_input(vector2i *cursor,
                 cursor->y++;
             break;
         case ENTER:
-            if (selected_pos->x != -1) {
-                set_selection_game_field_cell(field, *selected_pos, 0);
-
-                if (check_match(field, *selected_pos, *cursor)) {
-                    set_available_game_field_cell(field, *selected_pos, 0);
-                    set_available_game_field_cell(field, *cursor, 0);
-
-                    if (selected_pos->y == cursor->y && check_game_row_is_clear(field, cursor->y)) {
-                        remove_game_field_row(field, cursor->y);
-                    } else if (selected_pos->y != cursor->y){
-                        if (check_game_row_is_clear(field, cursor->y))
-                            remove_game_field_row(field, cursor->y);
-                        if (check_game_row_is_clear(field, selected_pos->y))
-                            remove_game_field_row(field, selected_pos->y);
-                    }
-
-                    selected_pos->x = -1;
-                    select_block = 1;
-                }
-            }
-            if (!select_block) {
-                *selected_pos = *cursor;
-                set_selection_game_field_cell(field, *selected_pos, 1);
-            }
-            select_block = 0;
+            user_game_select(cursor, selected_pos, field);
+            break;
         case NONE: default:
             break;
     }
