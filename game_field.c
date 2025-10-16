@@ -252,6 +252,23 @@ int set_available_game_field_cell(game_field *field, vector2i pos, int value) {
     return res;
 }
 
+int set_cursor_game_field_cell(game_field *field, vector2i pos, int value) {
+    field_cell *cell;
+    int res;
+
+    cell = get_game_field_cell(field, pos);
+
+    if (cell == NULL) {
+        res = 0;
+    }
+    else {
+        cell->is_cursor = value;
+        res = 1;
+    }
+    
+    return res;
+}
+
 int find_match(game_field *field, vector2i *start_p, vector2i *end_p) {
     int res, i, j, row_size, d;
     vector2i cursor_p, tmp_p;

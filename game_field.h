@@ -190,6 +190,19 @@ int set_selection_game_field_cell(game_field *field, vector2i pos, int value);
 */
 int set_available_game_field_cell(game_field *field, vector2i pos, int value);
 
+/*  
+    Sets the cursor state of a specific cell in the game field.
+
+    input:  
+        field - pointer to the game_field structure  
+        pos   - cell position (x, y) within the field  
+        value - new cursor state (non-zero if the cursor is on this cell, 0 otherwise)  
+
+    output:  
+        returns 1 if the cell exists and was updated,  
+        otherwise returns 0  
+*/
+int set_cursor_game_field_cell(game_field *field, vector2i pos, int value);
 
 /*  
     Searches the game field for a valid match according to NumberMatch rules.

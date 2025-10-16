@@ -2,19 +2,32 @@
 #ifndef FIELD_CELL_H
 #define FIELD_CELL_H
 
-#define ENABLE_COLOR "\033[0m"
-#define UNENABLE_COLOR "\033[35m"
+#define ENABLE_COLOR    "\033[0m"
+#define UNENABLE_COLOR  "\033[35m"
 #define HIGHLITED_COLOR "\033[36m"
+
 
 #define BASE_PRINT "%s %d \033[0m"
 #define SELECTED_PRINT "%s[%d]\033[0m"
+#define CURSOR_PRINT "%s\033[4m %d \033[0m"
+#define SELECTED_CURSOR_PRINT "%s\033[4m[%d]\033[0m"
 
 
+/*  
+    Represents a single cell in the game field.
+
+    value         - numeric value of the cell (from 1 to 9)  
+    is_available  - indicates whether the cell is active and can be used (1 = true, 0 = false)  
+    is_selected   - marks the cell as currently selected by the player  
+    is_highlited  - shows that the cell is highlighted
+    is_cursor     - indicates that the cursor is currently pointing to this cell  
+*/
 struct field_cell {
     short value;
     int is_available;
     int is_selected;
     int is_highlited;
+    int is_cursor;
 };
 
 typedef struct field_cell field_cell;
