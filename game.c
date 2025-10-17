@@ -5,10 +5,6 @@
 
 #include"game.h"
 
-#define HORISONTAL_LINE_PATTERN "==="
-#define MIN_FIELD_DISPLAY_HEIGHT 15
-
-
 int get_key() {
     struct termios oldt, newt;
     int ch;
@@ -124,41 +120,59 @@ void user_game_select(vector2i *cursor,
     }
 }
 
+void user_game_move(GAME_KEY key,
+                    vector2i *cursor,
+                    game_field *field) {
+    int row_size = row_size = get_game_field_row_size(field, cursor->y);
+    
+    switch (key) {
+    case RIGHT:
+        if (cursor->x < row_size - 1)
+            cursor->x++;
+        else
+            cursor->x = 0;
+        break;
+    case LEFT:
+        if (cursor->x > 0)
+            cursor->x--;
+        else
+            cursor->x = row_size - 1;
+        break;
+    case UP:
+        if (cursor->y > 0)
+            cursor->y--;
+        break;
+    case DOWN:
+        if (cursor->y < field->height - 1 &&
+            cursor->x <= get_game_field_row_size(field, cursor->y + 1) - 1)
+            cursor->y++;
+        break;
+    default:
+        break;
+    }
+}
+
 void user_game_input(vector2i *cursor,
                      vector2i *selected_pos,
                      game_field *field) {
     GAME_KEY key;
-    int row_size;
     
     key = get_game_key();
-    switch (key) {
-        case RIGHT:
-            row_size = get_game_field_row_size(field, cursor->y);
-            if (cursor->x < row_size - 1)
-                cursor->x++;
-            break;
-        case LEFT:
-            if (cursor->x > 0)
-                cursor->x--;
-            break;
-        case UP:
-            if (cursor->y > 0)
-                cursor->y--;
-            break;
-        case DOWN:
-            if (cursor->y < field->height - 1 &&
-                cursor->x <= get_game_field_row_size(field, cursor->y + 1) - 1)
-                cursor->y++;
-            break;
+
+    if (key & ARROW_KEY) {
+        user_game_move(key, cursor, field);
+    } else {
+        switch (key) {
         case ENTER:
             user_game_select(cursor, selected_pos, field);
             break;
-        case NONE: default:
+        default:
             break;
+        }
     }
 }
 
-void display_game_screen(game_field *field, vector2i cursor) {
+void display_game_screen(game_field *field) {
     int i;
 
     if (system("clear") != 0)
@@ -173,9 +187,7 @@ void display_game_screen(game_field *field, vector2i cursor) {
         printf(HORISONTAL_LINE_PATTERN);
     printf("\n");
     
-    set_cursor_game_field_cell(field, cursor, 1);
     display_game_field(field);
-    set_cursor_game_field_cell(field, cursor, 0);
 
     for (i = field->height; i < MIN_FIELD_DISPLAY_HEIGHT; i++)
         printf("\n");
@@ -198,19 +210,25 @@ void start_game() {
 
     do {
         
-        display_game_screen(field, cursor);
+        set_cursor_game_field_cell(field, cursor, 1);
+
+        serialize_game_field(field, "save.bin");
+        
+        display_game_screen(field);
+        
+        set_cursor_game_field_cell(field, cursor, 0);
         
         user_game_input(&cursor, &selected_pos, field);
 
      } while (!check_game_is_over(field));
 
-    display_game_screen(field, cursor);
-    printf("GAME OVER!!!\n");
+    display_game_screen(field);
 
-    sleep(4);
+    print_over("GAME OVER !!!", create_vector2i(7, 7));
 
     printf("Type any key for continue...\n");
-    get_game_key();
+    
+    get_key();
     
     free(field);
 }
