@@ -8,8 +8,8 @@
 
 #include "vector2i.h"
 
-#define BORDER_SYMBL "="
-#define MESSAGE_BORDER 1
+#define BORDER_SYMBL "#"
+#define BORDER_SIZE 2
 
 #define gotopos(pos) printf("\033[%d;%dH", (pos.y), (pos.x))
 

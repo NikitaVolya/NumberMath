@@ -57,13 +57,16 @@ void print_over(const char *text, vector2i pos) {
 
     gotopos(pos);
     pos.y++;
-    for(i = 0; i < max_line_len + MESSAGE_BORDER * 2; i++)
-        printf(BORDER_ROW);
-    
-    gotopos(pos);
-    pos.y++;
-    for(i = 0; i < max_line_len + MESSAGE_BORDER * 2; i++)
-        printf(" ");
+    for(i = 0; i < max_line_len + BORDER_SIZE * 2; i++)
+        printf(BORDER_SYMBL);
+
+
+    for (i=0; i < BORDER_SIZE; i++) {
+        gotopos(pos);
+        pos.y++;
+        for(j = 0; j < max_line_len + BORDER_SIZE * 2; j++)
+            printf(" ");
+    }
 
 
     i = 0;
@@ -72,7 +75,7 @@ void print_over(const char *text, vector2i pos) {
         gotopos(pos);
         pos.y++;
 
-        for(j = 0; j < MESSAGE_BORDER - 1; j++)
+        for(j = 0; j < BORDER_SIZE - 1; j++)
             printf(" ");
        
         printf(" ");
@@ -83,22 +86,24 @@ void print_over(const char *text, vector2i pos) {
             j++;
         }
 
-        for(;j < max_line_len + MESSAGE_BORDER; j++)
+        for(;j < max_line_len + BORDER_SIZE; j++)
             printf(" ");
 
         if (text[i] == '\n')
             i++;
     }
 
-    gotopos(pos);
-    pos.y++;
-    for(i = 0; i < max_line_len + MESSAGE_BORDER * 2; i++)
-        printf(" ");
+    for (i = 0; i < BORDER_SIZE; i++) {
+        gotopos(pos);
+        pos.y++;
+        for(j = 0; j < max_line_len + BORDER_SIZE * 2; j++)
+            printf(" ");
+    }
 
     gotopos(pos);
     pos.y++;
-    for(i = 0; i < max_line_len + MESSAGE_BORDER * 2; i++)
-        printf("=");
+    for(i = 0; i < max_line_len + BORDER_SIZE * 2; i++)
+        printf(BORDER_SYMBL);
 
     gotopos(start_p);
 }
