@@ -12,7 +12,7 @@ game_field* create_new_game_field(short width) {
 
         res->score = 0;
         res->count = 0;
-        res->stage = 0;
+        res->stage = 1;
     
         res->width = width;
         res->height = 0;
@@ -500,7 +500,7 @@ int check_game_is_over(game_field *field) {
     vector2i start, end;
 
     if (check_game_field_is_clear(field) ||
-        !find_match(field, &start, &end)) {
+        (!find_match(field, &start, &end) && field->additions_available <= 0)) {
         res = 1;
     } else {
         res = 0;

@@ -3,7 +3,7 @@
 #define GAME_FIELD_H
 
 #define MAX_WIDTH 10
-#define MAX_HEIGHT 25
+#define MAX_HEIGHT 51 * 5 + 1
 
 #include"field_cell.h"
 #include"vector2i.h"
