@@ -12,17 +12,27 @@
 /*  
     Represents the game field for NumberMatch.
 
-    table  - 2D array of field_cell structures (cells of the field)  
-    score  - current game score  
-    count  - total number of cells currently in use  
-    stage  - current stage/level of the game  
-    width  - number of cells in each row  
-    height - number of rows currently in the field  
+    table                - 2D array of field_cell structures (cells of the field) 
+    count                - total number of cells currently in use
+    
+    score                - current game score 
+    stage                - current stage/level of the game
+    
+    width                - number of cells in each row  
+    height               - number of rows currently in the field
+
+    hints_available      - number of hints the player currently has  
+    hints_max            - maximum hints allowed
+
+    additions_available  - number of additions the player currently has
+    additions_max        - maximum number of additions allowed  
 */
 struct game_field {
     field_cell table[MAX_HEIGHT][MAX_WIDTH];
     int score, count;
-    unsigned short stage, width, height;
+    unsigned short stage, width, height,
+        hints_available, hints_max,
+        additions_available, additions_max;
 };
 
 typedef struct game_field game_field;

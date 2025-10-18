@@ -181,7 +181,10 @@ void display_game_screen(game_field *field) {
     printf("Score: %d\n", field->score);
     printf("Stage: %d\n", field->stage);
 
-    printf("Get help: %c | Add line: %c\n", HELP + ('A' - 'a'), ADD_LINE + ('A' - 'a'));
+    printf("Get help ( %c ) | %d / %d\n", HELP + ('A' - 'a'),
+           field->hints_available, field->hints_max);
+    printf("Additions ( %c ) | %d / %d\n", ADD_LINE + ('A' - 'a'),
+           field->additions_available, field->additions_max);
 
     for (i = 0; i < field->width; i++)
         printf(HORISONTAL_LINE_PATTERN);
@@ -211,11 +214,9 @@ void start_game() {
     do {
         
         set_cursor_game_field_cell(field, cursor, 1);
-
-        serialize_game_field(field, "save.bin");
         
         display_game_screen(field);
-        
+
         set_cursor_game_field_cell(field, cursor, 0);
         
         user_game_input(&cursor, &selected_pos, field);
@@ -224,7 +225,7 @@ void start_game() {
 
     display_game_screen(field);
 
-    print_over("GAME OVER !!!", create_vector2i(7, 7));
+    print_over("GAME OVER !!!", create_vector2i(6, 7));
 
     printf("Type any key for continue...\n");
     
