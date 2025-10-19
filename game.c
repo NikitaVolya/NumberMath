@@ -89,18 +89,21 @@ void init_game(game_field *field) {
 void user_game_select(vector2i *cursor,
                       vector2i *selected_pos,
                       game_field *field) {
+    MATCH_TYPE match_res;
     
     if (selected_pos->x != -1) {
         set_selection_game_field_cell(field, *selected_pos, 0);
 
+        match_res = check_match(field, *selected_pos, *cursor);
         if (cursor->x == selected_pos->x && cursor->y == selected_pos->y) {
             selected_pos->x = -1;
-        } else if (check_match(field, *selected_pos, *cursor)) {
+        } else if (match_res) {
             set_available_game_field_cell(field, *selected_pos, 0);
             set_available_game_field_cell(field, *cursor, 0);
 
             if (check_game_row_is_clear(field, cursor->y)) {
                 remove_game_field_row(field, cursor->y);
+                field->score += CLEAR_LINE_MATCH;
                 
                 if (selected_pos->y >= cursor->y)
                     selected_pos->y--;
@@ -110,12 +113,15 @@ void user_game_select(vector2i *cursor,
             
             if (check_game_row_is_clear(field, selected_pos->y)) {
                 remove_game_field_row(field, selected_pos->y);
+                field->score += CLEAR_LINE_MATCH;
                 cursor->y--;
             }
 
             if (cursor->y < 0) cursor->y = 0;
 
             selected_pos->x = -1;
+
+            field->score += match_res;
         } else {
             *selected_pos = *cursor;
             set_selection_game_field_cell(field, *selected_pos, 1);         
@@ -178,20 +184,20 @@ void user_game_input(vector2i *cursor,
                 expand_game_field(field);
                 field->additions_available--;
             } else {
-                print_over("No addditions available", create_vector2i(0, 7));
+                print_over("No addditions available", create_vector2i(0, 9));
                 get_key();
             }
             break;
         case HELP:
             if (field->hints_available <= 0) {
-                print_over("No hints available ", create_vector2i(3, 7));
+                print_over("No hints available ", create_vector2i(3, 9));
                 get_key();
             } else if (find_match(field, &pos1, &pos2)) {
                 set_highlight_game_field_cell(field, pos1, 1);
                 set_highlight_game_field_cell(field, pos2, 1);
                 field->hints_available--;
             } else {
-                print_over("No match finded", create_vector2i(5, 7));
+                print_over("No match finded", create_vector2i(5, 9));
                 get_key();
             }
             break;
@@ -199,6 +205,31 @@ void user_game_input(vector2i *cursor,
             break;
         }
     }
+}
+
+void display_available_numbers(game_field *field) {
+    int i, x, y, numbers[10];
+    field_cell cell;
+    
+    for (i = 1; i < 10; i++)
+        numbers[i] = 0;
+
+    for (i = 0; i < field->count; i++) {
+        x = i % field->width;
+        y = i / field->width;
+
+        cell = field->table[y][x];
+        if (cell.is_available)
+            numbers[cell.value] = 1;
+    }
+
+    for (i = 1; i < 10; i++) {
+        if (numbers[i])
+            printf(" %d ", i);
+        else
+            printf(" - ");
+    }
+    printf("\n");
 }
 
 void display_game_screen(game_field *field) {
@@ -214,6 +245,12 @@ void display_game_screen(game_field *field) {
            field->hints_available, field->hints_max);
     printf("Additions ( %c ) | %d / %d\n", ADD_LINE + ('A' - 'a'),
            field->additions_available, field->additions_max);
+    
+    for (i = 0; i < field->width; i++)
+        printf(HORISONTAL_LINE_PATTERN);
+    printf("\n");
+    
+    display_available_numbers(field);
 
     for (i = 0; i < field->width; i++)
         printf(HORISONTAL_LINE_PATTERN);
@@ -247,13 +284,18 @@ void start_game() {
         display_game_screen(field);
 
         set_cursor_game_field_cell(field, cursor, 0);
+
+        serialize_game_field(field, "save.bin");
         
         user_game_input(&cursor, &selected_pos, field);
 
         if (check_game_field_is_clear(field)) {
             field->stage++;
+            field->score += CLEAR_FIELD_MATCH;
+            
             field->additions_available = field->additions_max;
             field->hints_available = field->hints_max;
+            
             init_game(field);
         }
 

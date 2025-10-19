@@ -38,6 +38,18 @@ struct game_field {
 typedef struct game_field game_field;
 
 
+enum MATCH_TYPE {
+    DIRECTE_MATCH = 1,      /* Direct horizontal, vertical, or diagonal match */
+    NEXT_LINE_MATCH = 2,    /* Match continues on the next line */
+    DISTANCE_MATCH = 4,     /* Match with spaces between cells */
+    CLEAR_LINE_MATCH = 10,  /* Clear entire line after a successful match */
+    CLEAR_FIELD_MATCH = 150,/* Clear entire field after a major match */
+    NOT_MATCH = 0,          /* Invalid or blocked match */
+    NONE_MATCH = -1         /* Default state before checking */
+};
+typedef enum MATCH_TYPE MATCH_TYPE;
+
+
 /*  
     Creates and initializes a new game field with the specified width.
 
@@ -230,18 +242,18 @@ int find_match(game_field *field, vector2i *start_p, vector2i *end_p);
 
 
 /*  
-    Verifies if two cells in the game field form a valid match path.
+    Checks whether two cells in the game field can form a valid match.
 
     input:  
         field   - pointer to the game_field structure  
-        start_p - start cell position (x, y)  
-        end_p   - end cell position (x, y)  
+        start_p - starting cell position (x, y)  
+        end_p   - ending cell position (x, y)  
 
     output:  
-        returns 1 if a valid match exists between the two cells,  
-        0 if the cells cannot be matched according to the rules  
+        returns one of the MATCH_TYPE values indicating the match type,  
+        or NOT_MATCH (0) if the cells cannot be matched according to the rules  
 */
-int check_match(game_field *field, vector2i start_p, vector2i end_p);
+MATCH_TYPE check_match(game_field *field, vector2i start_p, vector2i end_p);
 
 /*  
     Checks if a specific row in the game field is completely cleared.

@@ -32,6 +32,8 @@ short randshort(short start, short end);
 
 void init_game(game_field *field);
 
+void display_available_numbers(game_field *field);
+
 void display_game_screen(game_field *field);
 
 void user_game_select(vector2i *cursor,

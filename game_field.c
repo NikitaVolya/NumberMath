@@ -391,13 +391,13 @@ int find_match(game_field *field, vector2i *start_p, vector2i *end_p) {
 }
 
 int check_match(game_field *field, vector2i start_p, vector2i end_p) {
-    int res = -1, next_line = 0;
+    int next_line = 0, is_direct;
     vector2i current_p, direction, abs_delta, tmp;
     field_cell *start_cell, *end_cell, *current_cell;
+    MATCH_TYPE res = NONE_MATCH;
 
-    abs_delta = abs_vector2i(get_vector2i_to(start_p, end_p));
 
-    /* switch cells if end point is befor start point */
+    /* Swap cells if the end point appears before the start point */
     if (start_p.y > end_p.y) {
         tmp = start_p;
         start_p = end_p;
@@ -406,44 +406,56 @@ int check_match(game_field *field, vector2i start_p, vector2i end_p) {
     
     start_cell = get_game_field_cell(field, start_p);
     end_cell = get_game_field_cell(field, end_p);
+    
+    abs_delta = abs_vector2i(get_vector2i_to(start_p, end_p));
 
-    /* return 0 if cells can't matching */
+    /* Return NOT_MATCH if cells cannot be matched */
     if (!check_field_cell_math(start_cell, end_cell)) {
-        res = 0;
-    /* check if this diagonal, vertical or horisontal match */
+        res = NOT_MATCH;
+    
+    /* Check for direct horizontal, vertical, or diagonal alignment */
     } else if (abs_delta.x == 0 || abs_delta.y == 0 || abs_delta.x == abs_delta.y) {
         direction = get_direction_to(start_p, end_p);
-    /* check if the next line match */
+    /* Check for “next line” match (wrapping to a new line) */
     } else if (start_p.y < end_p.y) {
         direction = create_vector2i(1, 0);
         next_line = 1;
-    /* default return 0 */
+    /* Default: not a valid match */
     } else {
-        res = 0;
+        res = NOT_MATCH;
     }
 
-    /* if res is not 0 start check iteration */
+    /* If still valid, begin match path iteration */
     current_p = start_p;
-    while (res == -1) {
-        /* move cursor */
+    is_direct = 1;
+    while (res == NONE_MATCH) {
+        
+        /* Move to the next cell along the direction */
         current_p = add_vector2i(current_p, direction);
         current_cell = get_game_field_cell(field, current_p);
 
-        /* return 1 if cursor on end cell */
+        /* Reached target cell — determine match type */
         if (current_cell == end_cell) {
-            res = 1;
+            if (is_direct && next_line)
+                res = NEXT_LINE_MATCH;
+            else if (is_direct)
+                res = DIRECTE_MATCH;
+            else
+                res = DISTANCE_MATCH;
+        /* Out of field — possibly move to next line */
         } else if (current_cell == NULL) {
-            /* jump on next line */
             if (next_line && current_p.y < field->height - 1) {
                 current_p.y += 1;
                 current_p.x = -1;
-            /* return 0 if cursor is out of bounds and is not next line check */
             } else {
-                res = 0;
+                res = NOT_MATCH;
             }
-        /* return 0 if cursor on available cell that is not end cell */
+        /* Found an occupied cell before reaching end — not valid */
         } else if (current_cell->is_available) {
-            res = 0;
+            res = NOT_MATCH;
+        /* Passed through empty cells — mark as indirect */
+        } else {
+            is_direct = 0;
         }
     }
 
