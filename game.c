@@ -264,16 +264,12 @@ void display_game_screen(game_field *field) {
     for (i = 0; i < field->width; i++)
         printf(HORISONTAL_LINE_PATTERN);
     printf("\n");
-
 }
 
-void start_game() {
-    game_field *field = create_new_game_field(9);
+void game_cycle(game_field* field) {
     vector2i cursor, selected_pos;
     
     selected_pos.x = -1;
-
-    init_game(field);
 
     cursor = create_vector2i(0, 0);
 
@@ -310,4 +306,28 @@ void start_game() {
     get_key();
     
     free(field);
+}
+
+void load_game() {
+    game_field *field;
+
+    field = deserialize_game_field("save.bin");
+    if (field == NULL) {
+        print_over("Error while loading game!", create_vector2i(3, 3));
+        get_key();
+    } else {
+        game_cycle(field);
+    }
+
+}
+
+void start_game() {
+    
+    game_field *field;
+
+    field = create_new_game_field(9);
+
+    init_game(field);
+
+    game_cycle(field);
 }

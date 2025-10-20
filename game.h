@@ -48,6 +48,8 @@ void user_game_input(vector2i *cursor,
                      vector2i *selected_pos,
                      game_field *field);
 
+void load_game();
+
 void start_game();
 
 #endif /* _GAME_H */
