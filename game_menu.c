@@ -4,6 +4,47 @@
 
 #include "game_menu.h"
 
+void show_tutorial() {
+    const char *tutorial_texts[] = {
+        "Bienvenue dans le jeu!\n\nUtilisez les fleches pour naviguer dans le menu et ENTER pour selectionner.",
+        "Pendant le jeu, vous pouvez bouger votre personnage avec les touches directionnelles.",
+        "Collectez des objets et evitez les obstacles pour augmenter votre score.",
+        "Bonne chance et amusez-vous bien!"
+    };
+    int n = 4;
+    int page = 0;
+    GAME_KEY key;
+    int done = 0;
+
+    while (!done) {
+        if (system("clear") != 0)
+            printf("Error while console clearing\n");
+
+        printf("\n==================== TUTORIAL ====================\n\n");
+        printf("%s\n", tutorial_texts[page]);
+        printf("\n=================================================\n");
+        printf("Page %d/%d\n", page + 1, n);
+        printf("Utilisez LEFT / RIGHT pour naviguer, ENTER pour quitter.\n");
+        printf("=================================================\n");
+        fflush(stdout);
+
+        key = get_game_key();
+        switch (key) {
+        case LEFT:
+            page = (page + n - 1) % n;
+            break;
+        case RIGHT:
+            page = (page + 1) % n;
+            break;
+        case ENTER:
+            done = 1;
+            break;
+        default:
+            break;
+        }
+    }
+}
+
 int execute(int position, int *exit) {
     int res = 1;
     switch (position) {
@@ -15,6 +56,9 @@ int execute(int position, int *exit) {
     case 1:
         break;
     case 2:
+        show_tutorial();
+        break;
+    case 3:
         *exit = 1;
         break;
     default:
@@ -25,8 +69,8 @@ int execute(int position, int *exit) {
 }
 
 int game_menu() {
-    const char *items[] = { "New Game", "Load Game", "Exit" };
-    const int n = 3;
+    const char *items[] = { "New Game", "Load Game", "Tutorial", "Exit" };
+    const int n = 4;
     int sel = 0;
     GAME_KEY key;
     int i;
