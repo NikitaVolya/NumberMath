@@ -122,6 +122,7 @@ void user_game_select(vector2i *cursor,
             selected_pos->x = -1;
 
             field->score += match_res;
+            serialize_game_field(field, "save.bin");
         } else {
             *selected_pos = *cursor;
             set_selection_game_field_cell(field, *selected_pos, 1);         
@@ -187,6 +188,7 @@ void user_game_input(vector2i *cursor,
                 print_over("No addditions available", create_vector2i(0, 9));
                 get_key();
             }
+            serialize_game_field(field, "save.bin");
             break;
         case HELP:
             if (field->hints_available <= 0) {
@@ -200,6 +202,7 @@ void user_game_input(vector2i *cursor,
                 print_over("No match finded", create_vector2i(5, 9));
                 get_key();
             }
+            serialize_game_field(field, "save.bin");
             break;
         default:
             break;
@@ -268,6 +271,8 @@ void display_game_screen(game_field *field) {
 
 void game_cycle(game_field* field) {
     vector2i cursor, selected_pos;
+
+    serialize_game_field(field, "save.bin");
     
     selected_pos.x = -1;
 
@@ -280,8 +285,6 @@ void game_cycle(game_field* field) {
         display_game_screen(field);
 
         set_cursor_game_field_cell(field, cursor, 0);
-
-        serialize_game_field(field, "save.bin");
         
         user_game_input(&cursor, &selected_pos, field);
 
@@ -293,13 +296,15 @@ void game_cycle(game_field* field) {
             field->hints_available = field->hints_max;
             
             init_game(field);
+
+            serialize_game_field(field, "save.bin");
         }
 
      } while (!check_game_is_over(field));
 
     display_game_screen(field);
 
-    print_over("GAME OVER !!!", create_vector2i(6, 7));
+    print_over("GAME OVER !!!", create_vector2i(6, 9));
 
     printf("Type any key for continue...\n");
     
