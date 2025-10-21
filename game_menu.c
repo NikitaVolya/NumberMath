@@ -6,9 +6,9 @@
 
 void show_tutorial() {
     const char *tutorial_texts[] = {
-        "Bienvenue dans Number Match!\n\nUtilisez les fleches pour naviguer dans le menu et ENTER pour quitter le Tutorial",
-        "Le but est d'effacer tous les chiffres du plateau.\n\nTrouvez des paires de nombres égaux (1 et 1, 7 et 7)\n\nou des paires dont la somme est égale à 10 (6 et 4, 8 et 2) sur la grille numérique.\n\nTouchez les nombres un par un pour les rayer et gagner des points.",
-        "Fonctionnalité: S’il ne reste plus de chiffres sur une ligne, celle-ci sera entièrement supprimée et le reste sera fusionné.\n\nVérifiez différentes directions : les paires peuvent être horizontales, verticales ou même diagonales.\n\nRecherchez les chiffres séparés par des cases vides : les chiffres placés en diagonale opposée peuvent également former des paires.\n\nVérifiez ligne par ligne : examinez la fin d’une ligne à droite et le début de la ligne suivante à gauche, il peut y avoir des paires.\n\n",
+        "Bienvenue dans Number Match!",
+        "Le but est d'effacer tous les chiffres du plateau.  \n\nTrouvez des paires de nombres égaux (1 et 1, 7 et 7).  \n\nOu des paires dont la somme est égale à 10 (6 et 4).  \n\nSélectionnez les nombres un par un pour les rayer.  \n\nChaque paire trouvée vous fait gagner des points.  \n\nEffacez tout le plateau pour remporter la partie !  ",
+        "S’il ne reste plus de chiffres sur une ligne,  \n\nelle sera supprimée et le reste fusionné.  \n\nVérifiez toutes les directions possibles :  \n\nles paires peuvent être horizontales,  \n\nverticales ou même diagonales.  \n\nCherchez les chiffres séparés par des cases :  \n\nles diagonales opposées peuvent former paires.  \n\nVérifiez ligne par ligne : la fin d’une ligne  \n\net le début de la suivante peuvent cacher paires.  ",
         "Bonne chance et amusez-vous bien!"
     };
     int n = 4;
@@ -20,12 +20,12 @@ void show_tutorial() {
         if (system("clear") != 0)
             printf("Error while console clearing\n");
 
-        printf("\n==================== TUTORIAL ====================\n\n");
+        printf("\n================================================================\n████████╗██╗   ██╗████████╗ ██████╗ ██████╗ ██╗ █████╗ ██╗     \n╚══██╔══╝██║   ██║╚══██╔══╝██╔═══██╗██╔══██╗██║██╔══██╗██║     \n   ██║   ██║   ██║   ██║   ██║   ██║██████╔╝██║███████║██║     \n   ██║   ██║   ██║   ██║   ██║   ██║██╔══██╗██║██╔══██║██║     \n   ██║   ╚██████╔╝   ██║   ╚██████╔╝██║  ██║██║██║  ██║███████╗\n   ╚═╝    ╚═════╝    ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚══════╝\n================================================================\n");
         printf("%s\n", tutorial_texts[page]);
-        printf("\n=================================================\n");
+        printf("\n================================================================\n");
         printf("Page %d/%d\n", page + 1, n);
-        printf("Utilisez LEFT / RIGHT pour naviguer, ENTER pour quitter.\n");
-        printf("=================================================\n");
+        printf("          ███████          ███████        \n      ████████                ████████\n   █████████████████   ██████████████████ Pour naviguer\n      ████████                ████████    \n          ███████          ███████\n\n ENTRER pour retourner au menu");
+        printf("\n================================================================\n");
         fflush(stdout);
 
         key = get_game_key();
@@ -79,12 +79,12 @@ int game_menu() {
     while (!exit) {
         if (system("clear") != 0)
             printf("Error while console clearing\n");
-        printf("\n====================================================\n █▄░█ █░█ █▀▄▀█ █▄▄ █▀▀ █▀█   █▀▄▀█ ▄▀█ ▀█▀ █▀▀ █░█     \n █░▀█ █▄█ █░▀░█ █▄█ ██▄ █▀▄   █░▀░█ █▀█ ░█░ █▄▄ █▀█\n====================================================\n");
+        printf("\n================================================================\n     ███╗   ██╗██╗   ██╗███╗   ███╗██████╗ ███████╗██████╗ \n     ████╗  ██║██║   ██║████╗ ████║██╔══██╗██╔════╝██╔══██╗\n     ██╔██╗ ██║██║   ██║██╔████╔██║██████╔╝█████╗  ██████╔╝\n     ██║╚██╗██║██║   ██║██║╚██╔╝██║██╔══██╗██╔══╝  ██╔══██╗\n     ██║ ╚████║╚██████╔╝██║ ╚═╝ ██║██████╔╝███████╗██║  ██║\n     ╚═╝  ╚═══╝ ╚═════╝ ╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝\n          ███╗   ███╗ █████╗ ████████╗ ██████╗██╗  ██╗\n          ████╗ ████║██╔══██╗╚══██╔══╝██╔════╝██║  ██║\n          ██╔████╔██║███████║   ██║   ██║     ███████║\n          ██║╚██╔╝██║██╔══██║   ██║   ██║     ██╔══██║\n          ██║ ╚═╝ ██║██║  ██║   ██║   ╚██████╗██║  ██║\n          ╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝\n================================================================\n");
         for (i = 0; i < n; i++) {
             if (i == sel) printf(" >%s<\n", items[i]);
             else printf("  %s\n", items[i]);
         }
-        printf("\n====================================================\n Utiliser les Fléches haut et bas pour naviguer!\n====================================================\n");
+        printf("\n================================================================\n              ████▒▒              ▒▒▒▒\n             ██████▒▒            ████▒▒\n            ████████▒▒           ████▒▒\nUtiliser   ██████████▒▒     ████████████▒▒  pour naviguer!\n          ████████████▒▒     ██████████▒▒\n              ████▒▒          ████████▒▒\n              ████▒▒           ██████▒▒\n               ▒▒▒▒             ████▒▒\n================================================================\n");
         fflush(stdout);
 
         key = get_game_key();
@@ -102,6 +102,6 @@ int game_menu() {
             break;
         }
     }
-    printf("Goodbye!\n");
+    printf(" ██████╗  ██████╗  ██████╗ ██████╗ ██████╗ ██╗   ██╗███████╗██╗\n██╔════╝ ██╔═══██╗██╔═══██╗██╔══██╗██╔══██╗╚██╗ ██╔╝██╔════╝██║\n██║  ███╗██║   ██║██║   ██║██║  ██║██████╔╝ ╚████╔╝ █████╗  ██║\n██║   ██║██║   ██║██║   ██║██║  ██║██╔══██╗  ╚██╔╝  ██╔══╝  ╚═╝\n╚██████╔╝╚██████╔╝╚██████╔╝██████╔╝██████╔╝   ██║   ███████╗██╗\n ╚═════╝  ╚═════╝  ╚═════╝ ╚═════╝ ╚═════╝    ╚═╝   ╚══════╝╚═╝\n");
     return 0;
 }
