@@ -24,7 +24,7 @@ void show_tutorial() {
         printf("%s\n", tutorial_texts[page]);
         printf("\n================================================================\n");
         printf("Page %d/%d\n", page + 1, n);
-        printf("          ███████          ███████        \n      ████████                ████████\n   █████████████████   ██████████████████ Pour naviguer\n      ████████                ████████    \n          ███████          ███████\n\n ENTRER pour retourner au menu");
+        printf("\nFleches GAUCHE et DROITE pour naviguer\nENTRER pour retourner au menu\n");
         printf("\n================================================================\n");
         fflush(stdout);
 
@@ -85,7 +85,7 @@ int game_menu() {
             if (i == sel) printf(" >%s<\n", items[i]);
             else printf("  %s\n", items[i]);
         }
-        printf("\n================================================================\n              ████▒▒              ▒▒▒▒\n             ██████▒▒            ████▒▒\n            ████████▒▒           ████▒▒\nUtiliser   ██████████▒▒     ████████████▒▒  pour naviguer!\n          ████████████▒▒     ██████████▒▒\n              ████▒▒          ████████▒▒\n              ████▒▒           ██████▒▒\n               ▒▒▒▒             ████▒▒\n================================================================\n");
+        printf("\n================================================================\nUtiliser les fleches HAUT et BAS pour naviguer.\nENTRER pour utiliser.\n================================================================\n");
         fflush(stdout);
 
         key = get_game_key();
