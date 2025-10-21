@@ -54,6 +54,7 @@ int execute(int position, int *exit) {
         start_game();
         break;
     case 1:
+        load_game();
         break;
     case 2:
         show_tutorial();

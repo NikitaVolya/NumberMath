@@ -3,7 +3,7 @@
 #define GAME_FIELD_H
 
 #define MAX_WIDTH 10
-#define MAX_HEIGHT 25
+#define MAX_HEIGHT 51 * 5 + 1
 
 #include"field_cell.h"
 #include"vector2i.h"
@@ -12,20 +12,42 @@
 /*  
     Represents the game field for NumberMatch.
 
-    table  - 2D array of field_cell structures (cells of the field)  
-    score  - current game score  
-    count  - total number of cells currently in use  
-    stage  - current stage/level of the game  
-    width  - number of cells in each row  
-    height - number of rows currently in the field  
+    table                - 2D array of field_cell structures (cells of the field) 
+    count                - total number of cells currently in use
+    
+    score                - current game score 
+    stage                - current stage/level of the game
+    
+    width                - number of cells in each row  
+    height               - number of rows currently in the field
+
+    hints_available      - number of hints the player currently has  
+    hints_max            - maximum hints allowed
+
+    additions_available  - number of additions the player currently has
+    additions_max        - maximum number of additions allowed  
 */
 struct game_field {
     field_cell table[MAX_HEIGHT][MAX_WIDTH];
     int score, count;
-    unsigned short stage, width, height;
+    unsigned short stage, width, height,
+        hints_available, hints_max,
+        additions_available, additions_max;
 };
 
 typedef struct game_field game_field;
+
+
+enum MATCH_TYPE {
+    DIRECTE_MATCH = 1,      /* Direct horizontal, vertical, or diagonal match */
+    NEXT_LINE_MATCH = 2,    /* Match continues on the next line */
+    DISTANCE_MATCH = 4,     /* Match with spaces between cells */
+    CLEAR_LINE_MATCH = 10,  /* Clear entire line after a successful match */
+    CLEAR_FIELD_MATCH = 150,/* Clear entire field after a major match */
+    NOT_MATCH = 0,          /* Invalid or blocked match */
+    NONE_MATCH = -1         /* Default state before checking */
+};
+typedef enum MATCH_TYPE MATCH_TYPE;
 
 
 /*  
@@ -190,6 +212,19 @@ int set_selection_game_field_cell(game_field *field, vector2i pos, int value);
 */
 int set_available_game_field_cell(game_field *field, vector2i pos, int value);
 
+/*  
+    Sets the cursor state of a specific cell in the game field.
+
+    input:  
+        field - pointer to the game_field structure  
+        pos   - cell position (x, y) within the field  
+        value - new cursor state (non-zero if the cursor is on this cell, 0 otherwise)  
+
+    output:  
+        returns 1 if the cell exists and was updated,  
+        otherwise returns 0  
+*/
+int set_cursor_game_field_cell(game_field *field, vector2i pos, int value);
 
 /*  
     Searches the game field for a valid match according to NumberMatch rules.
@@ -207,18 +242,18 @@ int find_match(game_field *field, vector2i *start_p, vector2i *end_p);
 
 
 /*  
-    Verifies if two cells in the game field form a valid match path.
+    Checks whether two cells in the game field can form a valid match.
 
     input:  
         field   - pointer to the game_field structure  
-        start_p - start cell position (x, y)  
-        end_p   - end cell position (x, y)  
+        start_p - starting cell position (x, y)  
+        end_p   - ending cell position (x, y)  
 
     output:  
-        returns 1 if a valid match exists between the two cells,  
-        0 if the cells cannot be matched according to the rules  
+        returns one of the MATCH_TYPE values indicating the match type,  
+        or NOT_MATCH (0) if the cells cannot be matched according to the rules  
 */
-int check_match(game_field *field, vector2i start_p, vector2i end_p);
+MATCH_TYPE check_match(game_field *field, vector2i start_p, vector2i end_p);
 
 /*  
     Checks if a specific row in the game field is completely cleared.

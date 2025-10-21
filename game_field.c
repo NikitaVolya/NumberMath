@@ -12,10 +12,16 @@ game_field* create_new_game_field(short width) {
 
         res->score = 0;
         res->count = 0;
-        res->stage = 0;
+        res->stage = 1;
     
         res->width = width;
         res->height = 0;
+
+        res->hints_max = 5;
+        res->hints_available = res->hints_max;
+
+        res->additions_max = 5;
+        res->additions_available = res->additions_max;
     } else {
         res = NULL;
     }
@@ -88,6 +94,7 @@ void expand_game_field(game_field *field) {
 int serialize_game_field(game_field* field, const char* file_name) {
     FILE* file;
     int res, i, x, y;
+    unsigned short tmp;
 
     if ((file = fopen(file_name, "w")) == NULL) {
         printf("Error while serializing game file\nCant write in file: %s\n", file_name);
@@ -96,9 +103,15 @@ int serialize_game_field(game_field* field, const char* file_name) {
         res = 1;
       
         fwrite(&field->width, sizeof(unsigned short), 1, file);
-        fwrite(&field->height, sizeof(unsigned short), 1, file);
         fwrite(&field->stage, sizeof(unsigned short), 1, file);
+        fwrite(&field->score, sizeof(int) / 2, 1, file);
         fwrite(&field->count, sizeof(int) / 2, 1, file);
+
+        tmp = field->additions_max * 16 + field->additions_available;
+        fwrite(&tmp, sizeof(unsigned short) / 2, 1, file);
+        
+        tmp = field->hints_max * 16 + field->hints_available;
+        fwrite(&tmp, sizeof(unsigned short) / 2, 1, file);
 
         for (i = 0; i < field->count; i++) {
             y = i / field->width;
@@ -106,6 +119,7 @@ int serialize_game_field(game_field* field, const char* file_name) {
             
             serialize_field_cell(field->table[y] + x, file);
         }
+
 
         fclose(file);
     }
@@ -119,6 +133,7 @@ game_field* deserialize_game_field(const char* file_name) {
     game_field* res;
     size_t file_size;
     int i, x, y;
+    unsigned short additions_data, hints_data;
 
     res = NULL;
     if ((file = fopen(file_name, "r")) == NULL) {
@@ -134,18 +149,31 @@ game_field* deserialize_game_field(const char* file_name) {
             res = (game_field*) malloc(sizeof(game_field));
 
             if (!fread(&res->width, sizeof(unsigned short), 1, file) ||
-                !fread(&res->height, sizeof(unsigned short), 1, file) ||
                 !fread(&res->stage, sizeof(unsigned short), 1, file) ||
+                !fread(&res->score, sizeof(int) / 2, 1, file) ||
                 !fread(&res->count, sizeof(int) / 2, 1, file) ||
-                (size_t)res->count + 8 != file_size) {
+                !fread(&additions_data, sizeof(unsigned short) / 2, 1, file) ||
+                !fread(&hints_data, sizeof(unsigned short) / 2, 1, file) ||
+                (size_t)res->count + 10 != file_size) {
                 free(res);
                 res = NULL;
             } else {
+                res->height = res->count / res->width +
+                    (res->count % res->width > 0 ? 1 : 0);
+
+                res->additions_max = additions_data / 16 & 15;
+                res->additions_available = additions_data & 15;
+
+                res->hints_max = hints_data / 16 & 15;
+                res->hints_available = hints_data & 15;
+                
                 for (i = 0; i < res->count; i++) {
                     y = i / res->width;
                     x = i % res->width;
                     res->table[y][x] = deserialize_field_cell(file);
                 }
+
+                
             }
         }
 
@@ -252,6 +280,23 @@ int set_available_game_field_cell(game_field *field, vector2i pos, int value) {
     return res;
 }
 
+int set_cursor_game_field_cell(game_field *field, vector2i pos, int value) {
+    field_cell *cell;
+    int res;
+
+    cell = get_game_field_cell(field, pos);
+
+    if (cell == NULL) {
+        res = 0;
+    }
+    else {
+        cell->is_cursor = value;
+        res = 1;
+    }
+    
+    return res;
+}
+
 int find_match(game_field *field, vector2i *start_p, vector2i *end_p) {
     int res, i, j, row_size, d;
     vector2i cursor_p, tmp_p;
@@ -346,13 +391,13 @@ int find_match(game_field *field, vector2i *start_p, vector2i *end_p) {
 }
 
 int check_match(game_field *field, vector2i start_p, vector2i end_p) {
-    int res = -1, next_line = 0;
+    int next_line = 0, is_direct;
     vector2i current_p, direction, abs_delta, tmp;
     field_cell *start_cell, *end_cell, *current_cell;
+    MATCH_TYPE res = NONE_MATCH;
 
-    abs_delta = abs_vector2i(get_vector2i_to(start_p, end_p));
 
-    /* switch cells if end point is befor start point */
+    /* Swap cells if the end point appears before the start point */
     if (start_p.y > end_p.y) {
         tmp = start_p;
         start_p = end_p;
@@ -361,44 +406,56 @@ int check_match(game_field *field, vector2i start_p, vector2i end_p) {
     
     start_cell = get_game_field_cell(field, start_p);
     end_cell = get_game_field_cell(field, end_p);
+    
+    abs_delta = abs_vector2i(get_vector2i_to(start_p, end_p));
 
-    /* return 0 if cells can't matching */
+    /* Return NOT_MATCH if cells cannot be matched */
     if (!check_field_cell_math(start_cell, end_cell)) {
-        res = 0;
-    /* check if this diagonal, vertical or horisontal match */
+        res = NOT_MATCH;
+    
+    /* Check for direct horizontal, vertical, or diagonal alignment */
     } else if (abs_delta.x == 0 || abs_delta.y == 0 || abs_delta.x == abs_delta.y) {
         direction = get_direction_to(start_p, end_p);
-    /* check if the next line match */
+    /* Check for “next line” match (wrapping to a new line) */
     } else if (start_p.y < end_p.y) {
         direction = create_vector2i(1, 0);
         next_line = 1;
-    /* default return 0 */
+    /* Default: not a valid match */
     } else {
-        res = 0;
+        res = NOT_MATCH;
     }
 
-    /* if res is not 0 start check iteration */
+    /* If still valid, begin match path iteration */
     current_p = start_p;
-    while (res == -1) {
-        /* move cursor */
+    is_direct = 1;
+    while (res == NONE_MATCH) {
+        
+        /* Move to the next cell along the direction */
         current_p = add_vector2i(current_p, direction);
         current_cell = get_game_field_cell(field, current_p);
 
-        /* return 1 if cursor on end cell */
+        /* Reached target cell — determine match type */
         if (current_cell == end_cell) {
-            res = 1;
+            if (is_direct && next_line)
+                res = NEXT_LINE_MATCH;
+            else if (is_direct)
+                res = DIRECTE_MATCH;
+            else
+                res = DISTANCE_MATCH;
+        /* Out of field — possibly move to next line */
         } else if (current_cell == NULL) {
-            /* jump on next line */
             if (next_line && current_p.y < field->height - 1) {
                 current_p.y += 1;
                 current_p.x = -1;
-            /* return 0 if cursor is out of bounds and is not next line check */
             } else {
-                res = 0;
+                res = NOT_MATCH;
             }
-        /* return 0 if cursor on available cell that is not end cell */
+        /* Found an occupied cell before reaching end — not valid */
         } else if (current_cell->is_available) {
-            res = 0;
+            res = NOT_MATCH;
+        /* Passed through empty cells — mark as indirect */
+        } else {
+            is_direct = 0;
         }
     }
 
@@ -455,7 +512,7 @@ int check_game_is_over(game_field *field) {
     vector2i start, end;
 
     if (check_game_field_is_clear(field) ||
-        !find_match(field, &start, &end)) {
+        (!find_match(field, &start, &end) && field->additions_available <= 0)) {
         res = 1;
     } else {
         res = 0;
