@@ -75,22 +75,6 @@ int remove_game_field_row(game_field *field, int index) {
     return res;
 }
 
-void expand_game_field(game_field *field) {
-    int i, x, y, old_count = field->count;
-    short tmp;
-
-    for (i = 0; i < old_count; i++) {
-        x = i % field->width;
-        y = i / field->width;
-
-        if (field->table[y][x].is_available) {
-            tmp = field->table[y][x].value;
-            add_values_game_field(field, &tmp, 1);
-        }
-    }
-    
-}
-
 int get_game_field_row_size(game_field *field, int index) {
     int res;
 
@@ -414,19 +398,6 @@ int check_game_field_is_clear(game_field *field) {
     return res;
 }
 
-int check_game_is_over(game_field *field) {
-    int res;
-    vector2i start, end;
-
-    if (check_game_field_is_clear(field) ||
-        (!find_match(field, &start, &end) && field->additions_available <= 0)) {
-        res = 1;
-    } else {
-        res = 0;
-    }
-
-    return res;
-}
 
 void display_game_field(game_field *field) {
     int i, j, row_size;

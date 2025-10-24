@@ -73,6 +73,37 @@ short randshort(short start, short end) {
     return start + rand() % (end - start + 1);
 }
 
+
+void expand_game_field(game_field *field) {
+    int i, x, y, old_count = field->count;
+    short tmp;
+
+    for (i = 0; i < old_count; i++) {
+        x = i % field->width;
+        y = i / field->width;
+
+        if (field->table[y][x].is_available) {
+            tmp = field->table[y][x].value;
+            add_values_game_field(field, &tmp, 1);
+        }
+    }
+    
+}
+
+int check_game_is_over(game_field *field) {
+    int res;
+    vector2i start, end;
+
+    if (check_game_field_is_clear(field) ||
+        (!find_match(field, &start, &end) && field->additions_available <= 0)) {
+        res = 1;
+    } else {
+        res = 0;
+    }
+
+    return res;
+}
+
 void init_game(game_field *field) {
     short values[NUMBERS];
     int i;

@@ -93,16 +93,6 @@ void add_values_game_field(game_field *field, short *values, int number);
 int remove_game_field_row(game_field *field, int index);
 
 /*  
-    Expands the game field by duplicating all available cells  
-    and appending their values to the end of the field.
-
-    input:  
-        field - pointer to the game_field structure to expand
-*/
-void expand_game_field(game_field *field);
-
-
-/*  
     Returns the number of cells in a specific row of the game field.
 
     input:  
