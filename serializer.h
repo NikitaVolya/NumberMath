@@ -4,8 +4,8 @@
 #include<stdlib.h>
 #include<stdio.h>
 
-#include"game_field.h"
-#include"field_cell.h"
+#include"game_objects/game_field.h"
+#include"game_objects/field_cell.h"
 
 /*  
     Saves a single field cell to a file in a compact format.

@@ -7,7 +7,7 @@
 #define HORISONTAL_LINE_PATTERN "==="
 #define MIN_FIELD_DISPLAY_HEIGHT 15
 
-#include"game_field.h"
+#include"game_objects/game_field.h"
 #include"custom_output.h"
 #include"serializer.h"
 

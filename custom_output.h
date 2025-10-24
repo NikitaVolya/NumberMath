@@ -6,7 +6,7 @@
 #include<stdlib.h>
 #include<stdio.h>
 
-#include "vector2i.h"
+#include "game_objects/vector2i.h"
 
 #define BORDER_SYMBL "#"
 #define BORDER_SIZE 2
