@@ -9,6 +9,7 @@
 
 #include"game_field.h"
 #include"custom_output.h"
+#include"serializer.h"
 
 
 enum GAME_KEY {

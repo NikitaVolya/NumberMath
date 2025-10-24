@@ -103,33 +103,6 @@ void expand_game_field(game_field *field);
 
 
 /*  
-    Saves the current game field state to a file.
-
-    input:  
-        field     - pointer to the game_field structure to save  
-        file_name - path to the output file  
-
-    output:  
-        returns 1 if serialization succeeded,  
-        0 if the file could not be opened for writing  
-*/
-int serialize_game_field(game_field* field, const char* file_name);
-
-/*  
-    Loads a saved game field state from a file.
-
-    input:  
-        file_name - path to the file containing serialized game data  
-
-    output:  
-        returns a pointer to the newly allocated game_field structure  
-        if loading succeeds, otherwise returns NULL  
-*/
-game_field* deserialize_game_field(const char* file_name);
-
-
-
-/*  
     Returns the number of cells in a specific row of the game field.
 
     input:  

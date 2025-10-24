@@ -57,28 +57,5 @@ void display_field_cell(field_cell cell);
         and both cells are available and distinct), otherwise returns 0  
 */
 int check_field_cell_math(field_cell *a, field_cell *b);
-/*  
-    Saves a single field cell to a file in a compact format.
-
-    input:  
-        cell - pointer to the field_cell structure to serialize  
-        file - pointer to an open file for writing  
-
-    output:  
-        returns 1 if the cell was successfully written,  
-        0 otherwise  
-*/
-int serialize_field_cell(field_cell *cell, FILE* file);
-/*  
-    Loads a single field cell from a file.
-
-    input:  
-        file - pointer to an open file for reading  
-
-    output:  
-        returns a field_cell structure with values read from the file,  
-        or a default empty cell if reading fails  
-*/
-field_cell deserialize_field_cell(FILE* file);
 
 #endif
