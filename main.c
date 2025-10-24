@@ -2,12 +2,12 @@
 #include<stdio.h>
 #include<time.h>
 
-#include"game_menu.h"
+#include"console_game_strategy.h"
 
 
 int main() {
     srand(time(NULL));
-    
-    game_menu();
+
+    show_console_game_menu();
     exit(EXIT_SUCCESS);
 }

@@ -244,18 +244,6 @@ int check_game_row_is_clear(game_field *field, int index);
 int check_game_field_is_clear(game_field *field);
 
 /*  
-    Checks if the game is over.
-
-    input:  
-        field - pointer to the game_field structure  
-
-    output:  
-        returns 1 if the game is over (field is cleared or no matches left),  
-        0 otherwise  
-*/
-int check_game_is_over(game_field *field);
-
-/*  
     Displays the entire game field on the console.
 
     input:  

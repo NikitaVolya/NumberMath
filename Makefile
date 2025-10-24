@@ -1,11 +1,11 @@
-main : game_objects/vector2i.o game_objects/field_cell.o game_objects/game_field.o custom_output.o serializer.o game.o game_menu.o main.o
-	gcc -o main game_objects/vector2i.o game_objects/field_cell.o game_objects/game_field.o custom_output.o serializer.o game.o game_menu.o main.o
-main.o : main.c game_menu.h
+main : game_objects/vector2i.o game_objects/field_cell.o game_objects/game_field.o custom_output.o serializer.o console_game_strategy.o game.o  main.o
+	gcc -o main game_objects/vector2i.o game_objects/field_cell.o game_objects/game_field.o custom_output.o serializer.o console_game_strategy.o game.o main.o
+main.o : main.c console_game_strategy.h
 	gcc -o main.o  -W -Wall -std=c89 -O2 -pedantic -c main.c
-game_menu.o : game_menu.c game_menu.h game.h
-	gcc -o game_menu.o  -W -Wall -std=c89 -O2 -pedantic -c game_menu.c
-game.o : game.c game.h game_objects/game_field.h custom_output.h serializer.h
+game.o : game.c game.h game_objects/game_field.h console_game_strategy.h serializer.h
 	gcc -o game.o  -W -Wall -std=c89 -O2 -pedantic -c game.c
+console_game_strategy.o : console_game_strategy.c console_game_strategy.h custom_output.h game_objects/field_cell.h serializer.h game.h
+	gcc -o console_game_strategy.o -W -Wall -std=c89 -O2 -pedantic -c console_game_strategy.c
 serializer.o : serializer.c serializer.h game_objects/game_field.h game_objects/field_cell.h
 	gcc -o serializer.o -W -Wall -std=c89 -O2 -pedantic -c serializer.c
 custom_output.o : custom_output.c custom_output.h game_objects/vector2i.h

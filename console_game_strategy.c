@@ -1,10 +1,197 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include"console_game_strategy.h"
 
-#include "game_menu.h"
+int get_key() {
+    struct termios oldt, newt;
+    int ch;
 
-void show_tutorial() {
+    tcgetattr(STDIN_FILENO, &oldt);
+    
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    
+    return ch;
+}
+
+GAME_KEY get_game_key() {
+    GAME_KEY res;
+    int key;
+
+    key = get_key();
+    switch(key) {
+    case ENTER:
+        res = ENTER;
+        break;
+    case HELP:
+        res = HELP;
+        break;
+    case ADD_LINE:
+        res = ADD_LINE;
+        break;
+    case 27:
+        key = get_key();
+        if (key == 91) {
+            switch (get_key()) {
+            case 'A':
+                res = UP;
+                break;
+            case 'B':
+                res = DOWN;
+                break;
+            case 'C':
+                res = RIGHT;
+                break;
+            case 'D':
+                res = LEFT;
+                break;
+            default:
+                res = NONE;
+                break;
+            }
+        } else {
+            res = NONE;
+        }
+        break;
+    default:
+        res = NONE;
+    }
+    
+    return res;
+    
+}
+
+
+void user_console_game_move(GAME_KEY key,
+                    vector2i *cursor,
+                    game_field *field) {
+    int row_size = row_size = get_game_field_row_size(field, cursor->y);
+    
+    switch (key) {
+    case RIGHT:
+        if (cursor->x < row_size - 1)
+            cursor->x++;
+        else
+            cursor->x = 0;
+        break;
+    case LEFT:
+        if (cursor->x > 0)
+            cursor->x--;
+        else
+            cursor->x = row_size - 1;
+        break;
+    case UP:
+        if (cursor->y > 0)
+            cursor->y--;
+        break;
+    case DOWN:
+        if (cursor->y < field->height - 1 &&
+            cursor->x <= get_game_field_row_size(field, cursor->y + 1) - 1)
+            cursor->y++;
+        break;
+    default:
+        break;
+    }
+}
+
+void user_console_game_input(vector2i *cursor,
+                             vector2i *selected_pos,
+                             game_field *field) {
+    GAME_KEY key;
+    
+    key = get_game_key();
+
+    if (key & ARROW_KEY) {
+        user_console_game_move(key, cursor, field);
+    } else {
+        switch (key) {
+        case ENTER:
+            user_game_select(cursor, selected_pos, field);
+            break;
+        case ADD_LINE:
+            expand_game_field(field);
+            break;
+        case HELP:
+            show_game_hints(field);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void display_console_available_numbers(game_field *field) {
+    int i, x, y, numbers[10];
+    field_cell cell;
+    
+    for (i = 1; i < 10; i++)
+        numbers[i] = 0;
+
+    for (i = 0; i < field->count; i++) {
+        x = i % field->width;
+        y = i / field->width;
+
+        cell = field->table[y][x];
+        if (cell.is_available)
+            numbers[cell.value] = 1;
+    }
+
+    for (i = 1; i < 10; i++) {
+        if (numbers[i])
+            printf(" %d ", i);
+        else
+            printf(" - ");
+    }
+    printf("\n");
+}
+
+void display_console_game_screen(game_field *field) {
+    int i;
+
+    if (system("clear") != 0)
+        printf("Error while console clearing\n");
+
+    printf("Score: %d\n", field->score);
+    printf("Stage: %d\n", field->stage);
+
+    printf("Get help ( %c ) | %d / %d\n", HELP + ('A' - 'a'),
+           field->hints_available, field->hints_max);
+    printf("Additions ( %c ) | %d / %d\n", ADD_LINE + ('A' - 'a'),
+           field->additions_available, field->additions_max);
+    
+    for (i = 0; i < field->width; i++)
+        printf(HORISONTAL_LINE_PATTERN);
+    printf("\n");
+    
+    display_console_available_numbers(field);
+
+    for (i = 0; i < field->width; i++)
+        printf(HORISONTAL_LINE_PATTERN);
+    printf("\n");
+    
+    display_game_field(field);
+
+    for (i = field->height; i < MIN_FIELD_DISPLAY_HEIGHT; i++)
+        printf("\n");
+
+    for (i = 0; i < field->width; i++)
+        printf(HORISONTAL_LINE_PATTERN);
+    printf("\n");
+}
+
+void end_console_game_message(game_field *field) {
+    display_console_game_screen(field);
+
+    print_over("GAME OVER !!!", create_vector2i(6, 9));
+
+    printf("Type any key for continue...\n");
+    
+    get_key();
+}
+
+void show_console_game_tutorial() {
     const char *tutorial_texts[] = {
         "Bienvenue dans Number Match!",
         "Le but est d'effacer tous les chiffres du plateau.  \n\nTrouvez des paires de nombres égaux (1 et 1, 7 et 7).  \n\nOu des paires dont la somme est égale à 10 (6 et 4).  \n\nSélectionnez les nombres un par un pour les rayer.  \n\nChaque paire trouvée vous fait gagner des points.  \n\nEffacez tout le plateau pour remporter la partie !  ",
@@ -52,7 +239,7 @@ void show_tutorial() {
     }
 }
 
-int execute(int position, int *exit) {
+int execute_cosnole_game_action(int position, int *exit) {
     int res = 1;
     switch (position) {
     case 0:
@@ -64,7 +251,7 @@ int execute(int position, int *exit) {
         load_game();
         break;
     case 2:
-        show_tutorial();
+        show_console_game_tutorial();
         break;
     case 3:
         *exit = 1;
@@ -76,7 +263,8 @@ int execute(int position, int *exit) {
     return res;
 }
 
-int game_menu() {
+
+int show_console_game_menu() {
     const char *items[] = { "New Game", "Load Game", "Tutorial", "Exit" };
     const int n = 4;
     int sel = 0;
@@ -119,7 +307,7 @@ int game_menu() {
             sel = (sel + 1) % n;
             break;
         case ENTER:
-            execute(sel, &exit);
+            execute_cosnole_game_action(sel, &exit);
             break;
         default:
             break;
@@ -132,4 +320,17 @@ int game_menu() {
     printf("\n╚██████╔╝╚██████╔╝╚██████╔╝██████╔╝██████╔╝   ██║   ███████╗██╗");
     printf("\n ╚═════╝  ╚═════╝  ╚═════╝ ╚═════╝ ╚═════╝    ╚═╝   ╚══════╝╚═╝\n");
     return 0;
+}
+
+
+void show_console_game_message(const char *text) {
+    int str_len = strlen(text);
+    vector2i draw_pos;
+
+    draw_pos.x = 12 - str_len / 2;
+    draw_pos.x = draw_pos.x < 0 ? 0 : draw_pos.x;
+    draw_pos.y = 9;
+
+    print_over(text, draw_pos);
+    get_key();
 }
