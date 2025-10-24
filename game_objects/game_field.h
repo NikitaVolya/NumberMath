@@ -243,15 +243,4 @@ int check_game_row_is_clear(game_field *field, int index);
 */
 int check_game_field_is_clear(game_field *field);
 
-/*  
-    Displays the entire game field on the console.
-
-    input:  
-        field - pointer to the game_field structure  
-
-    output:  
-        prints each cell of the field with proper formatting and colors  
-*/
-void display_game_field(game_field *field);
-
 #endif

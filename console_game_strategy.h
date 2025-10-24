@@ -12,7 +12,6 @@
 
 #include"custom_output.h"
 #include"game_objects/game_field.h"
-#include"serializer.h"
 #include"game.h"
 
 
@@ -42,6 +41,25 @@ void user_console_game_input(vector2i *cursor,
                              game_field *field);
 
 void display_console_available_numbers(game_field *field);
+
+/* 
+    Displays a field cell on the console with appropriate color and formatting.
+
+    input:    cell - field_cell structure to display
+    output:   prints the cell to the console with its current visual state
+*/
+void print_field_cell(field_cell cell);
+
+/*  
+    Displays the entire game field on the console.
+
+    input:  
+        field - pointer to the game_field structure  
+
+    output:  
+        prints each cell of the field with proper formatting and colors  
+*/
+void print_game_field(game_field *field);
 
 void display_console_game_screen(game_field *field);
 

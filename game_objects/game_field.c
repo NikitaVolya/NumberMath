@@ -397,18 +397,3 @@ int check_game_field_is_clear(game_field *field) {
 
     return res;
 }
-
-
-void display_game_field(game_field *field) {
-    int i, j, row_size;
-
-    for(i = 0; i < field->height; i++) {
-        row_size = get_game_field_row_size(field, i);
-        
-        for(j = 0; j < row_size; j++) {
-            display_field_cell(field->table[i][j]);
-        }
-
-        printf("\n");
-    }
-}

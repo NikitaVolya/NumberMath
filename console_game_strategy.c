@@ -147,6 +147,41 @@ void display_console_available_numbers(game_field *field) {
     printf("\n");
 }
 
+void print_field_cell(field_cell cell) {
+    const char *color;
+
+    if (!cell.is_available)
+        color = UNENABLE_COLOR;
+    else if (cell.is_highlited)
+        color = HIGHLITED_COLOR;
+    else
+        color = ENABLE_COLOR;
+
+    if (cell.is_selected && cell.is_cursor)
+        printf(SELECTED_CURSOR_PRINT, color, cell.value);
+    else if (cell.is_selected)
+        printf(SELECTED_PRINT, color, cell.value);
+    else if (cell.is_cursor)
+        printf(CURSOR_PRINT, color, cell.value);
+    else
+        printf(BASE_PRINT, color, cell.value);
+}
+
+
+void print_game_field(game_field *field) {
+    int i, j, row_size;
+
+    for(i = 0; i < field->height; i++) {
+        row_size = get_game_field_row_size(field, i);
+        
+        for(j = 0; j < row_size; j++) {
+            print_field_cell(field->table[i][j]);
+        }
+
+        printf("\n");
+    }
+}
+
 void display_console_game_screen(game_field *field) {
     int i;
 
@@ -171,7 +206,7 @@ void display_console_game_screen(game_field *field) {
         printf(HORISONTAL_LINE_PATTERN);
     printf("\n");
     
-    display_game_field(field);
+    print_game_field(field);
 
     for (i = field->height; i < MIN_FIELD_DISPLAY_HEIGHT; i++)
         printf("\n");

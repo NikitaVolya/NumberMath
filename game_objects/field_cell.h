@@ -38,13 +38,7 @@ typedef struct field_cell field_cell;
     output:   field_cell structure with the given value, marked as available and unselected
 */
 field_cell create_field_cell(short value);
-/* 
-    Displays a field cell with appropriate color and formatting.
 
-    input:    cell - field_cell structure to display
-    output:   prints the cell to the console with its current visual state
-*/
-void display_field_cell(field_cell cell);
 /*  
     Checks if two field cells form a valid match according to NumberMatch rules.
 
