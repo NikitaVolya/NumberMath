@@ -60,19 +60,6 @@ void show_game_hints(game_field *field) {
     serialize_game_field(field, "save.bin");
 }
 
-void init_game(game_field *field) {
-    short values[NUMBERS];
-    int i;
-
-    for(i = 0; i < NUMBERS; i++) {
-        values[i] = randshort(1, 9);
-    }
-
-    while (field->height > 0) remove_game_field_row(field, 0);
-    
-    add_values_game_field(field, values, NUMBERS);
-}
-
 void user_game_select(vector2i *cursor,
                       vector2i *selected_pos,
                       game_field *field) {
@@ -146,7 +133,7 @@ void game_cycle(game_field* field) {
             field->additions_available = field->additions_max;
             field->hints_available = field->hints_max;
             
-            init_game(field);
+            init_game_field(field);
 
             serialize_game_field(field, "save.bin");
         }
@@ -158,17 +145,28 @@ void game_cycle(game_field* field) {
     free(field);
 }
 
+void init_game_field(game_field *field) {
+    short values[INIT_CELLS_COUNT];
+    int i;
+
+    for(i = 0; i < INIT_CELLS_COUNT; i++) {
+        values[i] = randshort(1, 9);
+    }
+
+    while (field->height > 0) remove_game_field_row(field, 0);
+    
+    add_values_game_field(field, values, INIT_CELLS_COUNT);
+}
+
 void load_game() {
     game_field *field;
 
     field = deserialize_game_field("save.bin");
     if (field == NULL) {
-        print_over("Error while loading game!", create_vector2i(3, 3));
-        get_key();
+        show_console_game_message("Error while loading game!");
     } else {
         game_cycle(field);
     }
-
 }
 
 void start_game() {
@@ -177,7 +175,7 @@ void start_game() {
 
     field = create_new_game_field(9);
 
-    init_game(field);
+    init_game_field(field);
 
     game_cycle(field);
 }
