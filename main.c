@@ -2,7 +2,7 @@
 #include<stdio.h>
 #include<time.h>
 
-#include"console_game_strategy.h"
+#include"output_strategies/console/console_game_strategy.h"
 
 
 int main() {

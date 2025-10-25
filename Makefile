@@ -5,9 +5,10 @@ CFLAGS = -W -Wall -std=c89 -O2 -pedantic
 # Directories
 SRC_DIR = .
 GAME_OBJ_DIR = game_objects
+OUTPUT_STRATEGIES_DIR = output_strategies
 
 # Sources and objects
-SRC = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(GAME_OBJ_DIR)/*.c)
+SRC = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(GAME_OBJ_DIR)/*.c) $(wildcard $(OUTPUT_STRATEGIES_DIR)/*/*.c)
 OBJ = $(patsubst %.c, %.o, $(SRC))
 DEP = $(OBJ:.o=.d)
 

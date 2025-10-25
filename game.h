@@ -11,8 +11,7 @@
 
 #include"game_objects/game_field.h"
 #include"serializer.h"
-#include"console_game_strategy.h"
-
+#include"output_strategies/console/console_game_strategy.h"
 
 /*  
     Generates a random short integer within the specified range.  

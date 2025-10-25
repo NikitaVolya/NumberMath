@@ -11,8 +11,8 @@
 #include<string.h>
 
 #include"custom_output.h"
-#include"game_objects/game_field.h"
-#include"game.h"
+#include"../../game_objects/game_field.h"
+#include"../../game.h"
 
 
 enum GAME_KEY {
