@@ -4,13 +4,18 @@ int get_key() {
     struct termios oldt, newt;
     int ch;
 
+    /* save current terminal settings */
     tcgetattr(STDIN_FILENO, &oldt);
     
+    /* disable line buffering and echo */
     newt = oldt;
     newt.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    
+
+    /* read a single character */
     ch = getchar();
+    
+    /* restore original settings */
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     
     return ch;
@@ -22,14 +27,8 @@ GAME_KEY get_game_key() {
 
     key = get_key();
     switch(key) {
-    case ENTER:
-        res = ENTER;
-        break;
-    case HELP:
-        res = HELP;
-        break;
-    case ADD_LINE:
-        res = ADD_LINE;
+    case ENTER: case HELP: case ADD_LINE:
+        res = key;
         break;
     case 27:
         key = get_key();
@@ -63,7 +62,6 @@ GAME_KEY get_game_key() {
     
 }
 
-
 void user_console_game_move(GAME_KEY key, vector2i *cursor, game_field *field) {
     int row_size = row_size = get_game_field_row_size(field, cursor->y);
     
@@ -94,7 +92,7 @@ void user_console_game_move(GAME_KEY key, vector2i *cursor, game_field *field) {
     }
 }
 
-void user_console_game_input(game_config *config) {
+void user_console_game_input(struct game_config *config) {
     GAME_KEY key;
     
     key = get_game_key();
@@ -107,14 +105,16 @@ void user_console_game_input(game_config *config) {
             user_game_select(config);
             break;
         case ADD_LINE:
-            expand_game_field(config->field);
+            expand_game_field(config);
             break;
         case HELP:
-            show_game_hints(config->field);
+            show_game_hints(config);
             break;
         default:
             break;
         }
+        if (system("clear") != 0)
+            printf("Error while console clearing\n");
     }
 }
 
@@ -178,14 +178,15 @@ void print_game_field(game_field *field) {
     }
 }
 
-void display_console_game_screen(game_config *config) {
+void display_console_game_screen(struct game_config *config) {
     game_field *field;
     int i;
 
+    printf("\x1B[?25l");
+
     field = config->field;
 
-    if (system("clear") != 0)
-        printf("Error while console clearing\n");
+    gotopos(create_vector2i(0, 0));
 
     printf("Score: %d\n", field->score);
     printf("Stage: %d\n", field->stage);
@@ -213,9 +214,11 @@ void display_console_game_screen(game_config *config) {
     for (i = 0; i < field->width; i++)
         printf(HORISONTAL_LINE_PATTERN);
     printf("\n");
+
+    printf("\x1B[?25h"); 
 }
 
-void end_console_game_message(game_config *config) {
+void end_console_game_message(struct game_config *config) {
     display_console_game_screen(config);
 
     print_over("GAME OVER !!!", create_vector2i(6, 9));
@@ -273,7 +276,7 @@ void show_console_game_tutorial() {
     }
 }
 
-int execute_cosnole_game_action(game_config *config, int position, int *exit) {
+int execute_cosnole_game_action(struct game_config *config, int position, int *exit) {
     int res = 1;
     switch (position) {
     case 0:
@@ -282,6 +285,8 @@ int execute_cosnole_game_action(game_config *config, int position, int *exit) {
         start_game(config);
         break;
     case 1:
+        if (system("clear") != 0)
+            printf("Error while console clearing\n");
         load_game(config);
         break;
     case 2:
@@ -298,7 +303,7 @@ int execute_cosnole_game_action(game_config *config, int position, int *exit) {
 }
 
 
-int show_console_game_menu(game_config *config) {
+void show_console_game_menu(struct game_config *config) {
     const char *items[] = { "New Game", "Load Game", "Tutorial", "Exit" };
     const int n = 4;
     int sel = 0;
@@ -353,7 +358,6 @@ int show_console_game_menu(game_config *config) {
     printf("\n██║   ██║██║   ██║██║   ██║██║  ██║██╔══██╗  ╚██╔╝  ██╔══╝  ╚═╝");
     printf("\n╚██████╔╝╚██████╔╝╚██████╔╝██████╔╝██████╔╝   ██║   ███████╗██╗");
     printf("\n ╚═════╝  ╚═════╝  ╚═════╝ ╚═════╝ ╚═════╝    ╚═╝   ╚══════╝╚═╝\n");
-    return 0;
 }
 
 

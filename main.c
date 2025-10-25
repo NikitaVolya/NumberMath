@@ -2,17 +2,19 @@
 #include<stdio.h>
 #include<time.h>
 
-#include"output_strategies/console/console_game_strategy.h"
+#include"game_config.h"
 
 
 int main() {
-    game_config *config;
+    struct game_config *config;
     
     srand(time(NULL));
 
     config = create_game_config();
-    
-    show_console_game_menu(config);
+
+    set_console_output(config);
+
+    execute_game(config);
 
     free_game_config(config);
     exit(EXIT_SUCCESS);
