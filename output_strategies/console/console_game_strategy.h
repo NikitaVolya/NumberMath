@@ -11,7 +11,6 @@
 #include<string.h>
 
 #include"custom_output.h"
-#include"../../game_objects/game_field.h"
 #include"../../game.h"
 
 
@@ -32,13 +31,9 @@ int get_key();
 
 GAME_KEY get_game_key();
 
-void user_console_game_move(GAME_KEY key,
-                            vector2i *cursor,
-                            game_field *field);
+void user_console_game_move(GAME_KEY key, vector2i *cursor, game_field *field);
 
-void user_console_game_input(vector2i *cursor,
-                             vector2i *selected_pos,
-                             game_field *field);
+void user_console_game_input(game_config* config);
 
 void display_console_available_numbers(game_field *field);
 
@@ -61,9 +56,9 @@ void print_field_cell(field_cell cell);
 */
 void print_game_field(game_field *field);
 
-void display_console_game_screen(game_field *field);
+void display_console_game_screen(game_config *config);
 
-void end_console_game_message(game_field *field);
+void end_console_game_message(game_config *config);
 
 /*  
     Displays the multi-page tutorial explaining the game rules and navigation.
@@ -81,7 +76,8 @@ void show_console_game_tutorial();
 /*  
     Executes a menu action based on the current menu selection.
 
-    input:  
+    input:
+        config - pointer on game_config
         position - index of the selected menu item  
         exit - pointer to an integer flag controlling menu termination  
 
@@ -94,13 +90,13 @@ void show_console_game_tutorial();
         returns 1 if execution succeeded,  
         0 if the position is invalid  
 */
-int execute_cosnole_game_action(int position, int *exit);
+int execute_cosnole_game_action(game_config *config, int position, int *exit);
 
 /*  
     Displays and manages the main game menu interface.
 
     input:  
-        none  
+        config - pointer on game_config
 
     output:  
         continuously renders the main menu with navigation controls,  
@@ -108,7 +104,7 @@ int execute_cosnole_game_action(int position, int *exit);
         and executes the selected menu action.  
         exits when the user chooses "Exit".  
 */
-int show_console_game_menu();
+int show_console_game_menu(game_config *config);
 
 void show_console_game_message(const char *text);
 

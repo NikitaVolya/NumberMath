@@ -6,8 +6,14 @@
 
 
 int main() {
+    game_config *config;
+    
     srand(time(NULL));
 
-    show_console_game_menu();
+    config = create_game_config();
+    
+    show_console_game_menu(config);
+
+    free_game_config(config);
     exit(EXIT_SUCCESS);
 }

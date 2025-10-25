@@ -11,7 +11,20 @@
 
 #include"game_objects/game_field.h"
 #include"serializer.h"
+
+struct game_config {
+    game_field *field;
+    vector2i cursor_p, selected_p;
+};
+typedef struct game_config game_config;
+
 #include"output_strategies/console/console_game_strategy.h"
+
+
+game_config* create_game_config();
+
+void free_game_config(game_config *config);
+
 
 /*  
     Generates a random short integer within the specified range.  
@@ -71,9 +84,7 @@ void show_game_hints(game_field *field);
     Handles user selection and matching logic on the game field.  
 
     input:  
-        cursor       - pointer to the current cursor position  
-        selected_pos - pointer to the previously selected cell position  
-        field        - pointer to the game_field structure  
+        config - pointer on game_config
 
     behavior:  
         - If a cell is already selected:  
@@ -84,14 +95,14 @@ void show_game_hints(game_field *field);
             * Otherwise, updates the selected cell.  
         - If no cell is selected, selects the current cursor cell.  
 */
-void user_game_select(vector2i *cursor, vector2i *selected_pos, game_field *field);
+void user_game_select(game_config *config);
 
 /*  
     Runs the main game loop.  
 
-    input:  
-        field - pointer to the game_field structure  
-
+    input:
+        config - pointer on game_config
+        
     behavior:  
         - Initializes the cursor and selection state.  
         - Continuously:  
@@ -104,7 +115,7 @@ void user_game_select(vector2i *cursor, vector2i *selected_pos, game_field *fiel
         - The loop continues until the game is over.  
         - Displays the end-game message and frees the game_field memory.  
 */
-void game_cycle(game_field *field);
+void game_cycle(game_config *config);
 
 /*  
     Initializes the game field with random values.  
@@ -122,12 +133,15 @@ void init_game_field(game_field *field);
 /*  
     Loads a saved game from disk and starts the game loop.
 
+    input:
+        config - pointer on game_config
+
     behavior:  
         - Tries to deserialize the game field from "save.bin".  
         - If deserialization fails, shows an error message.  
         - If successful, starts the main game cycle using the loaded field.  
 */  
-void load_game();
+void load_game(game_config *config);
 
 /*  
     Starts a new game session.
@@ -137,6 +151,6 @@ void load_game();
         - Initializes the field with starting values.  
         - Starts the main game loop.  
 */  
-void start_game();
+void start_game(game_config *config);
 
 #endif /* _GAME_H */

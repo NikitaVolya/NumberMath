@@ -64,9 +64,7 @@ GAME_KEY get_game_key() {
 }
 
 
-void user_console_game_move(GAME_KEY key,
-                    vector2i *cursor,
-                    game_field *field) {
+void user_console_game_move(GAME_KEY key, vector2i *cursor, game_field *field) {
     int row_size = row_size = get_game_field_row_size(field, cursor->y);
     
     switch (key) {
@@ -96,25 +94,23 @@ void user_console_game_move(GAME_KEY key,
     }
 }
 
-void user_console_game_input(vector2i *cursor,
-                             vector2i *selected_pos,
-                             game_field *field) {
+void user_console_game_input(game_config *config) {
     GAME_KEY key;
     
     key = get_game_key();
 
     if (key & ARROW_KEY) {
-        user_console_game_move(key, cursor, field);
+        user_console_game_move(key, &config->cursor_p, config->field);
     } else {
         switch (key) {
         case ENTER:
-            user_game_select(cursor, selected_pos, field);
+            user_game_select(config);
             break;
         case ADD_LINE:
-            expand_game_field(field);
+            expand_game_field(config->field);
             break;
         case HELP:
-            show_game_hints(field);
+            show_game_hints(config->field);
             break;
         default:
             break;
@@ -182,8 +178,11 @@ void print_game_field(game_field *field) {
     }
 }
 
-void display_console_game_screen(game_field *field) {
+void display_console_game_screen(game_config *config) {
+    game_field *field;
     int i;
+
+    field = config->field;
 
     if (system("clear") != 0)
         printf("Error while console clearing\n");
@@ -200,13 +199,13 @@ void display_console_game_screen(game_field *field) {
         printf(HORISONTAL_LINE_PATTERN);
     printf("\n");
     
-    display_console_available_numbers(field);
+    display_console_available_numbers(config->field);
 
     for (i = 0; i < field->width; i++)
         printf(HORISONTAL_LINE_PATTERN);
     printf("\n");
     
-    print_game_field(field);
+    print_game_field(config->field);
 
     for (i = field->height; i < MIN_FIELD_DISPLAY_HEIGHT; i++)
         printf("\n");
@@ -216,8 +215,8 @@ void display_console_game_screen(game_field *field) {
     printf("\n");
 }
 
-void end_console_game_message(game_field *field) {
-    display_console_game_screen(field);
+void end_console_game_message(game_config *config) {
+    display_console_game_screen(config);
 
     print_over("GAME OVER !!!", create_vector2i(6, 9));
 
@@ -274,16 +273,16 @@ void show_console_game_tutorial() {
     }
 }
 
-int execute_cosnole_game_action(int position, int *exit) {
+int execute_cosnole_game_action(game_config *config, int position, int *exit) {
     int res = 1;
     switch (position) {
     case 0:
         if (system("clear") != 0)
             printf("Error while console clearing\n");
-        start_game();
+        start_game(config);
         break;
     case 1:
-        load_game();
+        load_game(config);
         break;
     case 2:
         show_console_game_tutorial();
@@ -299,7 +298,7 @@ int execute_cosnole_game_action(int position, int *exit) {
 }
 
 
-int show_console_game_menu() {
+int show_console_game_menu(game_config *config) {
     const char *items[] = { "New Game", "Load Game", "Tutorial", "Exit" };
     const int n = 4;
     int sel = 0;
@@ -342,7 +341,7 @@ int show_console_game_menu() {
             sel = (sel + 1) % n;
             break;
         case ENTER:
-            execute_cosnole_game_action(sel, &exit);
+            execute_cosnole_game_action(config, sel, &exit);
             break;
         default:
             break;
