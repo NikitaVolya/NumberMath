@@ -35,7 +35,7 @@ void set_mlv_output(struct game_config *config) {
     }
 
     config->output->display_game = display_mlv_game_screen;
-    config->output->update_game = user_console_game_input;
+    config->output->update_game = user_mlv_game_input;
     config->output->end_game_message = end_console_game_message;
     config->output->show_game_menu = show_mlv_game_menu;
     config->output->show_game_message = show_console_game_message;

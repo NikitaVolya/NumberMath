@@ -72,7 +72,7 @@ void display_game_grid(game_field *field) {
     field_cell_p = create_vector2i(GAME_PADDING, GRID_VERTICAL_POS);
     
     MLV_draw_rectangle(field_cell_p.x, field_cell_p.y,
-                       CELL_SIZE * 9, GRID_HEIGHT, MLV_COLOR_BLACK);
+                       GRID_WIDTCH, GRID_HEIGHT, MLV_COLOR_BLACK);
     
     for (j = 0; j < field->height; j++) {
 
@@ -109,4 +109,38 @@ void display_mlv_game_screen(struct game_config *config) {
         
     MLV_actualise_window();
 
+}
+
+
+void user_mlv_game_input(struct game_config* config) {
+    MLV_Event event;
+    int x = -1, y = -1;
+    vector2i gridPos;
+    game_field *field;
+
+    field = config->field;
+
+    event = MLV_get_event(NULL, NULL, NULL,
+                          NULL, NULL,
+                          &x, &y, NULL,
+                          NULL);
+
+    if (event == MLV_MOUSE_MOTION) {
+
+        gridPos = create_vector2i(
+            (x - GAME_PADDING) / CELL_SIZE,
+            (y - GRID_VERTICAL_POS) / CELL_SIZE
+            );
+
+        if (gridPos.y >= 0 && gridPos.y < field->height &&
+            gridPos.x >= 0 && gridPos.x < get_game_field_row_size(field, gridPos.y)) {
+        
+            config->cursor_p = gridPos;
+        }
+    }
+
+    if (event == MLV_MOUSE_BUTTON) {
+        printf("click\n");
+    }
+    
 }
