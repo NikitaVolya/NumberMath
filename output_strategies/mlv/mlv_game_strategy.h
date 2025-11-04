@@ -10,7 +10,7 @@
 #define CELL_SIZE ( ( GAME_WINDOW_WIDTCH - GAME_PADDING * 2 ) / 9 )
 
 #define GRID_VERTICAL_POS ( GAME_PADDING * 2 )
-#define GRID_HEIGHT ( GAME_WINDOW_HEIGHT * 6 / 10 )
+#define GRID_HEIGHT ( CELL_SIZE * 10 )
 #define GRID_WIDTCH ( CELL_SIZE * 9 )
 
 #define GAME_FONT "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"

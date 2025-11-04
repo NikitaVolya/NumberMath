@@ -114,7 +114,11 @@ void display_mlv_game_screen(struct game_config *config) {
 
 void user_mlv_game_input(struct game_config* config) {
     MLV_Event event;
-    int x = -1, y = -1;
+    
+    MLV_Button_state curr_state;
+    static MLV_Button_state prev_state = MLV_RELEASED;
+    
+    int x = -1, y = -1, in_grid;
     vector2i gridPos;
     game_field *field;
 
@@ -125,22 +129,29 @@ void user_mlv_game_input(struct game_config* config) {
                           &x, &y, NULL,
                           NULL);
 
-    if (event == MLV_MOUSE_MOTION) {
-
-        gridPos = create_vector2i(
+    gridPos = create_vector2i(
             (x - GAME_PADDING) / CELL_SIZE,
             (y - GRID_VERTICAL_POS) / CELL_SIZE
             );
+    
 
-        if (gridPos.y >= 0 && gridPos.y < field->height &&
-            gridPos.x >= 0 && gridPos.x < get_game_field_row_size(field, gridPos.y)) {
-        
-            config->cursor_p = gridPos;
-        }
+    if (gridPos.y >= 0 && gridPos.y < field->height &&
+        gridPos.x >= 0 && gridPos.x < get_game_field_row_size(field, gridPos.y)) {
+        in_grid = 1;
+    } else {
+        in_grid = 0;
     }
 
-    if (event == MLV_MOUSE_BUTTON) {
-        printf("click\n");
+    if (event == MLV_MOUSE_MOTION && in_grid) {
+        config->cursor_p = gridPos;
     }
+
+    curr_state = MLV_get_mouse_button_state(MLV_BUTTON_LEFT);
+
+    if (curr_state == MLV_PRESSED && prev_state == MLV_RELEASED && in_grid) {
+        user_game_select(config);
+    }
+
+    prev_state = curr_state;
     
 }
