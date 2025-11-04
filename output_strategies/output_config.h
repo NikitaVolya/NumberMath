@@ -26,6 +26,7 @@ struct output_config {
 };
 
 #include"console/console_game_strategy.h"
+#include"mlv/mlv_game_strategy.h"
 
 /*  
     Sets up the console-based output functions for the game.
@@ -39,5 +40,7 @@ struct output_config {
           menu, and message fields.
 */
 void set_console_output(struct game_config *config);
+
+void set_mlv_output(struct game_config *config);
 
 #endif /* _OUTPUT_CONFIG_H */

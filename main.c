@@ -12,7 +12,7 @@ int main() {
 
     config = create_game_config();
 
-    set_console_output(config);
+    set_mlv_output(config);
 
     execute_game(config);
 
