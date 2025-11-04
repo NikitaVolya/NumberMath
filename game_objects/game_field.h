@@ -93,43 +93,6 @@ void add_values_game_field(game_field *field, short *values, int number);
 int remove_game_field_row(game_field *field, int index);
 
 /*  
-    Expands the game field by duplicating all available cells  
-    and appending their values to the end of the field.
-
-    input:  
-        field - pointer to the game_field structure to expand
-*/
-void expand_game_field(game_field *field);
-
-
-/*  
-    Saves the current game field state to a file.
-
-    input:  
-        field     - pointer to the game_field structure to save  
-        file_name - path to the output file  
-
-    output:  
-        returns 1 if serialization succeeded,  
-        0 if the file could not be opened for writing  
-*/
-int serialize_game_field(game_field* field, const char* file_name);
-
-/*  
-    Loads a saved game field state from a file.
-
-    input:  
-        file_name - path to the file containing serialized game data  
-
-    output:  
-        returns a pointer to the newly allocated game_field structure  
-        if loading succeeds, otherwise returns NULL  
-*/
-game_field* deserialize_game_field(const char* file_name);
-
-
-
-/*  
     Returns the number of cells in a specific row of the game field.
 
     input:  
@@ -279,28 +242,5 @@ int check_game_row_is_clear(game_field *field, int index);
         0 if any cell is still available  
 */
 int check_game_field_is_clear(game_field *field);
-
-/*  
-    Checks if the game is over.
-
-    input:  
-        field - pointer to the game_field structure  
-
-    output:  
-        returns 1 if the game is over (field is cleared or no matches left),  
-        0 otherwise  
-*/
-int check_game_is_over(game_field *field);
-
-/*  
-    Displays the entire game field on the console.
-
-    input:  
-        field - pointer to the game_field structure  
-
-    output:  
-        prints each cell of the field with proper formatting and colors  
-*/
-void display_game_field(game_field *field);
 
 #endif

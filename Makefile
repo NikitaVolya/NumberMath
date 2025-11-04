@@ -1,18 +1,36 @@
-main : vector2i.o field_cell.o game_field.o custom_output.o game.o game_menu.o main.o
-	gcc -o main vector2i.o field_cell.o game_field.o custom_output.o game.o game_menu.o main.o
-main.o : main.c game_menu.h
-	gcc -o main.o  -W -Wall -std=c89 -O2 -pedantic -c main.c
-game_menu.o : game_menu.c game_menu.h game.h
-	gcc -o game_menu.o  -W -Wall -std=c89 -O2 -pedantic -c game_menu.c
-game.o : game.c game.h game_field.h custom_output.h
-	gcc -o game.o  -W -Wall -std=c89 -O2 -pedantic -c game.c
-custom_output.o : custom_output.c custom_output.h vector2i.h
-	gcc -o custom_output.o  -W -Wall -std=c89 -O2 -pedantic -c custom_output.c
-game_field.o : game_field.c game_field.h field_cell.h vector2i.h
-	gcc -o game_field.o  -W -Wall -std=c89 -O2 -pedantic -c game_field.c
-field_cell.o : field_cell.c field_cell.h
-	gcc -o field_cell.o  -W -Wall -std=c89 -O2 -pedantic -c field_cell.c
-vector2i.o : vector2i.c vector2i.h
-	gcc -o vector2i.o  -W -Wall -std=c89 -O2 -pedantic -c vector2i.c
-clean :
-	rm -rf *.o *~ main
+# Compiler and flags
+CC = gcc
+CFLAGS = -W -Wall -std=c89 -O2 -pedantic
+
+# Directories
+SRC_DIR = .
+GAME_OBJ_DIR = game_objects
+OUTPUT_STRATEGIES_DIR = output_strategies
+
+# Sources and objects
+SRC = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(GAME_OBJ_DIR)/*.c) $(wildcard $(OUTPUT_STRATEGIES_DIR)/*/*.c) $(wildcard $(OUTPUT_STRATEGIES_DIR)/*.c)
+OBJ = $(patsubst %.c, %.o, $(SRC))
+DEP = $(OBJ:.o=.d)
+
+# Executable
+TARGET = main
+
+# Default target
+all: $(TARGET)
+
+# Linking
+$(TARGET): $(OBJ)
+	$(CC) -o $@ $(OBJ)
+
+# Compilation rule (with dependency file)
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Include generated dependency files (if they exist)
+-include $(DEP)
+
+# Cleaning
+clean:
+	rm -f $(OBJ) $(DEP) $(TARGET)
+
+.PHONY: all clean

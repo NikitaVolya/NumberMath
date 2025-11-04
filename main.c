@@ -2,12 +2,20 @@
 #include<stdio.h>
 #include<time.h>
 
-#include"game_menu.h"
+#include"game_config.h"
 
 
 int main() {
-    srand(time(NULL));
+    struct game_config *config;
     
-    game_menu();
+    srand(time(NULL));
+
+    config = create_game_config();
+
+    set_console_output(config);
+
+    execute_game(config);
+
+    free_game_config(config);
     exit(EXIT_SUCCESS);
 }

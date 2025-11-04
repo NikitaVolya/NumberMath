@@ -2,54 +2,142 @@
 #ifndef _GAME_H
 #define _GAME_H
 
-#define NUMBERS 51
+#define INIT_CELLS_COUNT 51
 
-#define HORISONTAL_LINE_PATTERN "==="
-#define MIN_FIELD_DISPLAY_HEIGHT 15
+#include<termios.h>
+#include<unistd.h>
+#include<stdlib.h>
+#include<stdio.h>
 
-#include"game_field.h"
-#include"custom_output.h"
+#include"game_config.h"
+#include"serializer.h"
 
+/*  
+    Generates a random short integer within the specified range.  
 
-enum GAME_KEY {
-    ARROW_KEY = 16, /* 0b00010000   */
-    UP = 17,        /* 0b00010001   */ 
-    DOWN = 18,      /* 0b00010010   */
-    LEFT = 19,      /* 0b00010011   */
-    RIGHT = 20,     /* 0b00010100   */
-    ENTER = 10,     /* 0b00001000   */
-    HELP = 104,     /* 0b01101000 H */
-    ADD_LINE = 97,  /* 0b01100001 A */
-    NONE = 0
-};
-typedef enum GAME_KEY GAME_KEY;
+    input:  
+        start - lower bound of the range (inclusive)  
+        end   - upper bound of the range (inclusive)  
 
-int get_key();
-
-GAME_KEY get_game_key();
-
+    output:  
+        returns a random short value between start and end  
+*/
 short randshort(short start, short end);
 
-void init_game(game_field *field);
+/*  
+    Expands the current game field by duplicating values from available cells.  
 
-void display_available_numbers(game_field *field);
+    input:  
+        config - pointer to the game_config structure containing the current field and output settings  
 
-void display_game_screen(game_field *field);
+    behavior:  
+        - If there are available additions, duplicates all values from available cells  
+          and appends them to the bottom of the game field.  
+        - Decreases the count of available additions by one.  
+        - If no additions are available, displays a warning message via the output strategy.  
+        - Saves the updated game field state to "save.bin".  
+*/
+void expand_game_field(struct game_config *config);
 
-void user_game_select(vector2i *cursor,
-                      vector2i *selected_pos,
-                      game_field *field);
+/*  
+    Advances the game to the next stage and resets stage-related parameters.  
 
-void user_game_move(GAME_KEY key,
-                    vector2i *cursor,
-                    game_field *field);
+    input:  
+        field - pointer to the game_field structure  
 
-void user_game_input(vector2i *cursor,
-                     vector2i *selected_pos,
-                     game_field *field);
+    behavior:  
+        - Increments the current stage number.  
+        - Adds points to the score for clearing the field (CLEAR_FIELD_MATCH).  
+        - Resets the number of available additions and hints to their maximum values.  
+        - Reinitializes the game field with new random values.  
+        - Saves the updated game state to "save.bin".  
+*/
+void update_stage(game_field *field);
 
-void load_game();
+/*  
+    Checks if the game is over.
 
-void start_game();
+    input:  
+        field - pointer to the game_field structure  
+
+    output:  
+        returns 1 if the game is over (field is cleared or no matches left),  
+        0 otherwise  
+*/
+int check_game_is_over(game_field *field);
+
+/*  
+    Displays a visual hint by highlighting two matching cells on the game field.  
+
+    input:  
+        config - pointer to the game_config structure containing the current field and output settings  
+
+    behavior:  
+        - If no hints are available, shows a "No hints available" message.  
+        - If a matching pair is found, highlights both cells and decreases  
+          the number of available hints by one.  
+        - If no match exists, shows a "No match finded" message.  
+        - Saves the updated game field state to "save.bin".  
+*/
+void show_game_hints(struct game_config *config);
+
+/*  
+    Handles user selection logic for matching cells in the game field.  
+
+    input:  
+        config - pointer to the game_config structure containing the current field,  
+                 cursor position, and selected cell position  
+*/
+void user_game_select(struct game_config *config);
+
+/*  
+    Runs the main game loop.  
+
+    input:
+        config - pointer on game_config
+*/
+void game_cycle(struct game_config *config);
+
+/*  
+    Initializes the game field with random values.  
+
+    input:  
+        field - pointer to the game_field structure  
+
+    behavior:  
+        - Generates INIT_CELLS_COUNT random values in the range [1, 9].  
+        - Clears the current game field by removing all existing rows.  
+        - Adds the generated values to the field to start a new game state.  
+*/  
+void init_game_field(struct game_field *field);
+
+/*  
+    Loads a saved game from "save.bin" and starts the game loop.  
+
+    input:
+        config - pointer on game_config
+*/
+void load_game(struct game_config *config);
+
+/*  
+    Starts a new game by creating a fresh game field and running the game loop.  
+
+    input:
+        config - pointer on game_config
+*/
+void start_game(struct game_config *config);
+
+/*  
+    Executes the game by showing the main menu using the selected output strategy.
+
+    input:
+        config - pointer to the game_config structure
+
+    behavior:
+        - If config is NULL, prints an error message.
+        - If config->output is NULL, prints an error about missing output strategy.
+        - Otherwise, calls the show_game_menu function of the output strategy.
+*/
+void execute_game(struct game_config *config);
 
 #endif /* _GAME_H */

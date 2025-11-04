@@ -1,338 +1,223 @@
-#include<termios.h>
-#include<unistd.h>
-#include<stdlib.h>
-#include<stdio.h>
-
 #include"game.h"
-
-int get_key() {
-    struct termios oldt, newt;
-    int ch;
-
-    tcgetattr(STDIN_FILENO, &oldt);
-    
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    
-    return ch;
-}
-
-GAME_KEY get_game_key() {
-    GAME_KEY res;
-    int key;
-
-    key = get_key();
-    switch(key) {
-    case ENTER:
-        res = ENTER;
-        break;
-    case HELP:
-        res = HELP;
-        break;
-    case ADD_LINE:
-        res = ADD_LINE;
-        break;
-    case 27:
-        key = get_key();
-        if (key == 91) {
-            switch (get_key()) {
-            case 'A':
-                res = UP;
-                break;
-            case 'B':
-                res = DOWN;
-                break;
-            case 'C':
-                res = RIGHT;
-                break;
-            case 'D':
-                res = LEFT;
-                break;
-            default:
-                res = NONE;
-                break;
-            }
-        } else {
-            res = NONE;
-        }
-        break;
-    default:
-        res = NONE;
-    }
-    
-    return res;
-    
-}
-
 
 short randshort(short start, short end) {
     return start + rand() % (end - start + 1);
 }
 
-void init_game(game_field *field) {
-    short values[NUMBERS];
+void expand_game_field(struct game_config *config) {
+    int i, x, y, old_count;
+    game_field *field;
+    short tmp;
+
+    field = config->field;
+
+    if (field->additions_available > 0) {
+
+        old_count = field->count;
+
+        for (i = 0; i < old_count; i++) {
+            x = i % field->width;
+            y = i / field->width;
+
+            if (field->table[y][x].is_available) {
+                tmp = field->table[y][x].value;
+                add_values_game_field(field, &tmp, 1);
+            }
+        }
+
+        field->additions_available--;
+    } else {
+        config->output->show_game_message("No addditions available");
+    }
+    serialize_game_field(field, "save.bin");
+}
+
+void update_stage(game_field *field) {
+    
+    field->stage++;
+    field->score += CLEAR_FIELD_MATCH;
+            
+    field->additions_available = field->additions_max;
+    field->hints_available = field->hints_max;
+            
+    init_game_field(field);
+
+    serialize_game_field(field, "save.bin");
+}
+
+int check_game_is_over(game_field *field) {
+    int res;
+    vector2i start, end;
+
+    if (check_game_field_is_clear(field) ||
+        (!find_match(field, &start, &end) && field->additions_available <= 0)) {
+        res = 1;
+    } else {
+        res = 0;
+    }
+
+    return res;
+}
+
+void show_game_hints(struct game_config *config) {
+    vector2i pos1, pos2;
+    game_field *field;
+
+    field = config->field;
+
+    if (field->hints_available <= 0) {
+        config->output->show_game_message("No hints available ");
+    } else if (find_match(field, &pos1, &pos2)) {
+        set_highlight_game_field_cell(field, pos1, 1);
+        set_highlight_game_field_cell(field, pos2, 1);
+        field->hints_available--;
+    } else {
+        config->output->show_game_message("No match finded");
+    }
+    serialize_game_field(field, "save.bin");
+}
+
+void user_game_select(struct game_config *config) {
+    game_field *field;
+    vector2i *cursor_p, *selected_p;
+    MATCH_TYPE match_res;
+
+    field = config->field;
+    cursor_p = &config->cursor_p;
+    selected_p = &config->selected_p;
+    
+    /* - If a cell is already selected */
+    if (selected_p->x != -1) {
+        /* - Deselects it temporarily. */ 
+        set_selection_game_field_cell(field, *selected_p, 0);
+
+        /* - Checks if the current cursor position matches the previously selected cell. */
+        match_res = check_match(field, *selected_p, *cursor_p);
+        
+        /* - If the same cell is clicked again, cancels the selection. */
+        if (cursor_p->x == selected_p->x && cursor_p->y == selected_p->y) {
+            selected_p->x = -1;
+        /* - If a valid match is found, removes both cells, updates the score,  
+           clears completed rows, and repositions the cursor.  */
+        } else if (match_res) {
+            set_available_game_field_cell(field, *selected_p, 0);
+            set_available_game_field_cell(field, *cursor_p, 0);
+
+            if (check_game_row_is_clear(field, cursor_p->y)) {
+                remove_game_field_row(field, cursor_p->y);
+                field->score += CLEAR_LINE_MATCH;
+                
+                if (selected_p->y >= cursor_p->y)
+                    selected_p->y--;
+                
+                cursor_p->y--;
+            }
+            
+            if (check_game_row_is_clear(field, selected_p->y)) {
+                remove_game_field_row(field, selected_p->y);
+                field->score += CLEAR_LINE_MATCH;
+                cursor_p->y--;
+            }
+
+            if (cursor_p->y < 0) cursor_p->y = 0;
+
+            selected_p->x = -1;
+
+            field->score += match_res;
+            serialize_game_field(field, "save.bin");
+        /* - If is a not valide match select current cursor position */
+        } else {
+            *selected_p = *cursor_p; 
+            set_selection_game_field_cell(field, *selected_p, 1);         
+        }
+    /* - If no cell is currently selected */
+    } else {
+        *selected_p = *cursor_p;
+        set_selection_game_field_cell(field, *selected_p, 1);
+    }
+}
+
+void game_cycle(struct game_config *config) {
+
+    serialize_game_field(config->field, "save.bin");
+    
+    config->selected_p.x = -1;
+    config->cursor_p = create_vector2i(0, 0);
+
+    do {
+        set_cursor_game_field_cell(config->field, config->cursor_p, 1);
+
+        config->output->display_game(config);
+
+        set_cursor_game_field_cell(config->field, config->cursor_p, 0);
+
+        config->output->update_game(config);
+
+        if (check_game_field_is_clear(config->field)) {
+            update_stage(config->field);
+        }
+
+     } while (!check_game_is_over(config->field));
+
+    config->output->end_game_message(config);
+}
+
+void init_game_field(game_field *field) {
+    short values[INIT_CELLS_COUNT];
     int i;
 
-    for(i = 0; i < NUMBERS; i++) {
+    for(i = 0; i < INIT_CELLS_COUNT; i++) {
         values[i] = randshort(1, 9);
     }
 
     while (field->height > 0) remove_game_field_row(field, 0);
     
-    add_values_game_field(field, values, NUMBERS);
+    add_values_game_field(field, values, INIT_CELLS_COUNT);
 }
 
-void user_game_select(vector2i *cursor,
-                      vector2i *selected_pos,
-                      game_field *field) {
-    MATCH_TYPE match_res;
-    
-    if (selected_pos->x != -1) {
-        set_selection_game_field_cell(field, *selected_pos, 0);
+void load_game(struct game_config *config) {
 
-        match_res = check_match(field, *selected_pos, *cursor);
-        if (cursor->x == selected_pos->x && cursor->y == selected_pos->y) {
-            selected_pos->x = -1;
-        } else if (match_res) {
-            set_available_game_field_cell(field, *selected_pos, 0);
-            set_available_game_field_cell(field, *cursor, 0);
+    /* free any previously allocated field to avoid memory leaks */
+    if (config->field != NULL) {
+        free(config->field);
+    }
 
-            if (check_game_row_is_clear(field, cursor->y)) {
-                remove_game_field_row(field, cursor->y);
-                field->score += CLEAR_LINE_MATCH;
-                
-                if (selected_pos->y >= cursor->y)
-                    selected_pos->y--;
-                
-                cursor->y--;
-            }
-            
-            if (check_game_row_is_clear(field, selected_pos->y)) {
-                remove_game_field_row(field, selected_pos->y);
-                field->score += CLEAR_LINE_MATCH;
-                cursor->y--;
-            }
-
-            if (cursor->y < 0) cursor->y = 0;
-
-            selected_pos->x = -1;
-
-            field->score += match_res;
-            serialize_game_field(field, "save.bin");
-        } else {
-            *selected_pos = *cursor;
-            set_selection_game_field_cell(field, *selected_pos, 1);         
-        }
+    /* attempt to load saved game data */
+    if ((config->field = deserialize_game_field("save.bin")) == NULL) {
+        config->output->show_game_message("Error while loading game!");
     } else {
-        *selected_pos = *cursor;
-        set_selection_game_field_cell(field, *selected_pos, 1);
+        game_cycle(config);
+        
+        free(config->field);
+        config->field = NULL;
     }
 }
 
-void user_game_move(GAME_KEY key,
-                    vector2i *cursor,
-                    game_field *field) {
-    int row_size = row_size = get_game_field_row_size(field, cursor->y);
+void start_game(struct game_config *config) {
     
-    switch (key) {
-    case RIGHT:
-        if (cursor->x < row_size - 1)
-            cursor->x++;
-        else
-            cursor->x = 0;
-        break;
-    case LEFT:
-        if (cursor->x > 0)
-            cursor->x--;
-        else
-            cursor->x = row_size - 1;
-        break;
-    case UP:
-        if (cursor->y > 0)
-            cursor->y--;
-        break;
-    case DOWN:
-        if (cursor->y < field->height - 1 &&
-            cursor->x <= get_game_field_row_size(field, cursor->y + 1) - 1)
-            cursor->y++;
-        break;
-    default:
-        break;
+    /* free any previously allocated field to avoid memory leaks */
+    if (config->field != NULL) {
+        free(config->field);
     }
+    
+    /* create a new game field with width 9 */
+    config->field = create_new_game_field(9);
+
+    init_game_field(config->field);
+    game_cycle(config);
+
+    free(config->field);
+    config->field = NULL;
 }
 
-void user_game_input(vector2i *cursor,
-                     vector2i *selected_pos,
-                     game_field *field) {
-    GAME_KEY key;
-    vector2i pos1, pos2;
-    
-    key = get_game_key();
+void execute_game(struct game_config *config) {
 
-    if (key & ARROW_KEY) {
-        user_game_move(key, cursor, field);
+    if (config == NULL) {
+        printf("Error config is NULL");
+    } else if (config->output == NULL) {
+        printf("Error! Output strategy not selected\n");
     } else {
-        switch (key) {
-        case ENTER:
-            user_game_select(cursor, selected_pos, field);
-            break;
-        case ADD_LINE:
-            if (field->additions_available > 0) {
-                expand_game_field(field);
-                field->additions_available--;
-            } else {
-                print_over("No addditions available", create_vector2i(0, 9));
-                get_key();
-            }
-            serialize_game_field(field, "save.bin");
-            break;
-        case HELP:
-            if (field->hints_available <= 0) {
-                print_over("No hints available ", create_vector2i(3, 9));
-                get_key();
-            } else if (find_match(field, &pos1, &pos2)) {
-                set_highlight_game_field_cell(field, pos1, 1);
-                set_highlight_game_field_cell(field, pos2, 1);
-                field->hints_available--;
-            } else {
-                print_over("No match finded", create_vector2i(5, 9));
-                get_key();
-            }
-            serialize_game_field(field, "save.bin");
-            break;
-        default:
-            break;
-        }
-    }
-}
-
-void display_available_numbers(game_field *field) {
-    int i, x, y, numbers[10];
-    field_cell cell;
-    
-    for (i = 1; i < 10; i++)
-        numbers[i] = 0;
-
-    for (i = 0; i < field->count; i++) {
-        x = i % field->width;
-        y = i / field->width;
-
-        cell = field->table[y][x];
-        if (cell.is_available)
-            numbers[cell.value] = 1;
+        config->output->show_game_menu(config);
     }
 
-    for (i = 1; i < 10; i++) {
-        if (numbers[i])
-            printf(" %d ", i);
-        else
-            printf(" - ");
-    }
-    printf("\n");
-}
-
-void display_game_screen(game_field *field) {
-    int i;
-
-    if (system("clear") != 0)
-        printf("Error while console clearing\n");
-
-    printf("Score: %d\n", field->score);
-    printf("Stage: %d\n", field->stage);
-
-    printf("Get help ( %c ) | %d / %d\n", HELP + ('A' - 'a'),
-           field->hints_available, field->hints_max);
-    printf("Additions ( %c ) | %d / %d\n", ADD_LINE + ('A' - 'a'),
-           field->additions_available, field->additions_max);
-    
-    for (i = 0; i < field->width; i++)
-        printf(HORISONTAL_LINE_PATTERN);
-    printf("\n");
-    
-    display_available_numbers(field);
-
-    for (i = 0; i < field->width; i++)
-        printf(HORISONTAL_LINE_PATTERN);
-    printf("\n");
-    
-    display_game_field(field);
-
-    for (i = field->height; i < MIN_FIELD_DISPLAY_HEIGHT; i++)
-        printf("\n");
-
-    for (i = 0; i < field->width; i++)
-        printf(HORISONTAL_LINE_PATTERN);
-    printf("\n");
-}
-
-void game_cycle(game_field* field) {
-    vector2i cursor, selected_pos;
-
-    serialize_game_field(field, "save.bin");
-    
-    selected_pos.x = -1;
-
-    cursor = create_vector2i(0, 0);
-
-    do {
-        
-        set_cursor_game_field_cell(field, cursor, 1);
-        
-        display_game_screen(field);
-
-        set_cursor_game_field_cell(field, cursor, 0);
-        
-        user_game_input(&cursor, &selected_pos, field);
-
-        if (check_game_field_is_clear(field)) {
-            field->stage++;
-            field->score += CLEAR_FIELD_MATCH;
-            
-            field->additions_available = field->additions_max;
-            field->hints_available = field->hints_max;
-            
-            init_game(field);
-
-            serialize_game_field(field, "save.bin");
-        }
-
-     } while (!check_game_is_over(field));
-
-    display_game_screen(field);
-
-    print_over("GAME OVER !!!", create_vector2i(6, 9));
-
-    printf("Type any key for continue...\n");
-    
-    get_key();
-    
-    free(field);
-}
-
-void load_game() {
-    game_field *field;
-
-    field = deserialize_game_field("save.bin");
-    if (field == NULL) {
-        print_over("Error while loading game!", create_vector2i(3, 3));
-        get_key();
-    } else {
-        game_cycle(field);
-    }
-
-}
-
-void start_game() {
-    
-    game_field *field;
-
-    field = create_new_game_field(9);
-
-    init_game(field);
-
-    game_cycle(field);
 }
