@@ -54,10 +54,9 @@ void select_cell_style(field_cell *cell,
     } else {
         if (cell->is_selected) {
             *font_color = MLV_COLOR_DEEPSKYBLUE;
-        }
-
-        if (cell->is_cursor || cell->is_selected) {
             *background_color = MLV_rgba(146, 225, 255, 255);
+        } else if (cell->is_cursor) {
+            *background_color = MLV_rgba(200, 225, 255, 255);
         }
     }
 }
@@ -118,9 +117,11 @@ void user_mlv_game_input(struct game_config* config) {
     MLV_Button_state curr_state;
     static MLV_Button_state prev_state = MLV_RELEASED;
     
-    int x = -1, y = -1, in_grid;
+    int x = -1, y = -1;
     vector2i gridPos;
     game_field *field;
+
+    MATCH_TYPE user_match;
 
     field = config->field;
 
@@ -133,25 +134,26 @@ void user_mlv_game_input(struct game_config* config) {
             (x - GAME_PADDING) / CELL_SIZE,
             (y - GRID_VERTICAL_POS) / CELL_SIZE
             );
-    
 
     if (gridPos.y >= 0 && gridPos.y < field->height &&
         gridPos.x >= 0 && gridPos.x < get_game_field_row_size(field, gridPos.y)) {
-        in_grid = 1;
-    } else {
-        in_grid = 0;
+        
+        if (event == MLV_MOUSE_MOTION) {
+            config->cursor_p = gridPos;
+        }
+
+        curr_state = MLV_get_mouse_button_state(MLV_BUTTON_LEFT);
+
+        if (curr_state == MLV_PRESSED && prev_state == MLV_RELEASED) {
+            user_match = user_game_select(config);
+
+            if (user_match > 0)
+                printf("%d \n", user_match);
+        }
+
+        prev_state = curr_state;
     }
 
-    if (event == MLV_MOUSE_MOTION && in_grid) {
-        config->cursor_p = gridPos;
-    }
-
-    curr_state = MLV_get_mouse_button_state(MLV_BUTTON_LEFT);
-
-    if (curr_state == MLV_PRESSED && prev_state == MLV_RELEASED && in_grid) {
-        user_game_select(config);
-    }
-
-    prev_state = curr_state;
+    
     
 }

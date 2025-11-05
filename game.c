@@ -107,7 +107,7 @@ MATCH_TYPE user_game_select(struct game_config *config) {
 
             if (check_game_row_is_clear(field, cursor_p->y)) {
                 remove_game_field_row(field, cursor_p->y);
-                field->score += CLEAR_LINE_MATCH;
+                match_res += CLEAR_LINE_MATCH;
                 
                 if (selected_p->y >= cursor_p->y)
                     selected_p->y--;
@@ -117,7 +117,7 @@ MATCH_TYPE user_game_select(struct game_config *config) {
             
             if (check_game_row_is_clear(field, selected_p->y)) {
                 remove_game_field_row(field, selected_p->y);
-                field->score += CLEAR_LINE_MATCH;
+                match_res += CLEAR_LINE_MATCH;
                 cursor_p->y--;
             }
 
