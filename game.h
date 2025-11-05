@@ -82,13 +82,16 @@ int check_game_is_over(game_field *field);
 void show_game_hints(struct game_config *config);
 
 /*  
-    Handles user selection logic for matching cells in the game field.  
+    Handles user selection logic for matching cells in the game field and return MATCH_TYPE.  
 
     input:  
         config - pointer to the game_config structure containing the current field,  
-                 cursor position, and selected cell position  
+                 cursor position, and selected cell position
+    output:
+        return MATCH_TYPE that was produce by user selection
+        
 */
-void user_game_select(struct game_config *config);
+MATCH_TYPE user_game_select(struct game_config *config);
 
 /*  
     Runs the main game loop.  
