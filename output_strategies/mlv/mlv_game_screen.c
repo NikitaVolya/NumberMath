@@ -1,32 +1,43 @@
 #include"mlv_game_screen.h"
 
-void display_game_score(int score) {
-    char text[MAX_SCORE_TEXT_SIZE];
-    int posX, posY, sizeX, sizeY, i, j;
-    char tmp;
-    MLV_Font *font = MLV_load_font(GAME_FONT_BOLD, 26);
 
-    if (score == 0) {
-        text[0] = '0';
-        text[1] = '\0';
+void itos(char *dest, int value, int count) {
+    int i, j, tmp;
+    
+    if (count <= 0) {
+        
+    } else if (count == 1) {
+        dest[0] = '\0';
+    } else if (value == 0) {
+        dest[0] = '0';
+        dest[1] = '\0';
     } else {
-        for (i = 0; i < MAX_SCORE_TEXT_SIZE - 1 && score > 0; i++) {
-            text[i] = '0' + score % 10;
-            score /= 10;
+        for (i = 0; i < count - 1 && value > 0; i++) {
+            dest[i] = '0' + value % 10;
+            value /= 10;
         }
-        text[i] = '\0';
+        dest[i] = '\0';
         
         j = 0;
         i -= 1;
         while (j < i) {
-            tmp = text[i];
-            text[i] = text[j];
-            text[j] = tmp;
+            tmp = dest[i];
+            dest[i] = dest[j];
+            dest[j] = tmp;
 
             i--;
             j++;
         }
     }
+}
+
+
+void display_game_score(int score) {
+    char text[MAX_SCORE_TEXT_SIZE];
+    int posX, posY, sizeX, sizeY;
+    MLV_Font *font = MLV_load_font(GAME_FONT_BOLD, 26);
+
+    itos(text, score, MAX_SCORE_TEXT_SIZE);
 
     posX = GAME_PADDING + CELL_SIZE * 3;
     posY = GAME_PADDING;
@@ -104,12 +115,27 @@ void display_mlv_game_screen(struct game_config *config) {
 
     display_game_grid(config->field);
     display_game_score(config->field->score);
-    
+
+    MLV_draw_ctext_animations();
         
     MLV_actualise_window();
 
 }
 
+void show_score_message(int x, int y, int score) {
+    vector2i start, end;
+    char text[5];
+
+    x = GAME_PADDING + x * CELL_SIZE + CELL_SIZE / 2 - 5;
+    y = GRID_VERTICAL_POS + y * CELL_SIZE + CELL_SIZE / 2 - 5;
+
+    start = create_vector2i(x, y);
+    end = create_vector2i(x, y - CELL_SIZE);
+
+    itos(text, score, 5);
+
+    MLV_create_ctext_animation(text, 20, 500, start, end, CTEXT_ANIMATION_EASEOUT);
+}
 
 void user_mlv_game_input(struct game_config* config) {
     MLV_Event event;
@@ -135,8 +161,6 @@ void user_mlv_game_input(struct game_config* config) {
             (y - GRID_VERTICAL_POS) / CELL_SIZE
             );
 
-    elapsed_time = MLV_get_time();
-
     if (gridPos.y >= 0 && gridPos.y < field->height &&
         gridPos.x >= 0 && gridPos.x < get_game_field_row_size(field, gridPos.y)) {
         
@@ -149,8 +173,9 @@ void user_mlv_game_input(struct game_config* config) {
         if (curr_state == MLV_PRESSED && prev_state == MLV_RELEASED) {
             user_match = user_game_select(config);
 
-            if (user_match > 0)
-                printf("%d \n", user_match);
+            if (user_match > 0) {
+                show_score_message(gridPos.x, gridPos.y, user_match);
+            }
         }
 
         prev_state = curr_state;

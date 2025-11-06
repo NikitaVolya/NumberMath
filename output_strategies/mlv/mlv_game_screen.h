@@ -2,8 +2,9 @@
 #ifndef _MLV_GAME_SCREEN_H
 #define _MLV_GAME_SCREEN_H
 
-#include"../output_config.h"
 #include <MLV/MLV_all.h>
+#include"../output_config.h"
+#include"mlv_custom_text_animation.h"
 
 void display_game_score(int score);
 

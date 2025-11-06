@@ -18,6 +18,10 @@
 
 #define MAX_SCORE_TEXT_SIZE 10
 
+#define FRAME_RATE 120
+
+
+#include"mlv_custom_text_animation.h"
 #include"mlv_game_screen.h"
 
 

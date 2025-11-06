@@ -22,10 +22,14 @@ void show_mlv_game_menu(struct game_config *config) {
                       "NumberMatch",
                       GAME_WINDOW_WIDTCH,
                       GAME_WINDOW_HEIGHT);
+
+    MLV_ctext_animations_start();
     
-    MLV_change_frame_rate(120);
+    MLV_change_frame_rate(FRAME_RATE);
 
     show_console_game_menu(config);
+
+    MLV_ctext_animations_end();
 
     MLV_free_window();
 }
