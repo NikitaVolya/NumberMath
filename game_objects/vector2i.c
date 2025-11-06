@@ -80,3 +80,11 @@ vector2i get_direction(vector2i vector) {
 vector2i get_direction_to(vector2i a, vector2i b) {
     return get_direction(get_vector2i_to(a, b));
 }
+
+float vector2i_get_length(vector2i vector) {
+    return sqrt(vector.x * vector.x + vector.y * vector.y);
+}
+
+float vector2i_get_distance(vector2i a, vector2i b) {
+    return vector2i_get_length(get_vector2i_to(a, b));
+}
