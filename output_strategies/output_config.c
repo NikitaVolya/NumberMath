@@ -22,6 +22,8 @@ void show_mlv_game_menu(struct game_config *config) {
                       "NumberMatch",
                       GAME_WINDOW_WIDTCH,
                       GAME_WINDOW_HEIGHT);
+    
+    MLV_change_frame_rate(120);
 
     show_console_game_menu(config);
 

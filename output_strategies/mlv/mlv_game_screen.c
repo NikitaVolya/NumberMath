@@ -135,6 +135,8 @@ void user_mlv_game_input(struct game_config* config) {
             (y - GRID_VERTICAL_POS) / CELL_SIZE
             );
 
+    elapsed_time = MLV_get_time();
+
     if (gridPos.y >= 0 && gridPos.y < field->height &&
         gridPos.x >= 0 && gridPos.x < get_game_field_row_size(field, gridPos.y)) {
         
@@ -154,6 +156,5 @@ void user_mlv_game_input(struct game_config* config) {
         prev_state = curr_state;
     }
 
-    
-    
+    MLV_delay_according_to_frame_rate();
 }
