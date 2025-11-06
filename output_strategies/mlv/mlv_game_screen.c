@@ -1,5 +1,6 @@
 #include"mlv_game_screen.h"
 
+static vector2i mouse_p;
 
 void itos(char *dest, int value, int count) {
     int i, j, tmp;
@@ -108,13 +109,77 @@ void display_game_grid(game_field *field) {
     MLV_free_font(font);
 }
 
+void display_expand_button(struct game_config *config) {
+    MLV_Color fill_color;
+    vector2i btn_p;
+    float distance;
+    char text[2];
+
+    btn_p = EXPAND_BTN_POS;
+
+    distance = vector2i_get_distance(mouse_p, btn_p);
+
+    if (!config->field->additions_available || distance <= EXPAND_BTN_RADIUS) {
+        fill_color = MLV_COLOR_GRAY;
+    } else {
+        fill_color = MLV_COLOR_DEEPSKYBLUE;
+    }
+
+    text[0] = '0' + config->field->additions_available;
+    text[1] = '\0';
+
+
+    MLV_draw_filled_circle(EXPAND_BTN_HORISONTAL_POS,
+                           EXPAND_BTN_VERTICAL_POS,
+                           EXPAND_BTN_RADIUS,
+                           fill_color);
+    
+    MLV_draw_circle(EXPAND_BTN_HORISONTAL_POS,
+                    EXPAND_BTN_VERTICAL_POS,
+                    EXPAND_BTN_RADIUS,
+                    MLV_COLOR_BLACK);
+
+    MLV_draw_filled_rectangle(
+        EXPAND_BTN_HORISONTAL_POS - EXPAND_BTN_RADIUS + EXPAND_BTN_PADDING,
+        EXPAND_BTN_VERTICAL_POS - EXPAND_BTN_PLUS_WIDTH / 2,
+        (EXPAND_BTN_RADIUS - EXPAND_BTN_PADDING) * 2,
+        EXPAND_BTN_PLUS_WIDTH * 2,
+        MLV_COLOR_BLACK
+        );
+
+    MLV_draw_filled_rectangle(
+        EXPAND_BTN_HORISONTAL_POS - EXPAND_BTN_PLUS_WIDTH / 2,
+        EXPAND_BTN_VERTICAL_POS - EXPAND_BTN_RADIUS + EXPAND_BTN_PADDING,
+        EXPAND_BTN_PLUS_WIDTH * 2,
+        (EXPAND_BTN_RADIUS - EXPAND_BTN_PADDING) * 2,
+        MLV_COLOR_BLACK
+        );
+
+    MLV_draw_filled_circle(EXPAND_BTN_HORISONTAL_POS + EXPAND_BTN_RADIUS * 3 / 4,
+                           EXPAND_BTN_VERTICAL_POS - EXPAND_BTN_RADIUS * 3 / 4,
+                           EXPAND_BTN_RADIUS / 3,
+                           MLV_COLOR_WHITE);
+    
+    MLV_draw_circle(EXPAND_BTN_HORISONTAL_POS + EXPAND_BTN_RADIUS * 3 / 4,
+                     EXPAND_BTN_VERTICAL_POS - EXPAND_BTN_RADIUS * 3 / 4,
+                     EXPAND_BTN_RADIUS / 3,
+                     MLV_COLOR_BLACK);
+
+    MLV_draw_text(EXPAND_BTN_HORISONTAL_POS + EXPAND_BTN_RADIUS * 3 / 5,
+                  EXPAND_BTN_VERTICAL_POS - EXPAND_BTN_RADIUS + 2,
+                  text,
+                  MLV_COLOR_BLACK);
+}
+
 
 void display_mlv_game_screen(struct game_config *config) {
         
     MLV_clear_window(MLV_COLOR_WHITE);
 
     display_game_grid(config->field);
+    
     display_game_score(config->field->score);
+    display_expand_button(config);
 
     MLV_draw_ctext_animations();
         
@@ -143,12 +208,14 @@ void user_mlv_game_input(struct game_config* config) {
     MLV_Button_state curr_state;
     static MLV_Button_state prev_state = MLV_RELEASED;
     
-    int x = -1, y = -1;
+    int x = -1, y = -1, mouse_on_grid;
+    float dist_to_expand_btn;
     vector2i gridPos;
     game_field *field;
 
     MATCH_TYPE user_match;
 
+    
     field = config->field;
 
     event = MLV_get_event(NULL, NULL, NULL,
@@ -156,21 +223,28 @@ void user_mlv_game_input(struct game_config* config) {
                           &x, &y, NULL,
                           NULL);
 
+    if (event == MLV_MOUSE_MOTION) {
+        mouse_p.x = x;
+        mouse_p.y = y;
+    }
+
     gridPos = create_vector2i(
             (x - GAME_PADDING) / CELL_SIZE,
             (y - GRID_VERTICAL_POS) / CELL_SIZE
             );
 
-    if (gridPos.y >= 0 && gridPos.y < field->height &&
+    if (x - GAME_PADDING >= 0 && y - GRID_VERTICAL_POS >= 0 &&
+        gridPos.y >= 0 && gridPos.y < field->height &&
         gridPos.x >= 0 && gridPos.x < get_game_field_row_size(field, gridPos.y)) {
-        
-        if (event == MLV_MOUSE_MOTION) {
-            config->cursor_p = gridPos;
-        }
+        mouse_on_grid = 1;
+    } else {
+        mouse_on_grid = 0;
+    }
+    
+    curr_state = MLV_get_mouse_button_state(MLV_BUTTON_LEFT);
+    if (curr_state == MLV_PRESSED && prev_state == MLV_RELEASED) {
 
-        curr_state = MLV_get_mouse_button_state(MLV_BUTTON_LEFT);
-
-        if (curr_state == MLV_PRESSED && prev_state == MLV_RELEASED) {
+        if (mouse_on_grid) {
             user_match = user_game_select(config);
 
             if (user_match > 0) {
@@ -178,8 +252,20 @@ void user_mlv_game_input(struct game_config* config) {
             }
         }
 
-        prev_state = curr_state;
+        dist_to_expand_btn = vector2i_get_distance(mouse_p, EXPAND_BTN_POS);
+        if (dist_to_expand_btn <= (float) EXPAND_BTN_RADIUS) {
+            expand_game_field(config);
+        }
     }
+    prev_state = curr_state;
+    
+
+    if (event == MLV_MOUSE_MOTION) {
+        
+        if (mouse_on_grid)
+            config->cursor_p = gridPos;
+    }
+    
 
     MLV_delay_according_to_frame_rate();
 }

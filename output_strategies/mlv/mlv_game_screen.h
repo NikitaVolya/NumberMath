@@ -12,6 +12,8 @@ void select_cell_style(field_cell *cell, MLV_Color *font_color, MLV_Color *backg
 
 void display_game_grid(game_field *field);
 
+void display_expand_button(struct game_config *config);
+
 void display_mlv_game_screen(struct game_config *config);
 
 void user_mlv_game_input(struct game_config* config);
