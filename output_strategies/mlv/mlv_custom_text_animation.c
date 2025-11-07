@@ -17,7 +17,7 @@ ctext_animation* free_ctext_animation(ctext_animation *value) {
 
     if (value != NULL) {
         free(value->text);
-        free(value->font);
+        MLV_free_font(value->font);
         free(value);
     }
 
