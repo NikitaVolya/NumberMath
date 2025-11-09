@@ -16,6 +16,8 @@ void display_expand_button(struct game_config *config);
 
 void display_mlv_game_screen(struct game_config *config);
 
+void show_score_message(int x, int y, int score);
+
 void user_mlv_game_input(struct game_config* config);
 
 #endif /* _MLV_GAME_SCREEN_H */

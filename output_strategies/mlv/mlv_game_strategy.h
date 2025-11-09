@@ -20,6 +20,12 @@
 #define EXPAND_BTN_PLUS_WIDTH 2
 #define EXPAND_BTN_PADDING ( EXPAND_BTN_RADIUS / 3 )
 
+#define HELP_BTN_VERTICAL_POS EXPAND_BTN_VERTICAL_POS
+#define HELP_BTN_HORISONTAL_POS ( GAME_PADDING + CELL_SIZE / 2 + CELL_SIZE * 8 )
+#define HELP_BTN_POS create_vector2i(HELP_BTN_HORISONTAL_POS, HELP_BTN_VERTICAL_POS)
+#define HELP_BTN_RADIUS ( CELL_SIZE * 2 / 3 )
+#define HELP_ICON_WIDTH 2
+
 #define GAME_FONT "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 #define GAME_FONT_BOLD "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 

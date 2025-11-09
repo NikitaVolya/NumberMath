@@ -70,6 +70,9 @@ void select_cell_style(field_cell *cell,
         } else if (cell->is_cursor) {
             *background_color = MLV_rgba(200, 225, 255, 255);
         }
+        if (cell->is_highlited) {
+            *font_color = MLV_COLOR_YELLOW;
+        }
     }
 }
 
@@ -171,6 +174,67 @@ void display_expand_button(struct game_config *config) {
                   MLV_COLOR_BLACK);
 }
 
+void display_help_button(struct game_config *config) {
+    MLV_Color fill_color;
+    vector2i btn_p;
+    float distance;
+    char text[2];
+
+    btn_p = HELP_BTN_POS;
+
+    distance = vector2i_get_distance(mouse_p, btn_p);
+
+    if (!config->field->hints_available || distance <= HELP_BTN_RADIUS) {
+        fill_color = MLV_COLOR_GRAY;
+    } else {
+        fill_color = MLV_COLOR_DEEPSKYBLUE;
+    }
+
+    text[0] = '0' + config->field->hints_available;
+    text[1] = '\0';
+
+
+    MLV_draw_filled_circle(HELP_BTN_HORISONTAL_POS,
+                           HELP_BTN_VERTICAL_POS,
+                           HELP_BTN_RADIUS,
+                           fill_color);
+    
+    MLV_draw_circle(HELP_BTN_HORISONTAL_POS,
+                    HELP_BTN_VERTICAL_POS,
+                    HELP_BTN_RADIUS,
+                    MLV_COLOR_BLACK);
+
+
+    MLV_draw_filled_circle(HELP_BTN_HORISONTAL_POS + HELP_BTN_RADIUS * 3 / 4,
+                           HELP_BTN_VERTICAL_POS - HELP_BTN_RADIUS * 3 / 4,
+                           HELP_BTN_RADIUS / 3,
+                           MLV_COLOR_WHITE);
+    
+    MLV_draw_circle(HELP_BTN_HORISONTAL_POS + HELP_BTN_RADIUS * 3 / 4,
+                     HELP_BTN_VERTICAL_POS - HELP_BTN_RADIUS * 3 / 4,
+                     HELP_BTN_RADIUS / 3,
+                     MLV_COLOR_BLACK);
+
+    MLV_draw_text(HELP_BTN_HORISONTAL_POS + HELP_BTN_RADIUS * 3 / 5,
+                  HELP_BTN_VERTICAL_POS - HELP_BTN_RADIUS + 2,
+                  text,
+                  MLV_COLOR_BLACK);
+}
+
+void display_stage(struct game_config *config) {
+    MLV_Font *font;
+    char text[11];
+
+    font = MLV_load_font(GAME_FONT_BOLD, 16);
+
+    strcpy(text, "stage: ");
+    itos(text + 7, config->field->stage, 4);
+    
+    MLV_draw_text_with_font(GAME_PADDING, GAME_PADDING, text, font, MLV_COLOR_BLACK);
+    
+    MLV_free_font(font);
+}
+
 
 void display_mlv_game_screen(struct game_config *config) {
         
@@ -179,7 +243,11 @@ void display_mlv_game_screen(struct game_config *config) {
     display_game_grid(config->field);
     
     display_game_score(config->field->score);
+    
     display_expand_button(config);
+    display_help_button(config);
+    
+    display_stage(config);
 
     MLV_draw_ctext_animations();
         
@@ -209,7 +277,7 @@ void user_mlv_game_input(struct game_config* config) {
     static MLV_Button_state prev_state = MLV_RELEASED;
     
     int x = -1, y = -1, mouse_on_grid;
-    float dist_to_expand_btn;
+    float dist_to_expand_btn, dist_to_help_btn;
     vector2i gridPos;
     game_field *field;
 
@@ -255,6 +323,11 @@ void user_mlv_game_input(struct game_config* config) {
         dist_to_expand_btn = vector2i_get_distance(mouse_p, EXPAND_BTN_POS);
         if (dist_to_expand_btn <= (float) EXPAND_BTN_RADIUS) {
             expand_game_field(config);
+        }
+
+        dist_to_help_btn = vector2i_get_distance(mouse_p, HELP_BTN_POS);
+        if (dist_to_help_btn <= (float) HELP_BTN_RADIUS) {
+            show_game_hints(config);
         }
     }
     prev_state = curr_state;
