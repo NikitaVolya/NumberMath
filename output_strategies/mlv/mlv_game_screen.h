@@ -10,7 +10,7 @@ void display_game_score(int score);
 
 void select_cell_style(field_cell *cell, MLV_Color *font_color, MLV_Color *background_color);
 
-void display_game_grid(game_field *field);
+void display_game_grid(game_field *field, int shift);
 
 void display_expand_button(struct game_config *config);
 

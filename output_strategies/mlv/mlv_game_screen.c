@@ -76,17 +76,14 @@ void select_cell_style(field_cell *cell,
     }
 }
 
-void display_game_grid(game_field *field) {
+void display_game_grid(game_field *field, int shift) {
     char text[2] = " ";
     int i, j, field_row;
     vector2i field_cell_p;
     MLV_Font *font = MLV_load_font(GAME_FONT_BOLD, 22);
     MLV_Color background_color, font_color;
 
-    field_cell_p = create_vector2i(GAME_PADDING, GRID_VERTICAL_POS);
-    
-    MLV_draw_rectangle(field_cell_p.x, field_cell_p.y,
-                       GRID_WIDTCH, GRID_HEIGHT, MLV_COLOR_BLACK);
+    field_cell_p = create_vector2i(GAME_PADDING, GRID_VERTICAL_POS - shift);
     
     for (j = 0; j < field->height; j++) {
 
@@ -110,6 +107,15 @@ void display_game_grid(game_field *field) {
     }
 
     MLV_free_font(font);
+
+    MLV_draw_filled_rectangle(GAME_PADDING, 0,
+                              GAME_PADDING + GRID_WIDTCH, GRID_VERTICAL_POS, MLV_COLOR_WHITE);
+
+    MLV_draw_filled_rectangle(GAME_PADDING, GRID_VERTICAL_POS + GRID_HEIGHT,
+                              GAME_PADDING + GRID_WIDTCH, GAME_WINDOW_HEIGHT, MLV_COLOR_WHITE);
+    
+    MLV_draw_rectangle(GAME_PADDING, GRID_VERTICAL_POS,
+                       GRID_WIDTCH, GRID_HEIGHT, MLV_COLOR_BLACK);
 }
 
 void display_expand_button(struct game_config *config) {
@@ -240,7 +246,7 @@ void display_mlv_game_screen(struct game_config *config) {
         
     MLV_clear_window(MLV_COLOR_WHITE);
 
-    display_game_grid(config->field);
+    display_game_grid(config->field, config->shift);
     
     display_game_score(config->field->score);
     
@@ -259,9 +265,6 @@ void show_score_message(int x, int y, int score) {
     vector2i start, end;
     char text[5];
 
-    x = GAME_PADDING + x * CELL_SIZE + CELL_SIZE / 2 - 5;
-    y = GRID_VERTICAL_POS + y * CELL_SIZE + CELL_SIZE / 2 - 5;
-
     start = create_vector2i(x, y);
     end = create_vector2i(x, y - CELL_SIZE);
 
@@ -275,6 +278,7 @@ void user_mlv_game_input(struct game_config* config) {
     
     MLV_Button_state curr_state;
     static MLV_Button_state prev_state = MLV_RELEASED;
+    static int last_mouse_y = 0;
     
     int x = -1, y = -1, mouse_on_grid;
     float dist_to_expand_btn, dist_to_help_btn;
@@ -297,11 +301,11 @@ void user_mlv_game_input(struct game_config* config) {
     }
 
     gridPos = create_vector2i(
-            (x - GAME_PADDING) / CELL_SIZE,
-            (y - GRID_VERTICAL_POS) / CELL_SIZE
-            );
+        (x - GAME_PADDING) / CELL_SIZE,
+        (y - GRID_VERTICAL_POS + config->shift) / CELL_SIZE
+        );
 
-    if (x - GAME_PADDING >= 0 && y - GRID_VERTICAL_POS >= 0 &&
+    if (GRID_VERTICAL_POS <= mouse_p.y && mouse_p.y < GRID_VERTICAL_POS + GRID_HEIGHT &&
         gridPos.y >= 0 && gridPos.y < field->height &&
         gridPos.x >= 0 && gridPos.x < get_game_field_row_size(field, gridPos.y)) {
         mouse_on_grid = 1;
@@ -316,7 +320,7 @@ void user_mlv_game_input(struct game_config* config) {
             user_match = user_game_select(config);
 
             if (user_match > 0) {
-                show_score_message(gridPos.x, gridPos.y, user_match);
+                show_score_message(mouse_p.x, mouse_p.y, user_match);
             }
         }
 
@@ -329,8 +333,25 @@ void user_mlv_game_input(struct game_config* config) {
         if (dist_to_help_btn <= (float) HELP_BTN_RADIUS) {
             show_game_hints(config);
         }
+        
+    } else if (curr_state == MLV_PRESSED && prev_state == MLV_PRESSED &&
+               GRID_VERTICAL_POS <= mouse_p.y && mouse_p.y <= GRID_VERTICAL_POS + GRID_HEIGHT) {
+
+        config->shift += last_mouse_y - mouse_p.y;
+        
+        if (config->shift < 0)
+            config->shift = 0;
+
+        if (config->field->height * CELL_SIZE - GRID_HEIGHT <= config->shift)
+            config->shift = config->field->height * CELL_SIZE - GRID_HEIGHT;
     }
+
+    if (config->field->height * CELL_SIZE < GRID_HEIGHT)
+        config->shift = 0;
+
+    
     prev_state = curr_state;
+    last_mouse_y = mouse_p.y;
     
 
     if (event == MLV_MOUSE_MOTION) {

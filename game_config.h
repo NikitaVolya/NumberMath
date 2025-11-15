@@ -20,6 +20,7 @@ struct game_config {
     game_field *field;
     struct output_config *output;
     vector2i cursor_p, selected_p;
+    int shift;
 };
 
 /*  
