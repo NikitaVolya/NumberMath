@@ -77,7 +77,7 @@ void show_game_hints(struct game_config *config) {
     serialize_game_field(field, "save.bin");
 }
 
-void user_game_select(struct game_config *config) {
+MATCH_TYPE user_game_select(struct game_config *config) {
     game_field *field;
     vector2i *cursor_p, *selected_p;
     MATCH_TYPE match_res;
@@ -85,6 +85,8 @@ void user_game_select(struct game_config *config) {
     field = config->field;
     cursor_p = &config->cursor_p;
     selected_p = &config->selected_p;
+
+    match_res = NONE_MATCH;
     
     /* - If a cell is already selected */
     if (selected_p->x != -1) {
@@ -105,7 +107,7 @@ void user_game_select(struct game_config *config) {
 
             if (check_game_row_is_clear(field, cursor_p->y)) {
                 remove_game_field_row(field, cursor_p->y);
-                field->score += CLEAR_LINE_MATCH;
+                match_res += CLEAR_LINE_MATCH;
                 
                 if (selected_p->y >= cursor_p->y)
                     selected_p->y--;
@@ -115,7 +117,7 @@ void user_game_select(struct game_config *config) {
             
             if (check_game_row_is_clear(field, selected_p->y)) {
                 remove_game_field_row(field, selected_p->y);
-                field->score += CLEAR_LINE_MATCH;
+                match_res += CLEAR_LINE_MATCH;
                 cursor_p->y--;
             }
 
@@ -135,6 +137,8 @@ void user_game_select(struct game_config *config) {
         *selected_p = *cursor_p;
         set_selection_game_field_cell(field, *selected_p, 1);
     }
+
+    return match_res;
 }
 
 void game_cycle(struct game_config *config) {
