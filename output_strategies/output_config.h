@@ -7,6 +7,10 @@
 struct game_config;
 struct output_config;
 
+#include"console/console_game_strategy.h"
+#include"mlv/mlv_game_strategy.h"
+
+
 /*  
     Holds function pointers for different output actions in the game.
 
@@ -25,22 +29,20 @@ struct output_config {
     void (*show_game_message)(const char *text);
 };
 
-#include"console/console_game_strategy.h"
-#include"mlv/mlv_game_strategy.h"
-
 /*  
     Sets up the console-based output functions for the game.
 
     input:
         config - pointer to a game_config structure
-
-    behavior:
-        - Allocates memory for the output_config if it doesn't exist.
-        - Assigns console-specific functions to the display, update, end message, 
-          menu, and message fields.
 */
 void set_console_output(struct game_config *config);
 
+/*  
+    Sets up the mlv-based output functions for the game.
+
+    input:
+        config - pointer to a game_config structure
+*/
 void set_mlv_output(struct game_config *config);
 
 #endif /* _OUTPUT_CONFIG_H */

@@ -1,40 +1,4 @@
 
-#ifndef _MLV_GAME_STRATEGY_H
-#define _MLV_GAME_STRATEGY_H
-
-#define GAME_WINDOW_WIDTCH 520
-#define GAME_WINDOW_HEIGHT 680
-
-#define GAME_PADDING ( GAME_WINDOW_WIDTCH / 10 )
-
-#define CELL_SIZE ( ( GAME_WINDOW_WIDTCH - GAME_PADDING * 2 ) / 9 )
-
-#define GRID_VERTICAL_POS ( GAME_PADDING * 2 )
-#define GRID_HEIGHT ( CELL_SIZE * 10 )
-#define GRID_WIDTCH ( CELL_SIZE * 9 )
-
-#define EXPAND_BTN_VERTICAL_POS ( GAME_PADDING + GRID_VERTICAL_POS + GRID_HEIGHT )
-#define EXPAND_BTN_HORISONTAL_POS ( GAME_PADDING + CELL_SIZE / 2 )
-#define EXPAND_BTN_POS create_vector2i(EXPAND_BTN_HORISONTAL_POS, EXPAND_BTN_VERTICAL_POS)
-#define EXPAND_BTN_RADIUS ( CELL_SIZE * 2 / 3 )
-#define EXPAND_BTN_PLUS_WIDTH 2
-#define EXPAND_BTN_PADDING ( EXPAND_BTN_RADIUS / 3 )
-
-#define HELP_BTN_VERTICAL_POS EXPAND_BTN_VERTICAL_POS
-#define HELP_BTN_HORISONTAL_POS ( GAME_PADDING + CELL_SIZE / 2 + CELL_SIZE * 8 )
-#define HELP_BTN_POS create_vector2i(HELP_BTN_HORISONTAL_POS, HELP_BTN_VERTICAL_POS)
-#define HELP_BTN_RADIUS ( CELL_SIZE * 2 / 3 )
-#define HELP_ICON_WIDTH 2
-
-#define GAME_FONT "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-#define GAME_FONT_BOLD "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-
-#define MAX_SCORE_TEXT_SIZE 10
-
-#define FRAME_RATE 100
-
+#include"mlv_game_setup.h"
 #include"mlv_custom_text_animation.h"
 #include"mlv_game_screen.h"
-
-
-#endif /* _MLV_GAME_STRATEGY_H  */

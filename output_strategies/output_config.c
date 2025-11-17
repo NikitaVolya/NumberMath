@@ -15,7 +15,7 @@ void set_console_output(struct game_config *config) {
     config->output->show_game_message = show_console_game_message;
 }
 
-/* tmp game menu function */
+/* tmp game menu function for creating game screen */
 void show_mlv_game_menu(struct game_config *config) {
 
     MLV_create_window("NumberMatch | Game",

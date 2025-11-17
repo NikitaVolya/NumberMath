@@ -41,8 +41,4 @@ void MLV_ctext_animations_start();
 
 void MLV_ctext_animations_end();
 
-void MLV_ctext_animations_set_action(void (*func)(ctext_animation *value));
-
-void MLV_ctext_animations_clear_action();
-
 #endif /* _MLV_CUSTOM_TEXT_ANIMATION_H */
