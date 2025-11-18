@@ -1,0 +1,42 @@
+
+#ifndef _MLV_GAME_MESSAGE_H_
+#define _MLV_GAME_MESSAGE_H_
+
+#include<MLV/MLV_all.h>
+#include<stdlib.h>
+#include<stdio.h>
+#include"mlv_game_setup.h"
+#include"mlv_button.h"
+
+#define GAME_MESSAGE_WIDTH (GAME_WINDOW_WIDTCH * 2 / 3)
+#define GAME_MESSAGE_HEIGHT 120
+#define GAME_MESSAGE_POS_X ((GAME_WINDOW_WIDTCH - GAME_MESSAGE_WIDTH) / 2)
+#define GAME_MESSAGE_POS_Y (GAME_WINDOW_HEIGHT / 2 - GAME_MESSAGE_HEIGHT / 2)
+#define GAME_MESSAGE_CLOSE_BTN_SIZE 22
+#define GAME_MESSAGE_CLOSE_BTN_POS_X (GAME_MESSAGE_POS_X + GAME_MESSAGE_WIDTH - GAME_MESSAGE_CLOSE_BTN_SIZE)
+#define GAME_MESSAGE_CLOSE_BTN_POS_Y (GAME_MESSAGE_POS_Y)
+
+enum GAME_MESSAGE_TYPE {
+    GAME_MESSAGE_TYPE_OK
+};
+typedef enum GAME_MESSAGE_TYPE GAME_MESSAGE_TYPE;    
+
+
+enum GAME_MESSAGE_RESULT {
+    GAME_MESSAGE_RESULT_NULL = 0,
+    GAME_MESSAGE_RESULT_NONE,
+    GAME_MESSAGE_RESULT_OK,
+    GAME_MESSAGE_RESULT_YES,
+    GAME_MESSAGE_RESULT_NO
+};
+typedef enum GAME_MESSAGE_RESULT GAME_MESSAGE_RESULT;
+
+
+MLV_Button MLV_create_close_button();
+
+void MLV_show_ok_game_message(const char *text);
+
+GAME_MESSAGE_RESULT MLV_show_game_message(const char *text, GAME_MESSAGE_TYPE type);
+
+
+#endif /* _MLV_GAME_MESSAGE_H_ */
