@@ -4,9 +4,11 @@
 
 void set_console_output(struct game_config *config) {
 
-    if (config->output == NULL) {
-        config->output = (struct output_config*)malloc(sizeof(struct output_config));
+    if (config->output != NULL) {
+        free(config->output);
     }
+    config->output = (struct output_config*)malloc(sizeof(struct output_config));
+    
 
     config->output->display_game = display_console_game_screen;
     config->output->update_game = user_console_game_input;
@@ -36,9 +38,11 @@ void show_mlv_game_menu(struct game_config *config) {
 
 void set_mlv_output(struct game_config *config) {
 
-    if (config->output == NULL) {
-        config->output = (struct output_config*)malloc(sizeof(struct output_config));
+    if (config->output != NULL) {
+        free(config->output);
     }
+    config->output = (struct output_config*)malloc(sizeof(struct output_config));
+    
 
     config->output->display_game = display_mlv_game_screen;
     config->output->update_game = user_mlv_game_input;

@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -W -Wall -std=c89 -O2 -pedantic `pkg-config --cflags MLV`
+CFLAGS = -W -Wall -std=c89 -O2 -pedantic `pkg-config --cflags MLV` -lm 
 LDFLAGS = `pkg-config --libs-only-other --libs-only-L MLV`
 LDLIBS=`pkg-config --libs-only-l MLV`
 
@@ -22,7 +22,7 @@ all: $(TARGET)
 
 # Linking
 $(TARGET): $(OBJ)
-	$(CC) -o $@ $(LDFLAGS) $(OBJ) $(LDLIBS)
+	$(CC) -o $@$(LDFLAGS) $(OBJ) $(LDLIBS)
 
 # Compilation rule (with dependency file)
 %.o: %.c
