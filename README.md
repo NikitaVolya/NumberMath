@@ -14,12 +14,15 @@ ou
 > numbermatch mlv
 ```
 
-## Deuxième itération (04/11 → 18/11)
+### Second iteration (04/11 → 18/11)
+- Création d’une interface graphique en utilisant la bibliothèque **MLV** pour game_screen.
+- Ajout d’animations dans l’interface du jeu pour rendre l’affichage plus dynamique.
 
-- Création d’une interface graphique en utilisant la bibliothèque **MLV**.
-- Ajouter d'un système permettant d'enregistrer les scores dans le jeu.
+### Troisième itération (19/11 → 25/11)
 
-
+- Création de l’interface de menu et du tutoriel interactif.
+- Refonte de `game_field` : remplacement du tableau statique par un tableau dynamique pour plus de flexibilité.
+- Mise à jour des commentaires dans le code pour respecter le style **Doxygen**.
 ---
 
 # NumberMatch Project Development Report
@@ -41,5 +44,12 @@ ou
 
 ## Second iteration (04/11 → 18/11)
 
-- Created a graphical interface using the **MLV** library.
-- Add a system to save scores in the game
+- Developed a graphical game interface using the **MLV** library for game_screen.
+- Added animations to the game screen interface to make the display more dynamic.
+- Integrated a score saving system.
+
+### Third iteration (19/11 → 25/11)
+
+- Developed the interactive menu and tutorial interface.
+- Refactored `game_field` structure: replaced static array with dynamic array for more flexibility.
+- Updated code comments to follow **Doxygen** style.
