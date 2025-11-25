@@ -2,3 +2,4 @@ numbermatch
 *.o
 *.bin
 *.d
+*.history
