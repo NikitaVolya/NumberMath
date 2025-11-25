@@ -22,13 +22,18 @@ enum GAME_MESSAGE_TYPE {
 };
 typedef enum GAME_MESSAGE_TYPE GAME_MESSAGE_TYPE;    
 
-
+/**
+ * @brief Result codes for game message dialogs.
+ *
+ * Used to indicate how the user closed or responded
+ * to a modal message window.
+ */
 enum GAME_MESSAGE_RESULT {
-    GAME_MESSAGE_RESULT_NULL = 0,
-    GAME_MESSAGE_RESULT_NONE,
-    GAME_MESSAGE_RESULT_OK,
-    GAME_MESSAGE_RESULT_YES,
-    GAME_MESSAGE_RESULT_NO
+    GAME_MESSAGE_RESULT_NULL = 0, /**< No result / uninitialized state. */
+    GAME_MESSAGE_RESULT_NONE,     /**< Dialog closed without choosing an option. */
+    GAME_MESSAGE_RESULT_OK,       /**< "OK" button was pressed. */
+    GAME_MESSAGE_RESULT_YES,      /**< "Yes" option selected. */
+    GAME_MESSAGE_RESULT_NO        /**< "No" option selected. */
 };
 typedef enum GAME_MESSAGE_RESULT GAME_MESSAGE_RESULT;
 
@@ -50,17 +55,9 @@ MLV_Button MLV_create_close_button();
  * This function renders a centered message box containing the given text,
  * an "Ok" button, and a close ("X") button.
  *
- *
- * The result of the user action is returned as a value from
- * the GAME_MESSAGE_RESULT enumeration.
- *
  * @param[in] text
  *      The message text displayed inside the dialog box. Must be a valid,
  *      null-terminated C-string.
- *
- * @return GAME_MESSAGE_RESULT
- *      - GAME_MESSAGE_RESULT_OK   — the user clicked the "Ok" button  
- *      - GAME_MESSAGE_RESULT_NONE — the user closed the dialog with the "X" button
  *
  * @note The function blocks execution until a result is chosen.
  */
@@ -79,7 +76,7 @@ void MLV_show_ok_game_message(const char *text);
  *         - GAME_MESSAGE_RESULT_NO   — No  
  *         - GAME_MESSAGE_RESULT_NONE — Closed
  */
-void MLV_show_yesno_game_message(const char *text);
+GAME_MESSAGE_RESULT MLV_show_yesno_game_message(const char *text);
 
 /**
  * @brief Displays a modal game message window of the given type.
