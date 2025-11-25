@@ -9,6 +9,7 @@ struct game_config* create_game_config() {
     res->output = NULL;
     res->cursor_p = create_vector2i(0, 0);
     res->selected_p = create_vector2i(-1, 0);
+    res->shift = 0;
 
     return res;
 }

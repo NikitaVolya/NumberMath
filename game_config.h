@@ -14,12 +14,14 @@ struct output_config;
     field       - pointer to the current game_field structure  
     output      - pointer to the output strategy used for displaying and updating the game  
     cursor_p    - current position of the cursor in the game field  
-    selected_p  - currently selected cell position (-1 indicates no selection)  
+    selected_p  - currently selected cell position (-1 indicates no selection)
+    shift       - value of game grid shift in user interface
 */
 struct game_config {
     game_field *field;
     struct output_config *output;
     vector2i cursor_p, selected_p;
+    int shift;
 };
 
 /*  

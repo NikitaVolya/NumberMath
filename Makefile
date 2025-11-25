@@ -1,6 +1,8 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -W -Wall -std=c89 -O2 -pedantic
+CFLAGS = -W -Wall -std=c89 -O2 -pedantic `pkg-config --cflags MLV`
+LDFLAGS = `pkg-config --libs-only-other --libs-only-L MLV`
+LDLIBS=`pkg-config --libs-only-l MLV`
 
 # Directories
 SRC_DIR = .
@@ -13,18 +15,18 @@ OBJ = $(patsubst %.c, %.o, $(SRC))
 DEP = $(OBJ:.o=.d)
 
 # Executable
-TARGET = main
+TARGET = numbermatch
 
 # Default target
 all: $(TARGET)
 
 # Linking
 $(TARGET): $(OBJ)
-	$(CC) -o $@ $(OBJ)
+	$(CC) -o $@ $(LDFLAGS) $(OBJ) $(LDLIBS)
 
 # Compilation rule (with dependency file)
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -MMD -c $< -o $@
 
 # Include generated dependency files (if they exist)
 -include $(DEP)

@@ -2,6 +2,8 @@
 #ifndef VECTOR2I_H
 #define VECTOR2I_H
 
+#include<math.h>
+
 struct vector2i
 {
     int x, y;
@@ -107,5 +109,29 @@ vector2i get_direction(vector2i vector);
         representing the step direction along x and y axes
 */
 vector2i get_direction_to(vector2i a, vector2i b);
+
+/*  
+    Calculates the Euclidean length (magnitude) of a 2D vector.
+
+    input:
+        vector - the input vector (vector2i)
+
+    output:
+        returns the length of the vector
+*/
+float vector2i_get_length(vector2i vector);
+
+/*  
+    Calculates the Euclidean distance between two 2D points.
+
+    input:
+        a - the first point (vector2i)
+        b - the second point (vector2i)
+
+    output:
+        returns the distance between points a and b as a floating-point value
+*/
+
+float vector2i_get_distance(vector2i a, vector2i b);
 
 #endif
