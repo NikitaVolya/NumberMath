@@ -66,7 +66,7 @@ void MLV_show_ok_game_message(const char *text) {
     }
 }
 
-void MLV_show_yesno_game_message(const char *text) {
+GAME_MESSAGE_RESULT MLV_show_yesno_game_message(const char *text) {
     GAME_MESSAGE_RESULT res;
     MLV_Button yes_btn, no_btn, close_btn;
     vector2i mouse_p;
@@ -121,6 +121,8 @@ void MLV_show_yesno_game_message(const char *text) {
         MLV_delay_according_to_frame_rate();
         MLV_actualise_window();
     }
+
+    return res;
 }
 
 GAME_MESSAGE_RESULT MLV_show_game_message(const char *text, GAME_MESSAGE_TYPE type) {
