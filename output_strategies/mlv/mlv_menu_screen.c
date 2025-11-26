@@ -1,126 +1,58 @@
 #include "mlv_menu_screen.h"
-#include "mlv_game_setup.h"
+#include <MLV/MLV_all.h>
 
-#include <string.h>
+#define BTN_W  300
+#define BTN_H   80
+#define BTN_COLOR      MLV_rgba(70,130,255,255)
+#define BTN_HOVER      MLV_rgba(120,165,255,255)
+#define TEXT_COLOR     MLV_COLOR_WHITE
+#define BG_COLOR       MLV_rgba(255,247,229,255)
 
-static int mouse_over(int mx, int my, int x, int y, int w, int h) {
-    return (mx >= x && mx <= x + w && my <= y + h);
+static int hit(int mx,int my,int x,int y){
+    return mx>=x && mx<=x+BTN_W && my>=y && my<=y+BTN_H;
 }
 
-void mlv_show_menu(struct game_config *config) {
-    MLV_create_window(
-        "NumberMatch | Menu",
-        "NumberMatch",
-        GAME_WINDOW_WIDTCH,
-        GAME_WINDOW_HEIGHT
-        );
+static void draw_button(const char *label,int y,int hover){
+    int tw,th;
+    int x = (GAME_WINDOW_WIDTCH - BTN_W)/2;
 
-    MLV_Font *title_font = MLV_load_font(GAME_FONT_BOLD, 42);
-    MLV_Font *btn_font = MLV_load_font(GAME_FONT_BOLD, 28);
+    MLV_draw_filled_rectangle(x,y,BTN_W,BTN_H, hover?BTN_HOVER:BTN_COLOR);
+    MLV_draw_rectangle(x,y,BTN_W,BTN_H,MLV_COLOR_BLACK);
 
-    int bw = GAME_WINDOW_WIDTCH * 0.5;
-    int bh = 60;
-    int bx = (GAME_WINDOW_WIDTCH - bw) / 2;
+    MLV_get_size_of_text(label,&tw,&th);
+    MLV_draw_text(x+BTN_W/2-tw/2, y+BTN_H/2-th/2, label, TEXT_COLOR);
+}
 
-    int play_y = 220;
-    int score_y = play_y + 100;
-    int tutorial_y = score_y + 100;
-    int quit_y = tutorial_y + 100;
+void mlv_show_menu(struct game_config *config){
 
-    while(1) {
+    int mx,my;
+    int running = 1;
 
-        MLV_clear_window(MLV_COLOR_BLACK);
-        MLV_draw_text_with_font(GAME_PADDING, 80, "NUMBER MATCH", title_font, MLV_COLOR_WHITE);
-        int mx, my;
+    int play_y=230, load_y=330, tut_y=430, quit_y=530;
 
-        MLV_get_mouse_position(&mx, &my);
+    MLV_create_window("NumberMatch Menu","NumberMatch",
+                      GAME_WINDOW_WIDTCH,GAME_WINDOW_HEIGHT);
 
-        MLV_Color play_color = mouse_over(mx, my, bx, play_y, bw, bh)
-            ? MLV_COLOR_RED : MLV_COLOR_WHITE;
-        MLV_draw_filled_rectangle(bx, play_y, bw, bh, MLV_COLOR_GREY);
+    while(running){
 
-        MLV_draw_text_box_with_font(bx, play_y, bw, bh, "PLAY", btn_font, 0, play_color, MLV_COLOR_BLACK, play_color, MLV_TEXT_CENTER,
-                                    MLV_HORIZONTAL_CENTER,
-                                    MLV_VERTICAL_CENTER
-            );
-        
-        MLV_Color score_color = mouse_over(mx, my, bx, score_y, bw, bh)
-            ? MLV_COLOR_RED : MLV_COLOR_WHITE;
-        MLV_draw_filled_rectangle(bx, score_y, bw, bh, MLV_COLOR_GREY);
-        
-        MLV_draw_text_box_with_font(bx, score_y, bw, bh, "SCOREBOARD", btn_font, 0, score_color, MLV_COLOR_BLACK, score_color, MLV_TEXT_CENTER,
-                                    MLV_HORIZONTAL_CENTER,
-                                    MLV_VERTICAL_CENTER
-            );
-        
-        MLV_Color tutorial_color = mouse_over(mx, my, bx, tutorial_y, bw, bh)
-            ? MLV_COLOR_RED : MLV_COLOR_WHITE;
-        MLV_draw_filled_rectangle(bx, tutorial_y, bw, bh, MLV_COLOR_GREY);
-        
-        MLV_draw_text_box_with_font(bx, tutorial_y, bw, bh, "TUTORIAL", btn_font, 0, tutorial_color, MLV_COLOR_BLACK, tutorial_color, MLV_TEXT_CENTER,
-                                    MLV_HORIZONTAL_CENTER,
-                                    MLV_VERTICAL_CENTER
-            );
-        
-        MLV_Color quit_color = mouse_over(mx, my, bx, quit_y, bw, bh)
-            ? MLV_COLOR_RED : MLV_COLOR_WHITE;
-        MLV_draw_filled_rectangle(bx, quit_y, bw, bh, MLV_COLOR_GREY);
-        
-        MLV_draw_text_box_with_font(bx, quit_y, bw, bh, "QUIT", btn_font, 0, quit_color, MLV_COLOR_BLACK, quit_color, MLV_TEXT_CENTER,
-                                    MLV_HORIZONTAL_CENTER,
-                                    MLV_VERTICAL_CENTER
-            );
+        MLV_get_mouse_position(&mx,&my);
+        MLV_clear_window(BG_COLOR);
+
+        {
+            int tw,th;
+            MLV_get_size_of_text("NUMBER MATCH",&tw,&th);
+            MLV_draw_text(GAME_WINDOW_WIDTCH/2-tw/2,120,"NUMBER MATCH",MLV_COLOR_BLACK);
+        }
+
+        /* DRAW ONLY — NO ACTIONS */
+        draw_button("NEW GAME",  play_y, hit(mx,my,(GAME_WINDOW_WIDTCH-BTN_W)/2,play_y));
+        draw_button("LOAD GAME", load_y, hit(mx,my,(GAME_WINDOW_WIDTCH-BTN_W)/2,load_y));
+        draw_button("TUTORIAL",  tut_y,  hit(mx,my,(GAME_WINDOW_WIDTCH-BTN_W)/2,tut_y));
+        draw_button("EXIT",      quit_y, hit(mx,my,(GAME_WINDOW_WIDTCH-BTN_W)/2,quit_y));
+
         MLV_actualise_window();
 
-        MLV_Keyboard_button kb;
-        MLV_Mouse_button mb;
-        MLV_Input_box *input;
-
-        int click =
-            MLV_get_event(
-                &kb, NULL, NULL, NULL, NULL, &mx, &my, &mb, NULL
-                );
-        if (click == MLV_MOUSE_BUTTON) {
-            if (mouse_over(mx, my, bx, play_y, bw, bh)) {
-                MLV_free_font(title_font);
-                MLV_free_font(btn_font);
-                MLV_free_window();
-                return
-
-                    MENU_PLAY;
-            }
-        }
-        if (click == MLV_MOUSE_BUTTON) {
-            if (mouse_over(mx, my, bx, score_y, bw, bh)) {
-                MLV_free_font(title_font);
-                MLV_free_font(btn_font);
-                MLV_free_window();
-                return
-
-                    MENU_SCOREBOARD;
-            }
-        }
-            if (click == MLV_MOUSE_BUTTON) {
-                if (mouse_over(mx, my, bx, tutorial_y, bw, bh)) {
-                    MLV_free_font(title_font);
-                    MLV_free_font(btn_font);
-                    MLV_free_window();
-                    return
-
-                        MENU_TUTORIAL;
-                }
-            }
-            if (click == MLV_MOUSE_BUTTON) {
-                if (mouse_over(mx, my, bx, quit_y, bw, bh)) {
-                    MLV_free_font(title_font);
-                    MLV_free_font(btn_font);
-                    MLV_free_window();
-                    return
-
-                        MENU_QUIT;
-                }
-            }
     }
-return MENU_QUIT;
+
+    MLV_free_window();
 }
-        
