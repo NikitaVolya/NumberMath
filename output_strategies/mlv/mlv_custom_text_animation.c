@@ -13,6 +13,7 @@
 static struct ctexta_vector *ctext_animations = NULL;
 static int old_time = 0;
 
+
 ctext_animation* free_ctext_animation(ctext_animation *value) {
 
     if (value != NULL) {
@@ -148,7 +149,7 @@ void MLV_ctext_animations_start() {
         exit(EXIT_FAILURE);
     }
 
-    ctext_animations = ctexta_vector_create();
+    ctext_animations = ctexta_vector_create(4);
 
     /* get global time */
     old_time = MLV_get_time();

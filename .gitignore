@@ -3,3 +3,4 @@ numbermatch
 *.bin
 *.d
 *.history
+doc/

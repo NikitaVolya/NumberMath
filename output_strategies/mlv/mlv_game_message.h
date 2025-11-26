@@ -1,3 +1,16 @@
+/**
+ * @file mlv_game_message.h
+ * @brief Modal message dialogs for NumberMatch using MLV.
+ *
+ * This header provides structures, constants, and functions for creating
+ * and displaying modal message boxes in the MLV game window. It supports
+ * standard "OK" messages as well as "Yes/No" dialogs with a close button.
+ *
+ * The dialogs are centered in the game window and include preconfigured
+ * buttons for user interaction. Blocking behavior ensures that user input
+ * is captured before continuing game execution.
+ *
+ */
 
 #ifndef _MLV_GAME_MESSAGE_H_
 #define _MLV_GAME_MESSAGE_H_

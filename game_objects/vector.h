@@ -1,106 +1,332 @@
-/*
-  vector.h - Generic dynamic vector implementation in C
-
-  This header provides macros and inline functions to generate
-  type-safe dynamic arrays (vectors) for any data type in C.
-  It allows creating, freeing, and manipulating vectors with
-  functions like push, pop, insert, remove, map, filter, etc.
-
-  Created by Volianskyi Nikita
-  Adapted from the article by David Priver:
-  https://www.davidpriver.com/ctemplates.html
-
-  All code in this project is released into the public domain
-*/
+/**
+ * @file vector.h
+ * @brief Generic dynamic vector implementation in C.
+ *
+ * This header provides macros and inline functions to generate
+ * type-safe dynamic arrays (vectors) for any data type in C.
+ * It supports creating, freeing, and manipulating vectors with
+ * operations such as push, pop, insert, remove, map, filter, etc.
+ *
+ * @author Volianskyi Nikita
+ * @note Adapted from the article by David Priver:
+ *       https://www.davidpriver.com/ctemplates.html
+ *
+ * @attention All code in this project is released into the public domain.
+ *
+ * @note
+ * This section is intentionally left unguarded so that it can
+ * be included multiple times—once for each vector type instantiation.
+ */
 
 #ifndef VECTOR_H
 #define VECTOR_H
 
-/* 
-  Inline functions, #defines and includes that will be
-  needed for all instantiations can go up here.
-*/
-
 #include <stdlib.h>
 #include <stdio.h>
 
-/*
-    Combines the given prefix with the specified word to
-    create a new identifier.
+/**
+ * @name Name-Combining and String-Conversion Macros
+ * @brief Internal utility macros used to generate vector function names and string literals.
+ *
+ * These macros allow the generic vector system to:
+ * - concatenate identifiers to form function names (`pre##word`)
+ * - convert macro values into string literals
+ *
+ * They are internal but documented because they explain how automatic
+ * function names like `vector_int_set` are generated.
+ */
+/** @{ */
 
-    Used internally to generate function and type names
-    based on a configurable prefix (VECTOR_PREFIX).
-*/
-#define VECTOR_IMPL(word) VECTOR_COMB1(VECTOR_PREFIX, word)
+/**
+ * @def VECTOR_COMB1(pre, word)
+ * @brief Indirect macro expansion before token concatenation.
+ *
+ * This macro forces the full expansion of @c pre and @c word before passing
+ * them to `VECTOR_COMB2()`, ensuring the resulting name is correctly formed.
+ *
+ * @note  
+ * C’s `##` operator does **not** expand macro arguments automatically.  
+ * Wrapping it inside two levels fixes that:
+ * - `VECTOR_COMB1(A, B)` → expands A and B, then → `VECTOR_COMB2(A, B)`
+ * - `VECTOR_COMB2(A, B)` → performs `A##B`
+ */
 #define VECTOR_COMB1(pre, word) VECTOR_COMB2(pre, word)
+
+/**
+ * @def VECTOR_COMB2(pre, word)
+ * @brief Concatenates two identifiers.
+ *
+ * After full expansion from `VECTOR_COMB1`, this macro joins the tokens:
+ *
+ * @code
+ * VECTOR_COMB2(Vector_, int)  // → Vector_int
+ * VECTOR_COMB2(foo, bar)      // → foobar
+ * @endcode
+ *
+ * This is the core mechanism behind automatically generated vector function
+ * names such as `Vector_int_set`, `Vector_float_push`, etc.
+ */
 #define VECTOR_COMB2(pre, word) pre##word
 
-/*
-    Converts a macro argument into a string literal.
-*/
-#define STRINGIZE2(s) #s
+/**
+ * @def STRINGIZE(s)
+ * @brief Converts a macro argument into a string literal (after expansion).
+ *
+ * This macro stringifies @c s but only *after* expanding its macro value,
+ * thanks to the two-step approach using `STRINGIZE2()`.
+ *
+ * @code
+ * #define TYPE int
+ * STRINGIZE(TYPE)  // → "int"
+ * @endcode
+ */
 #define STRINGIZE(s) STRINGIZE2(s)
+
+/**
+ * @def STRINGIZE2(s)
+ * @brief Direct stringification without expansion.
+ *
+ * Used internally by `STRINGIZE()`—this macro applies the @c # operator
+ * directly, without expanding @c s first.
+ */
+#define STRINGIZE2(s) #s
+/** @} */
 
 #endif /* VECOTR_H */
 
-
-
-/*
-    NOTE: This section is *not* guarded because it is
-    intended to be included multiple times — once per
-    type definition of the vector.
-*/
+/**
+ * @def VECTOR_TYPE
+ * @brief User-defined macro defining the type stored in the vector.
+ *
+ * This macro must be defined before including the vector header.  
+ * It specifies the data type of the vector elements.
+ *
+ * @note Example:
+ * @code
+ * #define VECTOR_TYPE int
+ * #include "vector.h"
+ * @endcode
+ */
 #ifndef VECTOR_TYPE
-#error "VECTOR_TYPE must be defined before including this file"
+#error "VECTOR_TYPE is required! Define VECTOR_TYPE before including this header."
 #endif /* VECTOR_TYPE */
 
 
-/*
-    Defines the name of the vector data structure to be generated.
-    If VECTOR_NAME is not predefined, this macro creates a default
-    name in the format `vector_<TYPE>`, for example `vector_int`.
-*/
 #ifndef VECTOR_NAME
+/**
+ * @brief
+ * Defines the name of the vector data structure to be generated.
+ *
+ * If VECTOR_NAME is not predefined, a default name will be created
+ * in the format `vector_VECTOR_TYPE`, e.g., `vector_int`.
+ */
 #define VECTOR_NAME VECTOR_COMB1(VECTOR_COMB1(vector,_), VECTOR_TYPE)
 #endif /* VECTOR_NAME */
 
-
-#define VECTOR_NAME_STRING STRINGIZE(VECTOR_NAME)
-
-/*
-Prefix for generated functions.
-If not given generate like VECTOR_NAME_
-'vector_int_' for an 'int'
-*/
 #ifndef VECTOR_PREFIX
+/**
+ * @brief Prefix for all generated vector functions.
+ *
+ * If VECTOR_PREFIX is not predefined, it defaults to VECTOR_NAME_
+ * For example, for VECTOR_NAME = vector_int, the prefix becomes vector_int_
+*/
 #define VECTOR_PREFIX VECTOR_COMB1(VECTOR_NAME, _)
 #endif /* VECTOR_PREFIX */
 
+/**
+ * @brief Concatenates a prefix and a word to generate a new identifier.
+ *
+ * This macro is used internally to create type- and function-specific
+ * names for vector instances based on the configured @ref VECTOR_PREFIX .
+ *
+ * @param prefix The prefix to use (typically @ref VECTOR_PREFIX)
+ * @param word   The word to append to the prefix
+ */
+#define VECTOR_IMPL(word) VECTOR_COMB1(VECTOR_PREFIX, word)
 
-typedef struct VECTOR_NAME VECTOR_NAME;
-struct VECTOR_NAME {
-    VECTOR_TYPE* items;
-    size_t count, capacity;
-};
+/**
+ * @brief Converts the VECTOR_NAME macro into a string literal.
+ *
+ * This macro produces a string version of the generated vector's name.
+ * Internally it uses the @ref STRINGIZE macro to transform the
+ * @c VECTOR_NAME identifier into a string constant.
+ *
+ * @note
+ * This is useful for debugging, logging, or generating readable error messages.
+ *
+ * @see VECTOR_NAME
+ * @see STRINGIZE
+ */
+#define VECTOR_NAME_STRING STRINGIZE(VECTOR_NAME)
 
 
-/*
-    Expands the allocated memory of a vector when it becomes full.
+/**
+ * @name Vector Function Name Generator Macros
+ * @brief Expands generic function names into type-specific ones.
+ *
+ * These macros automatically generate the final function names for the
+ * vector implementation by combining the user-defined @ref VECTOR_PREFIX
+ * with a functional suffix such as `push`, `set`, `remove`, etc.
+ *
+ * For example, if:
+ * @code
+ * #define VECTOR_PREFIX vector_int_
+ * @endcode
+ *
+ * then:
+ * @code
+ * VECTOR_push  →  vector_int_push
+ * VECTOR_set   →  vector_int_set
+ * VECTOR_map   →  vector_int_map
+ * @endcode
+ *
+ * This allows the entire vector module to be generated automatically
+ * for any data type simply by defining:
+ * @code
+ * #define VECTOR_TYPE int
+ *
+ * or
+ *
+ * #define VECTOR_TYPE int
+ * #define VECTOR_PREFIX vectori_
+ * @endcode
+ */
 
-    input:
-        vector - pointer to the vector of type VECTOR_NAME*
+/** @{ */
 
-    behavior:
-        - Doubles the vector's capacity if it already has allocated memory.
-        - If the vector is empty, initializes capacity to 4.
-        - Reallocates memory to hold the new number of elements.
 
-    output:
-        Updates `vector->items` and `vector->capacity` in place.
-*/
+/** @def VECTOR_create   
+ *  @brief Creates a new vector instance. 
+ */
+#define VECTOR_create VECTOR_IMPL(create)
+
+/** @def VECTOR_expand   
+ *  @brief Expands vector capacity if needed. 
+ */
 #define VECTOR_expand VECTOR_IMPL(expand)
 
-static void VECTOR_expand (VECTOR_NAME* vector) {
+/** @def VECTOR_free     
+ *  @brief Frees all vector memory. 
+ */
+#define VECTOR_free VECTOR_IMPL(free)
+
+/** @def VECTOR_get      
+ *  @brief Retrieves an element by index. 
+ */
+#define VECTOR_get VECTOR_IMPL(get)
+
+/** @def VECTOR_set      
+ *  @brief Sets an element at a given index. 
+ */
+#define VECTOR_set VECTOR_IMPL(set)
+
+/** @def VECTOR_push    
+ *  @brief Appends a new value to the end of the vector. 
+ */
+#define VECTOR_push VECTOR_IMPL(push)
+
+/** @def VECTOR_insert   
+ *  @brief Inserts a value at a specific index. 
+ */
+#define VECTOR_insert VECTOR_IMPL(insert)
+
+/** @def VECTOR_pop      
+ *  @brief Removes and returns the last element. 
+ */
+#define VECTOR_pop VECTOR_IMPL(pop)
+
+/** @def VECTOR_remove   
+ *  @brief Removes an element at a given index. 
+ */
+#define VECTOR_remove VECTOR_IMPL(remove)
+
+/** @def VECTOR_foreach  
+ *  @brief Iterates through each element in the vector. 
+ */
+#define VECTOR_foreach VECTOR_IMPL(foreach)
+
+/** @def VECTOR_map      
+ *  @brief Applies a mapping function to each element. 
+ */
+#define VECTOR_map VECTOR_IMPL(map)
+
+/** @def VECTOR_any 
+ *  @brief Returns true if any element satisfies a predicate. 
+ */
+#define VECTOR_any VECTOR_IMPL(any)
+
+/** @def VECTOR_first_or_default
+ *  @brief Returns the first element matching a predicate or a default value.
+ */
+#define VECTOR_first_or_default VECTOR_IMPL(first_or_default)
+
+/** @def VECTOR_filter   
+ *  @brief Creates a new vector containing elements that match a predicate. 
+ */
+#define VECTOR_filter VECTOR_IMPL(filter)
+
+/** @} */
+
+
+/**
+ * @brief Type definition for a generic dynamic vector.
+ * 
+ * @typedef VECTOR_NAME
+ * @struct VECTOR_NAME
+ * 
+ * @details
+ * - `items`    : Pointer to the dynamically allocated array holding the elements.
+ * - `count`    : Current number of elements stored in the vector.
+ * - `capacity` : Allocated capacity of the vector (number of elements it can hold before expanding).
+ */
+struct VECTOR_NAME {
+    VECTOR_TYPE* items;
+    size_t count;
+    size_t capacity;
+};
+typedef struct VECTOR_NAME VECTOR_NAME;
+
+/**
+ * @brief Creates and initializes a new vector instance.
+ *
+ * @param[in] size Init size of vector
+ *
+ *
+ * @return VECTOR_NAME* Pointer to the newly created vector structure,
+ *         or NULL if memory allocation fails.
+ * 
+ */
+VECTOR_NAME * VECTOR_create (size_t size) {
+    VECTOR_NAME* res = malloc(sizeof(VECTOR_NAME));
+    
+    if (res != NULL) {
+
+        if (size == 0)
+            res->items = NULL;
+        else 
+            res->items = (VECTOR_TYPE*) calloc(size, sizeof(VECTOR_TYPE));
+
+        res->count = 0;
+        res->capacity = size;
+    }
+
+    return res;
+}
+
+/** 
+ * @brief Expands the allocated memory of a vector when it becomes full.
+ * 
+ * @param[in,out] vector Pointer to the vector of type VECTOR_NAME*.
+ * 
+ * @details
+ * - Doubles the vector's capacity if it already has allocated memory.
+ * - If the vector is empty, initializes capacity to 4.
+ * - Reallocates memory to hold the new number of elements.
+ * 
+ * @note
+ * Updates `vector->items` and `vector->capacity` in place.
+ */
+void VECTOR_expand (VECTOR_NAME* vector) {
     size_t new_capacity;
     
     new_capacity = vector->capacity ? vector->capacity * 2 : 4;
@@ -109,49 +335,16 @@ static void VECTOR_expand (VECTOR_NAME* vector) {
     vector->capacity = new_capacity;
 }
 
-/*
-    Creates and initializes a new vector instance.
-
-    behavior:
-        - Allocates memory for a new vector structure.
-        - Initializes internal fields:
-            * items = NULL
-            * count = 0
-            * capacity = 0
-        - The vector will automatically allocate memory
-          when the first element is inserted.
-
-    output:
-        returns a pointer to the newly created VECTOR_NAME structure
-        or NULL if memory allocation fails.
-*/
-#define VECTOR_create VECTOR_IMPL(create)
-
-VECTOR_NAME* VECTOR_create () {
-    VECTOR_NAME* res = malloc(sizeof(VECTOR_NAME));
-    
-    if (res != NULL) {
-        res->items = NULL;
-        res->count = 0;
-        res->capacity = 0;
-    }
-
-    return res;
-}
-
-/*
-    Frees all memory used by the vector.
-
-    input:
-        vector - pointer to the VECTOR_NAME structure to be freed
-
-    behavior:
-        - Releases the memory allocated for the vector's items.
-        - Frees the vector structure itself.
-        - Does nothing if the given pointer is NULL.
-*/
-#define VECTOR_free VECTOR_IMPL(free)
-
+/**
+ * @brief Frees all resources used by a dynamic vector.
+ * 
+ * @param[in,out] vector Pointer to the VECTOR_NAME structure to free.
+ * 
+ * @details
+ * - Frees memory allocated for the `items` array.
+ * - Frees the vector structure itself.
+ * - Safe to call with a NULL pointer (no operation performed).
+ */
 void VECTOR_free (VECTOR_NAME *vector) {
     if (vector != NULL) {
         free(vector->items);
@@ -159,22 +352,18 @@ void VECTOR_free (VECTOR_NAME *vector) {
     }
 }
 
-/*
-    Retrieves an element from the vector at a specified index.
-
-    input:
-        vector - pointer to the VECTOR_NAME structure
-        index  - position of the element to retrieve (0-based)
-
-    behavior:
-        - If the index is within bounds, returns the element at that position.
-        - If the index is out of bounds, prints an error message and terminates the program.
-
-    output:
-        returns the element of type VECTOR_TYPE stored at the given index
-*/
-#define VECTOR_get VECTOR_IMPL(get)
-
+/**
+ * @brief Retrieves an element from the vector at a given index.
+ * 
+ * @param[in] vector Pointer to the VECTOR_NAME structure.
+ * @param[in] index  Zero-based position of the element to retrieve.
+ * 
+ * @return The element of type VECTOR_TYPE stored at the specified index.
+ * 
+ * @note
+ * - If the index is out of bounds, the function prints an error message
+ *   and terminates the program.
+ */
 VECTOR_TYPE VECTOR_get (VECTOR_NAME *vector, size_t index) {
     if (index >= vector->count) {
         fprintf(stderr, "Segmentation fault " VECTOR_NAME_STRING " : Error in get index %ld out of bounds\n", index);
@@ -184,20 +373,33 @@ VECTOR_TYPE VECTOR_get (VECTOR_NAME *vector, size_t index) {
     return vector->items[index];
 }
 
-/*
-    Sets the value of an element in the vector at a specified index.
-
-    input:
-        vector - pointer to the VECTOR_NAME structure
-        value  - new value of type VECTOR_TYPE to assign
-        index  - position in the vector to modify (0-based)
-
-    behavior:
-        - If the index is within bounds, replaces the current value at that position.
-        - If the index is out of bounds, prints an error message and terminates the program.
-*/
-#define VECTOR_set VECTOR_IMPL(set)
-
+/**
+ * @brief Sets the value of an element in the vector at a given index.
+ *
+ * This function's final name is generated by the macro system:
+ * it expands to:
+ * @code
+ * VECTOR_PREFIX(set)
+ * @endcode
+ * using the @ref VECTOR_IMPL macro.
+ *
+ * For example, if `VECTOR_PREFIX` is `int_vector_`,
+ * the resulting function name becomes:
+ * @code
+ * int_vector_set
+ * @endcode
+ *
+ * @param[in,out] vector Pointer to the @ref VECTOR_NAME structure.
+ * @param[in]     value  New value of type @ref VECTOR_TYPE to assign.
+ * @param[in]     index  Zero-based position in the vector to modify.
+ *
+ * @note
+ * - If the index is out of bounds, the function prints an error message
+ *   and terminates the program.
+ *
+ * @see VECTOR_IMPL
+ * @see VECTOR_PREFIX
+ */
 void VECTOR_set (VECTOR_NAME *vector, VECTOR_TYPE value, size_t index) {
     if (index >= vector->count) {
         fprintf(stderr, "Segmentation fault " VECTOR_NAME_STRING " : Error in set index %ld out of bounds\n", index);
@@ -207,20 +409,17 @@ void VECTOR_set (VECTOR_NAME *vector, VECTOR_TYPE value, size_t index) {
     vector->items[index] = value;
 }
 
-/*
-    Adds a new element to the end of the vector.
-
-    input:
-        vector - pointer to the VECTOR_NAME structure
-        value  - element of type VECTOR_TYPE to append
-
-    behavior:
-        - If the vector is full, automatically expands its capacity.
-        - Stores the new value at the next available position.
-        - Increments the element count.
-*/
-#define VECTOR_push VECTOR_IMPL(push)
-
+/**
+ * @brief Appends a new element to the end of the vector.
+ * 
+ * @param[in,out] vector Pointer to the VECTOR_NAME structure.
+ * @param[in]     value  Element of type VECTOR_TYPE to append.
+ * 
+ * @details 
+ * - Automatically expands the vector's capacity if it is full.
+ * - Stores the new element at the next available position.
+ * - Increments the vector's element count.
+ */
 void VECTOR_push (VECTOR_NAME *vector, VECTOR_TYPE value) {
 
     if (vector->count == vector->capacity) {
@@ -229,26 +428,20 @@ void VECTOR_push (VECTOR_NAME *vector, VECTOR_TYPE value) {
     vector->items[vector->count++] = value;
 }
 
-/*
-    Inserts an element into the vector at the specified index.
-
-    input:
-        vector - pointer to the VECTOR_NAME structure
-        value  - element of type VECTOR_TYPE to insert
-        index  - position where the new element should be placed
-
-    behavior:
-        - If the index is greater than the current element count, 
-          prints an error message and terminates the program.
-        - If the index equals the last element position, 
-          the function behaves like VECTOR_push().
-        - If the vector is full, expands its capacity.
-        - Shifts existing elements to the right from the given index 
-          to make room for the new element.
-        - Increments the element count.
-*/
-#define VECTOR_insert VECTOR_IMPL(insert)
-
+/**
+ * @brief Inserts an element into the vector at a specified index.
+ * 
+ * @param[in,out] vector Pointer to the VECTOR_NAME structure.
+ * @param[in]     value  Element of type VECTOR_TYPE to insert.
+ * @param[in]     index  Position in the vector where the element will be inserted (0-based).
+ * 
+ * @details 
+ * - If the index is greater than the current element count, prints an error and exits.
+ * - If the index equals the last element position, behaves like VECTOR_push().
+ * - Automatically expands the vector if it is full.
+ * - Shifts existing elements to the right to make space.
+ * - Increments the element count.
+ */
 void VECTOR_insert (VECTOR_NAME *vector, VECTOR_TYPE value, size_t index) {
     size_t i;
 
@@ -271,23 +464,13 @@ void VECTOR_insert (VECTOR_NAME *vector, VECTOR_TYPE value, size_t index) {
     }
 }
 
-/*
-    Removes and returns the last element from the vector.
-
-    input:
-        vector - pointer to the VECTOR_NAME structure
-
-    behavior:
-        - If the vector is empty (count == 0), 
-          prints an error message and terminates the program.
-        - Otherwise, decreases the element count by one 
-          and returns the last stored element.
-
-    output:
-        returns the last element of type VECTOR_TYPE from the vector
-*/
-#define VECTOR_pop VECTOR_IMPL(pop)
-
+/**
+ * @brief Removes and returns an element from the vector at the end.
+ * 
+ * @param[in,out] vector Pointer to the VECTOR_NAME structure.
+ * 
+ * @return VECTOR_TYPE The removed element from the vector.
+ */
 VECTOR_TYPE VECTOR_pop (VECTOR_NAME *vector) {
     if (vector->count == 0) {
         fprintf(stderr, "Segmentation fault " VECTOR_NAME_STRING " : Cant pop in clear vector\n");
@@ -298,24 +481,19 @@ VECTOR_TYPE VECTOR_pop (VECTOR_NAME *vector) {
     return vector->items[vector->count];
 }
 
-/*
-    Removes and returns an element from the vector at a specific index.
-
-    input:
-        vector - pointer to the VECTOR_NAME structure
-        index  - position of the element to remove (0-based)
-
-    behavior:
-        - If the index is out of bounds (>= count), 
-          prints an error message and terminates the program.
-        - Shifts all elements after the removed one to fill the gap.
-        - Decreases the total element count by one.
-
-    output:
-        returns the removed element of type VECTOR_TYPE
-*/
-#define VECTOR_remove VECTOR_IMPL(remove)
-
+/**
+ * @brief Removes and returns an element from the vector at a specific index.
+ * 
+ * @param[in,out] vector Pointer to the VECTOR_NAME structure.
+ * @param[in] index      Position of the element to remove (0-based).
+ * 
+ * @details
+ * - If the index is out of bounds (>= count), prints an error message and exits.
+ * - Shifts all elements after the removed one to fill the gap.
+ * - Decreases the total element count by one.
+ * 
+ * @return VECTOR_TYPE The removed element from the vector.
+ */
 VECTOR_TYPE VECTOR_remove (VECTOR_NAME *vector, size_t index) {
     VECTOR_TYPE res;
     size_t i;
@@ -335,15 +513,15 @@ VECTOR_TYPE VECTOR_remove (VECTOR_NAME *vector, size_t index) {
     return res;
 }
 
-/*
-    Iterates over all elements in the vector and applies a given function.
-
-    input:
-        vector - pointer to the VECTOR_NAME structure
-        func   - pointer to a function that takes an element of type VECTOR_TYPE
-*/
-#define VECTOR_foreach VECTOR_IMPL(foreach)
-
+/**
+ * @brief Applies a given function to each element of the vector.
+ * 
+ * @param[in,out] vector Pointer to the VECTOR_NAME structure.
+ * @param[in] func       Function pointer to apply to each element (takes VECTOR_TYPE as argument).
+ * 
+ * @details
+ * Iterates over all elements in the vector and calls `func` for each one.
+ */
 void VECTOR_foreach (VECTOR_NAME *vector, void (*func)(VECTOR_TYPE value)) {
     size_t i;
 
@@ -352,17 +530,16 @@ void VECTOR_foreach (VECTOR_NAME *vector, void (*func)(VECTOR_TYPE value)) {
     }
 }
 
-/*
-    Applies a transformation function to all elements in the vector,
-    replacing each element with the result.
-
-    input:
-        vector - pointer to the VECTOR_NAME structure
-        func   - pointer to a function that takes a VECTOR_TYPE element
-                 and returns a transformed VECTOR_TYPE element
-*/
-#define VECTOR_map VECTOR_IMPL(map)
-
+/**
+ * @brief Transforms each element of the vector using a provided function.
+ * 
+ * @param[in,out] vector Pointer to the VECTOR_NAME structure.
+ * @param[in] func       Function pointer that takes a VECTOR_TYPE element and returns a transformed VECTOR_TYPE element.
+ * 
+ * @details
+ * Iterates over all elements in the vector, applies `func` to each element,
+ * and replaces the original element with the returned value.
+ */
 void VECTOR_map (VECTOR_NAME *vector, VECTOR_TYPE (*func)(VECTOR_TYPE value)) {
     size_t i;
 
@@ -371,16 +548,18 @@ void VECTOR_map (VECTOR_NAME *vector, VECTOR_TYPE (*func)(VECTOR_TYPE value)) {
     }
 }
 
-/*
-    Checks if at least one element in the vector satisfies a given predicate.
-
-    input:
-        vector    - pointer to the VECTOR_NAME structure
-        predicate - pointer to a function that takes a VECTOR_TYPE element
-                    and returns non-zero if the condition is met, 0 otherwise
-*/
-#define VECTOR_any VECTOR_IMPL(any)
-
+/**
+ * @brief Tests whether any element in the vector satisfies a given predicate.
+ * 
+ * @param[in] vector    Pointer to the VECTOR_NAME structure.
+ * @param[in] predicate Function pointer that takes a VECTOR_TYPE element and returns non-zero if the condition is met.
+ * 
+ * @return int Returns 1 if at least one element satisfies the predicate, 0 otherwise.
+ * 
+ * @details
+ * Iterates through all elements of the vector and applies `predicate`.
+ * Stops at the first element that satisfies the condition.
+ */
 int VECTOR_any (VECTOR_NAME *vector, int (*predicate)(VECTOR_TYPE value)) {
     int res;
     size_t i;
@@ -395,21 +574,19 @@ int VECTOR_any (VECTOR_NAME *vector, int (*predicate)(VECTOR_TYPE value)) {
     return res;
 }
 
-/*
-    Returns the first element in the vector that satisfies a given predicate,
-    or a default value if no element satisfies it.
-
-    input:
-        vector        - pointer to the VECTOR_NAME structure
-        predicate     - pointer to a function that takes a VECTOR_TYPE element
-                        and returns non-zero if the condition is met, 0 otherwise
-        default_value - value to return if no element satisfies the predicate
-
-    output:
-        VECTOR_TYPE value from the vector or `default_value` if none found
-*/
-#define VECTOR_first_or_default VECTOR_IMPL(first_or_default)
-
+/**
+ * @brief Finds the first element in the vector satisfying a predicate.
+ * 
+ * @param[in] vector        Pointer to the VECTOR_NAME structure.
+ * @param[in] predicate     Function pointer that takes a VECTOR_TYPE element and returns non-zero if the condition is met.
+ * @param[in] default_value Value to return if no element satisfies the predicate.
+ * 
+ * @return VECTOR_TYPE Returns the first element that satisfies `predicate`, or `default_value` if none is found.
+ * 
+ * @details
+ * Iterates through the vector elements in order and applies `predicate`.
+ * Returns immediately when a matching element is found.
+ */
 VECTOR_TYPE VECTOR_first_or_default (VECTOR_NAME *vector,
                                      int (*predicate)(VECTOR_TYPE value),
                                      VECTOR_TYPE default_value) {
@@ -429,20 +606,16 @@ VECTOR_TYPE VECTOR_first_or_default (VECTOR_NAME *vector,
     return res;
 }
 
-/*
-    Removes all elements from the vector that do not satisfy a given predicate.
-
-    input:
-        vector    - pointer to the VECTOR_NAME structure
-        predicate - pointer to a function that takes a VECTOR_TYPE element
-                    and returns non-zero if the element should be kept,
-                    0 if it should be removed
-                    
-    output:
-        modifies the vector in-place, removing elements that do not satisfy the predicate
-*/
-#define VECTOR_filter VECTOR_IMPL(filter)
-
+/**
+ * @brief Removes all elements from the vector that do not satisfy a given predicate.
+ * 
+ * @param[in,out] vector    Pointer to the VECTOR_NAME structure to modify.
+ * @param[in]     predicate Function pointer that takes a VECTOR_TYPE element and returns non-zero if the element should be kept, 0 if it should be removed.
+ * 
+ * @details
+ * Iterates through all elements of the vector and removes those for which `predicate` returns 0.
+ * The vector is modified in-place, and the count of elements is updated accordingly.
+ */
 void VECTOR_filter (VECTOR_NAME *vector, int (*predicate)(VECTOR_TYPE value)) {
     size_t i, j;
 

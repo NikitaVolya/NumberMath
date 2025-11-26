@@ -53,10 +53,10 @@ void MLV_draw_button(MLV_Button *button, vector2i *mouse_p) {
         fill_color = button->fill_color;
     }
 
-    MLV_draw_text_box(button->pos.x, button->pos.y,
+    MLV_draw_text_box_with_font(button->pos.x, button->pos.y,
                       button->size.x, button->size.y,
-                      button->text, 1,
-                      MLV_COLOR_BLACK, MLV_COLOR_BLACK, fill_color,
+                      button->text, button->font, 1,
+                      MLV_COLOR_BLACK, button->text_color, fill_color,
                       MLV_TEXT_CENTER, MLV_HORIZONTAL_CENTER, MLV_VERTICAL_CENTER);
 }
 
