@@ -161,7 +161,9 @@ void game_cycle(struct game_config *config) {
             update_stage(config->field);
         }
 
-     } while (!check_game_is_over(config->field));
+    } while (!check_game_is_over(config->field));
+
+    config->output->display_game(config);
 
     config->output->end_game_message(config);
 }
