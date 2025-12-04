@@ -53,19 +53,19 @@ void mlv_show_menu(struct game_config *config){
 
         MLV_get_mouse_position(&mx,&my);
 
-        fade += 0.003f * direction;
+        fade += 0.001f * direction;
         if(fade >= 1.0f)
             direction = -1;
         if(fade <= 0.0f)
             direction = 1;
-        int r = BASE_R - (int)        (fade*30);
-        int g = BASE_G - (int)        (fade*5);
-        int b = BASE_B - (int)        (fade*30);
+        int r = BASE_R - (int)        (fade*35);
+        int g = BASE_G - (int)        (fade*35);
+        int b = BASE_B - (int)        (fade*10);
 
         MLV_clear_window( MLV_rgba(r,g,b,255) );
         {
             MLV_get_size_of_text("NUMBER MATCH",&tw,&th);
-            MLV_draw_text(GAME_WINDOW_WIDTCH/2-tw/2,120,"NUMBER MATCH",TEXT_COLOR);
+            MLV_draw_text(GAME_WINDOW_WIDTCH/2-tw/2,GAME_WINDOW_HEIGHT/6,"NUMBER MATCH",TEXT_COLOR);
         }
 
         /* DRAW ONLY — NO ACTIONS */
