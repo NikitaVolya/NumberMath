@@ -48,9 +48,9 @@ static const char* tutorial_pages[MAX_TUTORIAL_PAGES] = {
 };
 
 
-/* ========================================
-               HELPER FUNCTIONS
-   ======================================== */
+/* ============================
+       HELPER FUNCTIONS
+   ============================ */
 
 static int hit_button(int mx, int my, int x, int y){
     return mx >= x && mx <= x + BTN_W && my >= y && my <= y + BTN_H;
@@ -84,9 +84,9 @@ static void draw_button(const char *label,int y,int hover){
 }
 
 
-/* ========================================
-               ARROW DRAWING
-   ======================================== */
+/* ============================
+        ARROW DRAWING
+   ============================ */
 
 void draw_left_arrow(int x, int y, int hover) {
     MLV_Color c;
@@ -125,16 +125,15 @@ void draw_right_arrow(int x, int y, int hover) {
 }
 
 
-
-/* ========================================
-           SLIDE TRANSITION
-   ======================================== */
+/* ============================
+       SLIDE TRANSITION
+   ============================ */
 
 void animate_slide(const char* old_page, const char* new_page, int direction) {
 
     int offset;
-    offset = 0;
 
+    offset = 0;
     while (offset < GAME_WINDOW_WIDTCH) {
 
         MLV_clear_window(MLV_COLOR_BEIGE);
@@ -177,10 +176,9 @@ void animate_slide(const char* old_page, const char* new_page, int direction) {
 }
 
 
-
-/* ========================================
-              TUTORIAL SCREEN
-   ======================================== */
+/* ============================
+        TUTORIAL SCREEN
+   ============================ */
 
 void show_tutorial_screen() {
 
@@ -192,11 +190,6 @@ void show_tutorial_screen() {
     int arrow_left_y  = GAME_WINDOW_HEIGHT/2 - ARROW_H/2;
     int arrow_right_x = GAME_WINDOW_WIDTCH - ARROW_W - 20;
     int arrow_right_y = GAME_WINDOW_HEIGHT/2 - ARROW_H/2;
-
-    int allow_left = 1;
-    int allow_right = 1;
-    int allow_exit = 1;
-    int allow_click = 1;
 
     while (running) {
 
@@ -237,7 +230,7 @@ void show_tutorial_screen() {
 
         MLV_draw_text(
             40, GAME_WINDOW_HEIGHT - 30,
-            "LEFT/RIGHT or click arrows — ENTER to exit",
+            "LEFT/RIGHT or click arrows — ENTER/ESC to exit",
             MLV_COLOR_BLACK
         );
 
@@ -245,79 +238,61 @@ void show_tutorial_screen() {
 
         ev = MLV_get_event(&key,NULL,NULL,NULL,NULL,&mx,&my,NULL,NULL);
 
-
-        /* ======================================
-                   KEYBOARD NAVIGATION
-           ====================================== */
-
+        /* KEYBOARD NAVIGATION (only act on press, then wait for release) */
         if (ev == MLV_KEY_PRESS || ev == MLV_KEYBOARD) {
 
-            /* LEFT */
-            if (key == MLV_KEYBOARD_LEFT) {
-                if (allow_left && page > 0) {
-                    animate_slide(tutorial_pages[page], tutorial_pages[page-1], -1);
-                    page--;
+            if (key == MLV_KEYBOARD_LEFT && page > 0) {
+                animate_slide(tutorial_pages[page], tutorial_pages[page-1], -1);
+                page--;
+
+                /* wait for key release to avoid auto-repeat */
+                while (MLV_get_keyboard_state(MLV_KEYBOARD_LEFT) == MLV_PRESSED) {
+                    MLV_delay_according_to_frame_rate();
                 }
-                allow_left = 0;
-            } else {
-                allow_left = 1;
             }
 
-            /* RIGHT */
-            if (key == MLV_KEYBOARD_RIGHT) {
-                if (allow_right && page < MAX_TUTORIAL_PAGES - 1) {
-                    animate_slide(tutorial_pages[page], tutorial_pages[page+1], 1);
-                    page++;
+            if (key == MLV_KEYBOARD_RIGHT && page < MAX_TUTORIAL_PAGES - 1) {
+                animate_slide(tutorial_pages[page], tutorial_pages[page+1], 1);
+                page++;
+
+                while (MLV_get_keyboard_state(MLV_KEYBOARD_RIGHT) == MLV_PRESSED) {
+                    MLV_delay_according_to_frame_rate();
                 }
-                allow_right = 0;
-            } else {
-                allow_right = 1;
             }
 
-            /* EXIT */
             if (key == MLV_KEYBOARD_RETURN || key == MLV_KEYBOARD_ESCAPE) {
-                if (allow_exit) running = 0;
-                allow_exit = 0;
-            } else {
-                allow_exit = 1;
+                running = 0;
+                while (MLV_get_keyboard_state(key) == MLV_PRESSED) {
+                    MLV_delay_according_to_frame_rate();
+                }
             }
         }
 
-
-        /* ======================================
-                   MOUSE NAVIGATION
-           ====================================== */
-
+        /* MOUSE NAVIGATION (click arrows) */
         if (ev == MLV_MOUSE_BUTTON) {
 
-            if (allow_click &&
-                hover_left &&
-                page > 0) {
-
+            if (hover_left && page > 0) {
                 animate_slide(tutorial_pages[page], tutorial_pages[page-1], -1);
                 page--;
             }
 
-            if (allow_click &&
-                hover_right &&
-                page < MAX_TUTORIAL_PAGES - 1) {
-
+            if (hover_right && page < MAX_TUTORIAL_PAGES - 1) {
                 animate_slide(tutorial_pages[page], tutorial_pages[page+1], 1);
                 page++;
             }
 
-            allow_click = 0;
-        } else {
-            allow_click = 1;
+            /* simple debounce: wait until mouse button released */
+            while (MLV_get_mouse_button_state(MLV_BUTTON_LEFT) == MLV_PRESSED) {
+                MLV_delay_according_to_frame_rate();
+            }
         }
     }
 }
 
 
-
-/* ========================================
-                   MAIN MENU
-   ======================================== */
+/* ============================
+           MAIN MENU
+   ============================ */
 
 void mlv_show_menu(struct game_config *config){
 
