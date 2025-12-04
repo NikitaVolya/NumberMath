@@ -206,10 +206,12 @@ void show_tutorial_screen() {
 
     nb_pages = (int)(sizeof(tutorial_pages) / sizeof(tutorial_pages[0]));
 
-    arrow_left_x  = 20;
-    arrow_left_y  = GAME_WINDOW_HEIGHT/2 - ARROW_H/2;
-    arrow_right_x = GAME_WINDOW_WIDTCH - ARROW_W - 20;
-    arrow_right_y = GAME_WINDOW_HEIGHT/2 - ARROW_H/2;
+    /* === NEW ARROW POSITIONING (bottom area) === */
+    arrow_left_y  = GAME_WINDOW_HEIGHT - 150;
+    arrow_right_y = GAME_WINDOW_HEIGHT - 150;
+
+    arrow_left_x  = 60;
+    arrow_right_x = GAME_WINDOW_WIDTCH - ARROW_W - 60;
 
     while (running) {
 
@@ -233,7 +235,7 @@ void show_tutorial_screen() {
         MLV_draw_text_box(
             40, 40,
             GAME_WINDOW_WIDTCH - 80,
-            GAME_WINDOW_HEIGHT - 120,
+            GAME_WINDOW_HEIGHT - 200, /* lifted for arrows */
             tutorial_pages[page],
             9,
             MLV_COLOR_BLACK,
@@ -246,7 +248,7 @@ void show_tutorial_screen() {
 
         sprintf(buf, "Page %d / %d", page+1, nb_pages);
         MLV_draw_text(GAME_WINDOW_WIDTCH/2 - 40,
-                      GAME_WINDOW_HEIGHT - 60,
+                      GAME_WINDOW_HEIGHT - 180,
                       buf,
                       MLV_COLOR_BLUE);
 
@@ -254,16 +256,15 @@ void show_tutorial_screen() {
         draw_right_arrow(arrow_right_x, arrow_right_y, hover_right);
 
         MLV_draw_text(
-            40, GAME_WINDOW_HEIGHT - 30,
-            "Flèches GAUCHE/DROITE ou clic sur les flèches — Entrée/Echap pour quitter",
+            40, GAME_WINDOW_HEIGHT - 40,
+            "Flèches GAUCHE/DROITE ou clic — Entrée/Echap pour quitter",
             MLV_COLOR_BLACK
         );
 
         MLV_actualise_window();
 
-        /* Pump event queue, but we don't rely on its type */
         ev = MLV_get_event(NULL,NULL,NULL,NULL,NULL,&mx,&my,NULL,NULL);
-        (void)ev; /* silence unused warning if any */
+        (void)ev;
 
         /* ---------- EDGE-DETECTION KEYBOARD ---------- */
 
@@ -272,19 +273,16 @@ void show_tutorial_screen() {
         enter_now = (MLV_get_keyboard_state(MLV_KEYBOARD_RETURN) == MLV_PRESSED);
         esc_now   = (MLV_get_keyboard_state(MLV_KEYBOARD_ESCAPE) == MLV_PRESSED);
 
-        /* LEFT: only when going 0 -> 1 */
         if (left_now && !left_before && page > 0) {
             animate_slide(tutorial_pages[page], tutorial_pages[page-1], -1);
             page--;
         }
 
-        /* RIGHT */
         if (right_now && !right_before && page < nb_pages - 1) {
             animate_slide(tutorial_pages[page], tutorial_pages[page+1], 1);
             page++;
         }
 
-        /* ENTER or ESC: exit tutorial */
         if ((enter_now && !enter_before) ||
             (esc_now   && !esc_before)) {
             running = 0;
