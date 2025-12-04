@@ -295,7 +295,7 @@ struct VECTOR_NAME {
 };
 typedef struct VECTOR_NAME VECTOR_NAME;
 
-#endif VECTOR_STRUCT_DEFINED
+#endif /* VECTOR_STRUCT_DEFINED */
 
 /**
  * @brief Creates and initializes a new vector instance.

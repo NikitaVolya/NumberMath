@@ -3,7 +3,7 @@
 
 #include <MLV/MLV_all.h>
 #include "../../game_objects/vector2i.h"
-#include "../../game_config.h"
+#include "../../game.h"
 #include "mlv_game_setup.h"
 
 typedef enum {

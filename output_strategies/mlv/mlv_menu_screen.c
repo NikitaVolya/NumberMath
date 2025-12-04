@@ -339,6 +339,10 @@ void mlv_show_menu(struct game_config *config){
     MLV_create_window("NumberMatch Menu","NumberMatch",
                       GAME_WINDOW_WIDTCH,GAME_WINDOW_HEIGHT);
 
+    MLV_change_frame_rate(FRAME_RATE);
+
+    MLV_ctext_animations_start();
+
     while(running){
 
         MLV_Event ev;
@@ -376,11 +380,11 @@ void mlv_show_menu(struct game_config *config){
         if (ev == MLV_MOUSE_BUTTON) {
 
             if (hit_button(mx,my,bx, play_y)) {
-                running = 0;
+                start_game(config);
             }
 
             if (hit_button(mx,my,bx, load_y)) {
-                running = 0;
+                load_game(config);
             }
 
             if (hit_button(mx,my,bx, tut_y)) {
@@ -392,6 +396,8 @@ void mlv_show_menu(struct game_config *config){
             }
         }
     }
+
+    MLV_ctext_animations_end();
 
     MLV_free_window();
 }
