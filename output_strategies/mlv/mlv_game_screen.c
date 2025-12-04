@@ -187,6 +187,28 @@ void display_stage(struct game_config *config) {
     MLV_free_font(font);
 }
 
+void display_game_scroller(struct game_config *config) {
+    float fill_procent;
+    int max_shift_height, scrolle_size;
+
+    max_shift_height = config->field->height * CELL_SIZE - GRID_HEIGHT;
+    if (max_shift_height <= 0)
+        max_shift_height = 1;
+    scrolle_size = ((float) (GRID_HEIGHT / CELL_SIZE) / config->field->height) * GRID_HEIGHT;
+    if (scrolle_size > GRID_HEIGHT)
+        scrolle_size = GRID_HEIGHT;
+
+    fill_procent = (float) config->shift / max_shift_height;
+
+    MLV_draw_rectangle(GAME_PADDING + GRID_WIDTCH + 10, GRID_VERTICAL_POS,
+                       20, GRID_HEIGHT,
+                       MLV_COLOR_BLACK);
+
+    MLV_draw_filled_rectangle(GAME_PADDING + GRID_WIDTCH + 10, GRID_VERTICAL_POS + (GRID_HEIGHT - scrolle_size + 4) * fill_procent,
+                              20                             , scrolle_size,
+                              MLV_COLOR_GRAY);
+}
+
 
 void display_mlv_game_screen(struct game_config *config) {
         
@@ -201,6 +223,8 @@ void display_mlv_game_screen(struct game_config *config) {
     display_help_button(config, mouse_p);
     
     display_stage(config);
+
+    display_game_scroller(config);
 
     MLV_draw_ctext_animations();
         

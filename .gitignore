@@ -2,3 +2,5 @@ numbermatch
 *.o
 *.bin
 *.d
+*.history
+doc/

@@ -1,213 +1,136 @@
+/**
+ * @file console_game_strategy.h
+ * @brief Console-based output and input strategy for the NumberMatch game.
+ *
+ * This module provides functions for rendering the game field in the console,
+ * handling user input (arrows, enter, help, add line), displaying menus,
+ * messages, and tutorial screens. It implements a console-specific output
+ * strategy compatible with the `output_config` interface.
+ */
+
 #ifndef _CONSOLE_GAME_STRATEGY_H
 #define _CONSOLE_GAME_STRATEGY_H
+
+#include <termios.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "custom_output.h"
+#include "../../game.h"
+#include "../../game_config.h"
+#include "../output_config.h"
 
 #define HORISONTAL_LINE_PATTERN "==="
 #define MIN_FIELD_DISPLAY_HEIGHT 15
 
-#include<termios.h>
-#include<unistd.h>
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
+#define ENABLE_COLOR    "\033[0m"
+#define UNENABLE_COLOR  "\033[35m"
+#define HIGHLITED_COLOR "\033[36m"
 
-#include"custom_output.h"
-#include"../../game.h"
-#include"../../game_config.h"
-#include"../output_config.h"
+#define BASE_PRINT "%s %d \033[0m"
+#define SELECTED_PRINT "%s[%d]\033[0m"
+#define CURSOR_PRINT "%s\033[4m %d \033[0m"
+#define SELECTED_CURSOR_PRINT "%s\033[4m[%d]\033[0m"
 
-
+/**
+ * @enum GAME_KEY
+ * @brief Represents keys recognized by the console game input system.
+ */
 enum GAME_KEY {
-    ARROW_KEY = 16,             /* 0b00010000   */
-    UP        = ARROW_KEY + 1,  /* 0b00010001   */ 
-    DOWN      = ARROW_KEY + 2,  /* 0b00010010   */
-    LEFT      = ARROW_KEY + 3,  /* 0b00010011   */
-    RIGHT     = ARROW_KEY + 4,  /* 0b00010100   */
-    ENTER     = 10,             /* 0b00001000   */
-    HELP      = 104,            /* 0b01101000 H */
-    ADD_LINE  = 97,             /* 0b01100001 A */
-    NONE      = 0
+    ARROW_KEY = 16,             /**< Base value for arrow keys */
+    UP        = ARROW_KEY + 1,  /**< Up arrow key */
+    DOWN      = ARROW_KEY + 2,  /**< Down arrow key */
+    LEFT      = ARROW_KEY + 3,  /**< Left arrow key */
+    RIGHT     = ARROW_KEY + 4,  /**< Right arrow key */
+    ENTER     = 10,             /**< Enter key */
+    HELP      = 104,            /**< 'H' key for help */
+    ADD_LINE  = 97,             /**< 'A' key to add a line */
+    NONE      = 0               /**< Unrecognized key */
 };
 typedef enum GAME_KEY GAME_KEY;
 
-/*  
-    Reads a single key press from the user without waiting for Enter and without echoing.
-
-    output:
-        returns the integer code of the key pressed
-
-    behavior:
-        - Saves the current terminal settings.
-        - Disables canonical mode and echo so input is immediate and invisible.
-        - Reads one character from standard input.
-        - Restores the previous terminal settings.
-*/
+/**
+ * @brief Reads a single key press without waiting for Enter and without echo.
+ * @return The integer code of the key pressed.
+ */
 int get_key();
 
-/*  
-    Reads a key press from the user and maps it to a GAME_KEY value.
-
-    output:
-        returns a GAME_KEY representing the key pressed (arrows, ENTER, HELP, ADD_LINE, or NONE)
-
-    behavior:
-        - Calls get_key() to read a single character.
-        - Maps normal keys (ENTER, HELP, ADD_LINE) directly.
-        - Detects arrow key sequences (ESC [ A/B/C/D) and maps them to UP, DOWN, RIGHT, LEFT.
-        - Returns NONE for any unrecognized key.
-*/
+/**
+ * @brief Reads a key press and maps it to a GAME_KEY value.
+ * @return A GAME_KEY value representing the key pressed.
+ */
 GAME_KEY get_game_key();
 
-/*  
-    Updates the cursor position on the game field based on the arrow key pressed.
-
-    input:
-        key    - the pressed arrow key (UP, DOWN, LEFT, RIGHT)
-        cursor - pointer to the current cursor position
-        field  - pointer to the game_field structure
-
-    behavior:
-        - Moves the cursor within bounds of the current row and field height.
-        - Wraps horizontally when reaching the row edges.
-        - Prevents vertical movement outside the field or into shorter rows.
-*/
+/**
+ * @brief Moves the cursor in the game field according to an arrow key.
+ * @param key Arrow key pressed (UP, DOWN, LEFT, RIGHT).
+ * @param cursor Pointer to the current cursor position.
+ * @param field Pointer to the game_field structure.
+ */
 void user_console_game_move(GAME_KEY key, vector2i *cursor, game_field *field);
 
-/*  
-    Processes user input during the console game loop.
-
-    input:
-        config - pointer to game_config structure containing field, cursor, and output info
-
-    behavior:
-        - Reads a key from the user.
-        - If an arrow key is pressed, moves the cursor accordingly.
-        - If ENTER is pressed, selects the current cell and processes matching.
-        - If ADD_LINE is pressed, expands the game field (duplicates available cells).
-        - If HELP is pressed, highlights a possible match if hints are available.
-        - Ignores other keys.
-*/
+/**
+ * @brief Handles user input during the console game loop.
+ * @param config Pointer to the game_config structure.
+ */
 void user_console_game_input(struct game_config* config);
 
-/*  
-    Displays the numbers currently available on the game field.
-
-    input:
-        field - pointer to the game_field structure
-
-    behavior:
-        - Scans all cells in the field.
-        - Marks which numbers (1-9) are available.
-        - Prints available numbers as digits, unavailable numbers as '-'.
-*/
+/**
+ * @brief Displays available numbers on the game field.
+ * @param field Pointer to the game_field structure.
+ */
 void display_console_available_numbers(game_field *field);
 
-/* 
-    Displays a field cell on the console with appropriate color and formatting.
-
-    input:    cell - field_cell structure to display
-    output:   prints the cell to the console with its current visual state
-*/
+/**
+ * @brief Prints a single field cell with console formatting and colors.
+ * @param cell Field cell to display.
+ */
 void print_field_cell(field_cell cell);
 
-/*  
-    Displays the entire game field on the console.
-
-    input:  
-        field - pointer to the game_field structure  
-
-    output:  
-        prints each cell of the field with proper formatting and colors  
-*/
+/**
+ * @brief Prints the entire game field to the console.
+ * @param field Pointer to the game_field structure.
+ */
 void print_game_field(game_field *field);
 
-/*  
-    Displays the full game screen in the console.  
-
-    input:
-        config - pointer to the game_config structure
-
-    behavior:
-        - Clears the console screen.
-        - Prints current score and stage.
-        - Shows number of hints and additions available.
-        - Prints horizontal separator lines.
-        - Displays available numbers.
-        - Prints the current state of the game field.
-        - Ensures minimum field height is displayed.
-*/
+/**
+ * @brief Displays the full game screen including score, stage, hints, and field.
+ * @param config Pointer to the game_config structure.
+ */
 void display_console_game_screen(struct game_config *config);
 
-/*  
-    Displays the final game screen and shows the "GAME OVER" message.
-
-    input:
-        config - pointer on game_config
-
-    behavior:
-        - Displays the current game field and messages.
-        - Prints "GAME OVER !!!" at a specific position.
-        - Waits for user input before continuing.
-*/
+/**
+ * @brief Displays the end-of-game screen with a "GAME OVER" message.
+ * @param config Pointer to the game_config structure.
+ */
 void end_console_game_message(struct game_config *config);
 
-/*  
-    Displays the multi-page tutorial explaining the game rules and navigation.
+/**
+ * @brief Displays the tutorial for the game with navigation and exit options.
+ */
+void show_console_game_tutorial(void);
 
-    input:  
-        none  
+/**
+ * @brief Executes the selected menu action.
+ * @param config Pointer to the game_config structure.
+ * @param position Index of the selected menu item.
+ * @param exit Pointer to an integer flag controlling menu termination.
+ * @return 1 if the action executed successfully, 0 if the position is invalid.
+ */
+int execute_console_game_action(struct game_config *config, int position, int *exit);
 
-    output:  
-        shows several tutorial pages on screen that the player  
-        can navigate using LEFT and RIGHT arrows,  
-        and exit using ENTER.  
-*/
-void show_console_game_tutorial();
-
-/*  
-    Executes a menu action based on the current menu selection.
-
-    input:
-        config - pointer on game_config
-        position - index of the selected menu item  
-        exit - pointer to an integer flag controlling menu termination  
-
-    output:  
-        launches the corresponding action:  
-            0 - Start new game  
-            1 - Load saved game  
-            2 - Show tutorial  
-            3 - Exit the game  
-        returns 1 if execution succeeded,  
-        0 if the position is invalid  
-*/
-int execute_cosnole_game_action(struct game_config *config, int position, int *exit);
-
-/*  
-    Displays and manages the main game menu interface.
-
-    input:  
-        config - pointer on game_config
-
-    output:  
-        continuously renders the main menu with navigation controls,  
-        processes user key inputs (UP, DOWN, ENTER),  
-        and executes the selected menu action.  
-        exits when the user chooses "Exit".  
-*/
+/**
+ * @brief Displays and manages the main game menu in the console.
+ * @param config Pointer to the game_config structure.
+ */
 void show_console_game_menu(struct game_config *config);
 
-/*  
-    Displays a centered message on the console and waits for user input.
-
-    input:
-        text - message string to display
-
-    behavior:
-        - Calculates horizontal position to center the message.
-        - Ensures the message does not start at a negative position.
-        - Draws the message at row 9 of the console.
-        - Waits for the user to press any key before returning.
-*/
+/**
+ * @brief Displays a centered message on the console and waits for user input.
+ * @param text Message string to display.
+ */
 void show_console_game_message(const char *text);
 
 #endif /* _CONSOLE_GAME_STRATEGY_H */

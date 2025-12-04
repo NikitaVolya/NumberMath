@@ -1,3 +1,13 @@
+/**
+ * @file mlv_game_screen.h
+ * @brief Rendering and input handling for NumberMatch using the MLV library.
+ *
+ * This module provides functions to display the game state, buttons, score,
+ * stage, and handle user input via mouse interactions in the MLV window.
+ * It integrates with the custom text animation system for visual feedback.
+ *
+ */
+
 
 #include <MLV/MLV_all.h>
 #include"../output_config.h"
@@ -5,133 +15,79 @@
 #include"../../game_objects/outils.h"
 #include"mlv_custom_text_animation.h"
 
-/*  
-    Displays the current game score on the screen using a styled text box.
-
-    input:
-        score - integer score value to be converted and drawn  
-
-    output:
-        Draws the score visually on the game window using MLV  
-*/
+/**
+ * @brief Displays the current score in a styled text box.
+ * @param[in] score Current integer score to display.
+ */
 void display_game_score(int score);
 
-/*  
-    Determines the visual style (font and background colors) of a game field cell  
-    based on its state flags.
-
-    input:
-        cell            – pointer to the field_cell structure describing cell state  
-        font_color      – output pointer where the chosen font color will be stored  
-        background_color– output pointer where the chosen background color will be stored  
-    output:
-        Updates font_color and background_color with the final style values  
-*/
+/**
+ * @brief Determines visual style for a cell based on its state.
+ * @param[in] cell Pointer to the field_cell structure.
+ * @param[out] font_color Output pointer to store the chosen font color.
+ * @param[out] background_color Output pointer to store the chosen background color.
+ */
 void select_cell_style(field_cell *cell, MLV_Color *font_color, MLV_Color *background_color);
 
-/*  
-    Renders the entire game grid onto the MLV window.
 
-    input:
-        field – pointer to the game_field structure containing all cells  
-        shift – vertical offset applied to the grid for scrolling animations  
-
-    output:
-        Renders the full grid and its decorations to the screen  
-*/
+/**
+ * @brief Renders the full game grid with its current state.
+ * @param[in] field Pointer to the game_field structure.
+ * @param[in] shift Vertical offset for scrolling animations.
+ */
 void display_game_grid(game_field *field, int shift);
 
-/*  
-    Draws a circular button with a highlight and a text label.
-
-    input:
-        x, y        – center position of the button  
-        radius      – button radius  
-        fill_color  – main fill color of the circle  
-        text        – label drawn above the highlight  
-
-    output:
-        Renders a stylized circular button to the screen  
-*/
+/**
+ * @brief Draws a circular button with highlight and text label.
+ * @param[in] x X-coordinate of the button center.
+ * @param[in] y Y-coordinate of the button center.
+ * @param[in] radius Radius of the circular button.
+ * @param[in] fill_color Main fill color of the button.
+ * @param[in] text Label to display on the button.
+ */
 void draw_circle_button(int x, int y, int radius, MLV_Color fill_color, char *text);
 
-/*  
-    Displays the “expand field” action button and draws its current state.
-
-    input:
-        config  – pointer to game configuration containing the field  
-        pos     – current mouse position (vector2i)
-
-    output:
-        Renders the expand button on the screen with appropriate color  
-        and current remaining expansions indicator  
-*/
+/**
+ * @brief Displays the "expand field" button and updates its visual state.
+ * @param[in] config Pointer to game configuration structure.
+ * @param[in] pos Current mouse position.
+ */
 void display_expand_button(struct game_config *config, vector2i pos);
 
-/*  
-    Displays the “help / hint” button and updates its visual state.
-
-    input:
-        config  – pointer to the game_config structure containing current field data  
-        pos     – current mouse cursor position
-
-    output:
-        Renders the help button with appropriate color and indicator  
-*/
+/**
+ * @brief Displays the "help/hint" button and updates its visual state.
+ * @param[in] config Pointer to game configuration structure.
+ * @param[in] pos Current mouse position.
+ */
 void display_help_button(struct game_config *config, vector2i pos);
 
-/*  
-    Displays the current game stage in the top-left corner of the window.
-
-    input:
-        config – pointer to the game_config structure containing the current field state
-
-    output:
-        Renders the stage indicator (e.g., "stage: 12")
-*/
+/**
+ * @brief Displays the current game stage in the top-left corner.
+ * @param[in] config Pointer to game configuration structure.
+ */
 void display_stage(struct game_config *config);
 
-/*  
-    Renders the entire game screen using the MLV graphics library.
-
-    input:
-        config – pointer to the game_config structure containing all game state data
-
-    output:
-        Fully updated game screen for the current frame
-*/
+/**
+ * @brief Renders the entire game screen using MLV.
+ * @param[in] config Pointer to game configuration structure.
+ */
 void display_mlv_game_screen(struct game_config *config);
 
-/*  
-    Creates an animated score message that floats upward on the screen.
-
-    input:
-        x, y    - starting coordinates of the message (vector2i)
-        score   - integer score value to display
-
-    output:
-        No return value. The animation is added to the MLV text animation system.
-*/
+/**
+ * @brief Creates an animated score message that floats upward.
+ * @param[in] x Starting X-coordinate.
+ * @param[in] y Starting Y-coordinate.
+ * @param[in] score Score value to display.
+ */
 void show_score_message(int x, int y, int score);
 
-/*
-    Handles user input for the MLV game interface, including mouse clicks, motion, and dragging.
-
-    input:
-        config - pointer to the game_config structure containing the current field, cursor, shift, and other settings
-
-    behavior:
-        - Updates the global mouse position (mouse_p) on motion events.
-        - Computes the cursor position on the game grid and sets config->cursor_p if inside bounds.
-        - Detects single clicks on:
-            * Game grid -> triggers user_game_select() and shows a score message if a match occurs.
-            * Expand button -> calls expand_game_field().
-            * Help button -> calls show_game_hints().
-        - Supports mouse dragging to scroll the game field if it exceeds the visible grid area.
-        - Resets field shift to zero if the grid is smaller than the visible area.
-        - Uses static variables to track previous mouse button state and last mouse Y position for detecting single clicks and drag.
-
-    output:
-        No return value. Updates config and triggers visual feedback through MLV text animations and field updates.
-*/
+/**
+ * @brief Handles user input for the MLV game interface.
+ *
+ * @param[in, out] config Pointer to the game_config structure.
+ *
+ * This function updates the mouse position, cursor location, detects clicks
+ * on the game grid, expand button, and help button, and handles dragging
+ * for scrolling the field. It also triggers score animations and field updates.
+ */
 void user_mlv_game_input(struct game_config* config);
