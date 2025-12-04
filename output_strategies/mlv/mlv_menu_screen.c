@@ -18,9 +18,9 @@
 #define MAX_TUTORIAL_PAGES 5
 
 
-/* ============================
-       TUTORIAL PAGES
-   ============================ */
+/* ========================================
+                TUTORIAL PAGES
+   ======================================== */
 
 static const char* tutorial_pages[MAX_TUTORIAL_PAGES] = {
 
@@ -48,9 +48,9 @@ static const char* tutorial_pages[MAX_TUTORIAL_PAGES] = {
 };
 
 
-/* ============================
-        BUTTON HELPERS
-   ============================ */
+/* ========================================
+               HELPER FUNCTIONS
+   ======================================== */
 
 static int hit_button(int mx, int my, int x, int y){
     return mx >= x && mx <= x + BTN_W && my >= y && my <= y + BTN_H;
@@ -72,10 +72,10 @@ static void draw_round_button(int x, int y, int w, int h, int r, MLV_Color c) {
 
 static void draw_button(const char *label,int y,int hover){
     int tw, th;
-    int x = (GAME_WINDOW_WIDTCH - BTN_W)/2;
+    int x;
 
-    draw_round_button(x, y, BTN_W, BTN_H, BTN_R, hover?BTN_HOVER:BG_COLOR);
-
+    x = (GAME_WINDOW_WIDTCH - BTN_W)/2;
+    draw_round_button(x, y, BTN_W, BTN_H, BTN_R, hover ? BTN_HOVER : BG_COLOR);
     MLV_get_size_of_text(label, &tw, &th);
     MLV_draw_text(x + BTN_W/2 - tw/2,
                   y + BTN_H/2 - th/2,
@@ -84,9 +84,9 @@ static void draw_button(const char *label,int y,int hover){
 }
 
 
-/* ============================
-         ARROW DRAWING
-   ============================ */
+/* ========================================
+               ARROW DRAWING
+   ======================================== */
 
 void draw_left_arrow(int x, int y, int hover) {
     MLV_Color c;
@@ -125,9 +125,10 @@ void draw_right_arrow(int x, int y, int hover) {
 }
 
 
-/* ============================
-       SLIDE TRANSITION
-   ============================ */
+
+/* ========================================
+           SLIDE TRANSITION
+   ======================================== */
 
 void animate_slide(const char* old_page, const char* new_page, int direction) {
 
@@ -176,29 +177,39 @@ void animate_slide(const char* old_page, const char* new_page, int direction) {
 }
 
 
-/* ============================
-         TUTORIAL SCREEN
-   ============================ */
+
+/* ========================================
+              TUTORIAL SCREEN
+   ======================================== */
 
 void show_tutorial_screen() {
 
     int page = 0;
     int running = 1;
-    int mx = 0;
-    int my = 0;
+    int mx = 0, my = 0;
 
-    int arrow_left_x = 20;
-    int arrow_left_y = GAME_WINDOW_HEIGHT/2 - ARROW_H/2;
+    int arrow_left_x  = 20;
+    int arrow_left_y  = GAME_WINDOW_HEIGHT/2 - ARROW_H/2;
     int arrow_right_x = GAME_WINDOW_WIDTCH - ARROW_W - 20;
     int arrow_right_y = GAME_WINDOW_HEIGHT/2 - ARROW_H/2;
+
+    int allow_left = 1;
+    int allow_right = 1;
+    int allow_exit = 1;
+    int allow_click = 1;
 
     while (running) {
 
         MLV_Event ev;
         MLV_Keyboard_button key;
         char buf[64];
+        int hover_left;
+        int hover_right;
 
         MLV_get_mouse_position(&mx, &my);
+        hover_left  = hit_small(mx,my,arrow_left_x,arrow_left_y,ARROW_W,ARROW_H);
+        hover_right = hit_small(mx,my,arrow_right_x,arrow_right_y,ARROW_W,ARROW_H);
+
         MLV_clear_window(MLV_COLOR_BEIGE);
 
         MLV_draw_text_box(
@@ -221,64 +232,92 @@ void show_tutorial_screen() {
                       buf,
                       MLV_COLOR_BLUE);
 
-        draw_left_arrow(
-            arrow_left_x, arrow_left_y,
-            hit_small(mx,my,arrow_left_x,arrow_left_y,ARROW_W,ARROW_H)
-        );
+        draw_left_arrow (arrow_left_x,  arrow_left_y,  hover_left);
+        draw_right_arrow(arrow_right_x, arrow_right_y, hover_right);
 
-        draw_right_arrow(
-            arrow_right_x, arrow_right_y,
-            hit_small(mx,my,arrow_right_x,arrow_right_y,ARROW_W,ARROW_H)
+        MLV_draw_text(
+            40, GAME_WINDOW_HEIGHT - 30,
+            "LEFT/RIGHT or click arrows — ENTER to exit",
+            MLV_COLOR_BLACK
         );
-
-        MLV_draw_text(40, GAME_WINDOW_HEIGHT - 30,
-                      "LEFT/RIGHT or click arrows — ENTER to exit",
-                      MLV_COLOR_BLACK);
 
         MLV_actualise_window();
 
         ev = MLV_get_event(&key,NULL,NULL,NULL,NULL,&mx,&my,NULL,NULL);
 
-        /* KEYBOARD */
+
+        /* ======================================
+                   KEYBOARD NAVIGATION
+           ====================================== */
+
         if (ev == MLV_KEY_PRESS || ev == MLV_KEYBOARD) {
 
-            if (key == MLV_KEYBOARD_LEFT && page > 0) {
-                animate_slide(tutorial_pages[page], tutorial_pages[page-1], -1);
-                page--;
+            /* LEFT */
+            if (key == MLV_KEYBOARD_LEFT) {
+                if (allow_left && page > 0) {
+                    animate_slide(tutorial_pages[page], tutorial_pages[page-1], -1);
+                    page--;
+                }
+                allow_left = 0;
+            } else {
+                allow_left = 1;
             }
 
-            if (key == MLV_KEYBOARD_RIGHT && page < MAX_TUTORIAL_PAGES - 1) {
-                animate_slide(tutorial_pages[page], tutorial_pages[page+1], +1);
-                page++;
+            /* RIGHT */
+            if (key == MLV_KEYBOARD_RIGHT) {
+                if (allow_right && page < MAX_TUTORIAL_PAGES - 1) {
+                    animate_slide(tutorial_pages[page], tutorial_pages[page+1], 1);
+                    page++;
+                }
+                allow_right = 0;
+            } else {
+                allow_right = 1;
             }
 
+            /* EXIT */
             if (key == MLV_KEYBOARD_RETURN || key == MLV_KEYBOARD_ESCAPE) {
-                running = 0;
+                if (allow_exit) running = 0;
+                allow_exit = 0;
+            } else {
+                allow_exit = 1;
             }
         }
 
-        /* MOUSE CLICK */
+
+        /* ======================================
+                   MOUSE NAVIGATION
+           ====================================== */
+
         if (ev == MLV_MOUSE_BUTTON) {
 
-            if (hit_small(mx,my,arrow_left_x,arrow_left_y,ARROW_W,ARROW_H) &&
+            if (allow_click &&
+                hover_left &&
                 page > 0) {
+
                 animate_slide(tutorial_pages[page], tutorial_pages[page-1], -1);
                 page--;
             }
 
-            if (hit_small(mx,my,arrow_right_x,arrow_right_y,ARROW_W,ARROW_H) &&
+            if (allow_click &&
+                hover_right &&
                 page < MAX_TUTORIAL_PAGES - 1) {
-                animate_slide(tutorial_pages[page], tutorial_pages[page+1], +1);
+
+                animate_slide(tutorial_pages[page], tutorial_pages[page+1], 1);
                 page++;
             }
+
+            allow_click = 0;
+        } else {
+            allow_click = 1;
         }
     }
 }
 
 
-/* ============================
-            MAIN MENU
-   ============================ */
+
+/* ========================================
+                   MAIN MENU
+   ======================================== */
 
 void mlv_show_menu(struct game_config *config){
 
@@ -297,12 +336,13 @@ void mlv_show_menu(struct game_config *config){
 
     int bx;
 
-    MLV_create_window("NumberMatch Menu", "NumberMatch",
-                      GAME_WINDOW_WIDTCH, GAME_WINDOW_HEIGHT);
+    MLV_create_window("NumberMatch Menu","NumberMatch",
+                      GAME_WINDOW_WIDTCH,GAME_WINDOW_HEIGHT);
 
     while(running){
 
         MLV_Event ev;
+        int r, g, b;
 
         MLV_get_mouse_position(&mx,&my);
 
@@ -310,14 +350,11 @@ void mlv_show_menu(struct game_config *config){
         if (fade >= 1.0f) direction = -1;
         if (fade <= 0.0f) direction = 1;
 
-        {
-            int r, g, b;
-            r = BASE_R - (int)(fade*35);
-            g = BASE_G - (int)(fade*35);
-            b = BASE_B - (int)(fade*10);
+        r = BASE_R - (int)(fade*35);
+        g = BASE_G - (int)(fade*35);
+        b = BASE_B - (int)(fade*10);
 
-            MLV_clear_window( MLV_rgba(r,g,b,255) );
-        }
+        MLV_clear_window( MLV_rgba(r,g,b,255) );
 
         MLV_get_size_of_text("NUMBER MATCH",&tw,&th);
         MLV_draw_text(GAME_WINDOW_WIDTCH/2-tw/2,
