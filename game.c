@@ -5,9 +5,10 @@ short randshort(short start, short end) {
 }
 
 void expand_game_field(struct game_config *config) {
-    int i, x, y, old_count;
     game_field *field;
-    short tmp;
+    field_cell *cell;
+    vector2i pos;
+    int i, old_count;
 
     field = config->field;
 
@@ -16,12 +17,13 @@ void expand_game_field(struct game_config *config) {
         old_count = field->count;
 
         for (i = 0; i < old_count; i++) {
-            x = i % field->width;
-            y = i / field->width;
+            pos.x = i % field->width;
+            pos.y = i / field->width;
 
-            if (field->table[y][x].is_available) {
-                tmp = field->table[y][x].value;
-                add_values_game_field(field, &tmp, 1);
+            cell = get_game_field_cell(field, pos);
+
+            if (cell->is_available) {
+                add_values_game_field(field, &cell->value, 1);
             }
         }
 
