@@ -248,7 +248,7 @@ void show_tutorial_screen() {
 
         sprintf(buf, "Page %d / %d", page+1, nb_pages);
         MLV_draw_text(GAME_WINDOW_WIDTCH/2 - 40,
-                      GAME_WINDOW_HEIGHT - 180,
+                      GAME_WINDOW_HEIGHT - 120,
                       buf,
                       MLV_COLOR_BLUE);
 
@@ -376,12 +376,10 @@ void mlv_show_menu(struct game_config *config){
         if (ev == MLV_MOUSE_BUTTON) {
 
             if (hit_button(mx,my,bx, play_y)) {
-                config->load_save = 0;
                 running = 0;
             }
 
             if (hit_button(mx,my,bx, load_y)) {
-                config->load_save = 1;
                 running = 0;
             }
 
