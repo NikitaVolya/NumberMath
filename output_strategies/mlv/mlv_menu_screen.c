@@ -15,7 +15,7 @@
 #define ARROW_W 60
 #define ARROW_H 60
 
-#define MAX_TUTORIAL_PAGES 5
+#define MAX_TUTORIAL_PAGES 4
 
 
 /* ========================================
@@ -24,27 +24,37 @@
 
 static const char* tutorial_pages[MAX_TUTORIAL_PAGES] = {
 
-    "PAGE 1 — Basics\n"
-    "• Match two numbers that add up to 10.\n"
-    "• Adjacent cells only.\n"
-    "• Lines wrap around.\n",
+"Bienvenue dans Number Match !\n\n"
+"Le but du jeu est simple : effacer tous les chiffres du plateau.\n\n"
+"Pour cela, trouvez :\n"
+"• des paires de nombres identiques (ex. : 1 et 1),\n"
+"• ou des paires dont la somme fait 10 (ex. : 6 et 4).\n\n"
+"Sélectionnez les chiffres un par un pour les rayer,\n"
+"et progressez jusqu’à effacer tout le plateau !\n",
 
-    "PAGE 2 — Board mechanics\n"
-    "• When no moves remain, new lines are added.\n"
-    "• Undo costs points.\n",
+"Règles essentielles :\n\n"
+"• Chaque paire trouvée vous fait gagner des points.\n"
+"• Lorsque toutes les cases d’une ligne disparaissent,\n"
+"  la ligne est supprimée et le plateau se resserre.\n\n"
+"• Vérifiez toutes les directions possibles :\n"
+"  - horizontalement,\n"
+"  - verticalement,\n"
+"  - diagonalement.\n\n"
+"Les diagonales opposées peuvent aussi former des paires !\n",
 
-    "PAGE 3 — Scoring\n"
-    "• Removing numbers adds points.\n"
-    "• Combos give bonus points.\n",
+"Astuces pour progresser :\n\n"
+"• Pensez à regarder les chiffres séparés par des cases :\n"
+"  ils peuvent tout de même former une paire.\n\n"
+"• Analysez le plateau ligne par ligne :\n"
+"  la fin d’une ligne et le début de la suivante\n"
+"  peuvent cacher une paire compatible.\n\n"
+"• Prenez votre temps et observez bien les motifs répétés.\n",
 
-    "PAGE 4 — Strategy\n"
-    "• Clear long lines first.\n"
-    "• Avoid stacking identical numbers.\n",
+"Bonne chance et amusez-vous bien !\n\n"
+"Number Match est un jeu de logique et d’observation.\n"
+"Plus vous jouerez, plus vous repérerez les paires rapidement.\n"
+"Amusez-vous à optimiser vos choix et à battre vos scores !\n",
 
-    "PAGE 5 — Controls\n"
-    "• Mouse selects numbers.\n"
-    "• LEFT/RIGHT = navigate.\n"
-    "• ENTER = exit tutorial.\n"
 };
 
 
