@@ -15,46 +15,42 @@
 #define ARROW_W 60
 #define ARROW_H 60
 
-#define MAX_TUTORIAL_PAGES 4
+/* ============================
+       TUTORIAL PAGES (FR)
+   ============================ */
 
+static const char* tutorial_pages[] = {
 
-/* ========================================
-                TUTORIAL PAGES
-   ======================================== */
+    "Bienvenue dans Number Match !\n\n"
+    "Le but du jeu est simple : effacer tous les chiffres du plateau.\n\n"
+    "Pour cela, trouvez :\n"
+    "• des paires de nombres identiques (ex. : 1 et 1),\n"
+    "• ou des paires dont la somme fait 10 (ex. : 6 et 4).\n\n"
+    "Sélectionnez les chiffres un par un pour les rayer,\n"
+    "et progressez jusqu’à effacer tout le plateau !\n",
 
-static const char* tutorial_pages[MAX_TUTORIAL_PAGES] = {
+    "Règles essentielles :\n\n"
+    "• Chaque paire trouvée vous fait gagner des points.\n"
+    "• Lorsque toutes les cases d’une ligne disparaissent,\n"
+    "  la ligne est supprimée et le plateau se resserre.\n\n"
+    "• Vérifiez toutes les directions possibles :\n"
+    "  - horizontalement,\n"
+    "  - verticalement,\n"
+    "  - diagonalement.\n\n"
+    "Les diagonales opposées peuvent aussi former des paires !\n",
 
-"Bienvenue dans Number Match !\n\n"
-"Le but du jeu est simple : effacer tous les chiffres du plateau.\n\n"
-"Pour cela, trouvez :\n"
-"• des paires de nombres identiques (ex. : 1 et 1),\n"
-"• ou des paires dont la somme fait 10 (ex. : 6 et 4).\n\n"
-"Sélectionnez les chiffres un par un pour les rayer,\n"
-"et progressez jusqu’à effacer tout le plateau !\n",
+    "Astuces pour progresser :\n\n"
+    "• Pensez à regarder les chiffres séparés par des cases :\n"
+    "  ils peuvent tout de même former une paire.\n\n"
+    "• Analysez le plateau ligne par ligne :\n"
+    "  la fin d’une ligne et le début de la suivante\n"
+    "  peuvent cacher une paire compatible.\n\n"
+    "• Prenez votre temps et observez bien les motifs répétés.\n",
 
-"Règles essentielles :\n\n"
-"• Chaque paire trouvée vous fait gagner des points.\n"
-"• Lorsque toutes les cases d’une ligne disparaissent,\n"
-"  la ligne est supprimée et le plateau se resserre.\n\n"
-"• Vérifiez toutes les directions possibles :\n"
-"  - horizontalement,\n"
-"  - verticalement,\n"
-"  - diagonalement.\n\n"
-"Les diagonales opposées peuvent aussi former des paires !\n",
-
-"Astuces pour progresser :\n\n"
-"• Pensez à regarder les chiffres séparés par des cases :\n"
-"  ils peuvent tout de même former une paire.\n\n"
-"• Analysez le plateau ligne par ligne :\n"
-"  la fin d’une ligne et le début de la suivante\n"
-"  peuvent cacher une paire compatible.\n\n"
-"• Prenez votre temps et observez bien les motifs répétés.\n",
-
-"Bonne chance et amusez-vous bien !\n\n"
-"Number Match est un jeu de logique et d’observation.\n"
-"Plus vous jouerez, plus vous repérerez les paires rapidement.\n"
-"Amusez-vous à optimiser vos choix et à battre vos scores !\n",
-
+    "Bonne chance et amusez-vous bien !\n\n"
+    "Number Match est un jeu de logique et d’observation.\n"
+    "Plus vous jouerez, plus vous repérerez les paires rapidement.\n"
+    "Amusez-vous à optimiser vos choix et à battre vos scores !\n"
 };
 
 
@@ -98,7 +94,7 @@ static void draw_button(const char *label,int y,int hover){
         ARROW DRAWING
    ============================ */
 
-void draw_left_arrow(int x, int y, int hover) {
+static void draw_left_arrow(int x, int y, int hover) {
     MLV_Color c;
     int xs[3];
     int ys[3];
@@ -116,7 +112,7 @@ void draw_left_arrow(int x, int y, int hover) {
     MLV_draw_filled_polygon(xs, ys, 3, c);
 }
 
-void draw_right_arrow(int x, int y, int hover) {
+static void draw_right_arrow(int x, int y, int hover) {
     MLV_Color c;
     int xs[3];
     int ys[3];
@@ -139,8 +135,7 @@ void draw_right_arrow(int x, int y, int hover) {
        SLIDE TRANSITION
    ============================ */
 
-void animate_slide(const char* old_page, const char* new_page, int direction) {
-
+static void animate_slide(const char* old_page, const char* new_page, int direction) {
     int offset;
 
     offset = 0;
@@ -196,18 +191,38 @@ void show_tutorial_screen() {
     int running = 1;
     int mx = 0, my = 0;
 
-    int arrow_left_x  = 20;
-    int arrow_left_y  = GAME_WINDOW_HEIGHT/2 - ARROW_H/2;
-    int arrow_right_x = GAME_WINDOW_WIDTCH - ARROW_W - 20;
-    int arrow_right_y = GAME_WINDOW_HEIGHT/2 - ARROW_H/2;
+    int arrow_left_x;
+    int arrow_left_y;
+    int arrow_right_x;
+    int arrow_right_y;
+
+    int nb_pages;
+
+    int left_before  = 0;
+    int right_before = 0;
+    int enter_before = 0;
+    int esc_before   = 0;
+    int mouse_before = 0;
+
+    nb_pages = (int)(sizeof(tutorial_pages) / sizeof(tutorial_pages[0]));
+
+    arrow_left_x  = 20;
+    arrow_left_y  = GAME_WINDOW_HEIGHT/2 - ARROW_H/2;
+    arrow_right_x = GAME_WINDOW_WIDTCH - ARROW_W - 20;
+    arrow_right_y = GAME_WINDOW_HEIGHT/2 - ARROW_H/2;
 
     while (running) {
 
         MLV_Event ev;
-        MLV_Keyboard_button key;
         char buf[64];
         int hover_left;
         int hover_right;
+
+        int left_now;
+        int right_now;
+        int enter_now;
+        int esc_now;
+        int mouse_now;
 
         MLV_get_mouse_position(&mx, &my);
         hover_left  = hit_small(mx,my,arrow_left_x,arrow_left_y,ARROW_W,ARROW_H);
@@ -229,7 +244,7 @@ void show_tutorial_screen() {
             MLV_VERTICAL_TOP
         );
 
-        sprintf(buf, "Page %d / %d", page+1, MAX_TUTORIAL_PAGES);
+        sprintf(buf, "Page %d / %d", page+1, nb_pages);
         MLV_draw_text(GAME_WINDOW_WIDTCH/2 - 40,
                       GAME_WINDOW_HEIGHT - 60,
                       buf,
@@ -240,62 +255,64 @@ void show_tutorial_screen() {
 
         MLV_draw_text(
             40, GAME_WINDOW_HEIGHT - 30,
-            "LEFT/RIGHT or click arrows — ENTER/ESC to exit",
+            "Flèches GAUCHE/DROITE ou clic sur les flèches — Entrée/Echap pour quitter",
             MLV_COLOR_BLACK
         );
 
         MLV_actualise_window();
 
-        ev = MLV_get_event(&key,NULL,NULL,NULL,NULL,&mx,&my,NULL,NULL);
+        /* Pump event queue, but we don't rely on its type */
+        ev = MLV_get_event(NULL,NULL,NULL,NULL,NULL,&mx,&my,NULL,NULL);
+        (void)ev; /* silence unused warning if any */
 
-        /* KEYBOARD NAVIGATION (only act on press, then wait for release) */
-        if (ev == MLV_KEY_PRESS || ev == MLV_KEYBOARD) {
+        /* ---------- EDGE-DETECTION KEYBOARD ---------- */
 
-            if (key == MLV_KEYBOARD_LEFT && page > 0) {
-                animate_slide(tutorial_pages[page], tutorial_pages[page-1], -1);
-                page--;
+        left_now  = (MLV_get_keyboard_state(MLV_KEYBOARD_LEFT)   == MLV_PRESSED);
+        right_now = (MLV_get_keyboard_state(MLV_KEYBOARD_RIGHT)  == MLV_PRESSED);
+        enter_now = (MLV_get_keyboard_state(MLV_KEYBOARD_RETURN) == MLV_PRESSED);
+        esc_now   = (MLV_get_keyboard_state(MLV_KEYBOARD_ESCAPE) == MLV_PRESSED);
 
-                /* wait for key release to avoid auto-repeat */
-                while (MLV_get_keyboard_state(MLV_KEYBOARD_LEFT) == MLV_PRESSED) {
-                    MLV_delay_according_to_frame_rate();
-                }
-            }
-
-            if (key == MLV_KEYBOARD_RIGHT && page < MAX_TUTORIAL_PAGES - 1) {
-                animate_slide(tutorial_pages[page], tutorial_pages[page+1], 1);
-                page++;
-
-                while (MLV_get_keyboard_state(MLV_KEYBOARD_RIGHT) == MLV_PRESSED) {
-                    MLV_delay_according_to_frame_rate();
-                }
-            }
-
-            if (key == MLV_KEYBOARD_RETURN || key == MLV_KEYBOARD_ESCAPE) {
-                running = 0;
-                while (MLV_get_keyboard_state(key) == MLV_PRESSED) {
-                    MLV_delay_according_to_frame_rate();
-                }
-            }
+        /* LEFT: only when going 0 -> 1 */
+        if (left_now && !left_before && page > 0) {
+            animate_slide(tutorial_pages[page], tutorial_pages[page-1], -1);
+            page--;
         }
 
-        /* MOUSE NAVIGATION (click arrows) */
-        if (ev == MLV_MOUSE_BUTTON) {
+        /* RIGHT */
+        if (right_now && !right_before && page < nb_pages - 1) {
+            animate_slide(tutorial_pages[page], tutorial_pages[page+1], 1);
+            page++;
+        }
+
+        /* ENTER or ESC: exit tutorial */
+        if ((enter_now && !enter_before) ||
+            (esc_now   && !esc_before)) {
+            running = 0;
+        }
+
+        left_before  = left_now;
+        right_before = right_now;
+        enter_before = enter_now;
+        esc_before   = esc_now;
+
+        /* ---------- EDGE-DETECTION MOUSE ---------- */
+
+        mouse_now = (MLV_get_mouse_button_state(MLV_BUTTON_LEFT) == MLV_PRESSED);
+
+        if (mouse_now && !mouse_before) {
 
             if (hover_left && page > 0) {
                 animate_slide(tutorial_pages[page], tutorial_pages[page-1], -1);
                 page--;
             }
 
-            if (hover_right && page < MAX_TUTORIAL_PAGES - 1) {
+            if (hover_right && page < nb_pages - 1) {
                 animate_slide(tutorial_pages[page], tutorial_pages[page+1], 1);
                 page++;
             }
-
-            /* simple debounce: wait until mouse button released */
-            while (MLV_get_mouse_button_state(MLV_BUTTON_LEFT) == MLV_PRESSED) {
-                MLV_delay_according_to_frame_rate();
-            }
         }
+
+        mouse_before = mouse_now;
     }
 }
 
@@ -349,10 +366,10 @@ void mlv_show_menu(struct game_config *config){
 
         bx = (GAME_WINDOW_WIDTCH - BTN_W)/2;
 
-        draw_button("NEW GAME",  play_y, hit_button(mx,my,bx,play_y));
-        draw_button("LOAD GAME", load_y, hit_button(mx,my,bx,load_y));
-        draw_button("TUTORIAL",  tut_y,  hit_button(mx,my,bx,tut_y));
-        draw_button("EXIT",      quit_y, hit_button(mx,my,bx,quit_y));
+        draw_button("NOUVELLE PARTIE",  play_y, hit_button(mx,my,bx,play_y));
+        draw_button("CHARGER PARTIE",   load_y, hit_button(mx,my,bx,load_y));
+        draw_button("TUTORIEL",         tut_y,  hit_button(mx,my,bx,tut_y));
+        draw_button("QUITTER",          quit_y, hit_button(mx,my,bx,quit_y));
 
         MLV_actualise_window();
 
