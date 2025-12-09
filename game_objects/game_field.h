@@ -19,9 +19,24 @@
 #define MAX_WIDTH 10
 #define MAX_HEIGHT 51 * 5 + 1
 
+#include<stdlib.h>
+#include<stdio.h>
 #include"field_cell.h"
 #include"vector2i.h"
 
+struct field_row {
+    field_cell** items;
+    size_t count;
+    size_t capacity;
+};
+typedef struct field_row field_row;
+
+struct field_table {
+    field_row** items;
+    size_t count;
+    size_t capacity;
+};
+typedef struct field_table field_table;
 
 /**
  * @brief Represents the NumberMatch game field and its current state.
@@ -30,14 +45,13 @@
  * information such as score, stage, available actions, and field dimensions.
  */
 struct game_field {
-    field_cell table[MAX_HEIGHT][MAX_WIDTH]; /**< 2D grid of field_cell elements. */
+    field_table *table;
     
     int score;        /**< Current player score. */
     int count;        /**< Total number of active (available) cells. */
 
     unsigned short stage;              /**< Current stage (level) of the game. */
     unsigned short width;              /**< Number of columns in the field. */
-    unsigned short height;             /**< Number of rows in the field. */
 
     unsigned short hints_available;    /**< Number of hints currently available. */
     unsigned short hints_max;          /**< Maximum number of hints allowed. */
@@ -81,6 +95,12 @@ typedef enum MATCH_TYPE MATCH_TYPE;
  *         default values; returns NULL if the provided width is invalid
  */
 game_field* create_new_game_field(short width);
+
+void init_game_field_table(game_field *field);
+
+int get_game_field_height(game_field *field);
+
+void add_cell_game_field(game_field *field, field_cell *cell);
 
 /**  
  * @brief Adds new cell values to the game field sequentially.
@@ -227,5 +247,7 @@ int check_game_row_is_clear(game_field *field, int index);
  *             0 if any cell is still available
  */
 int check_game_field_is_clear(game_field *field);
+
+void game_field_free(game_field *field);
 
 #endif

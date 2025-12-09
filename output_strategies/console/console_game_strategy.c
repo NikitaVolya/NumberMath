@@ -83,7 +83,7 @@ void user_console_game_move(GAME_KEY key, vector2i *cursor, game_field *field) {
             cursor->y--;
         break;
     case DOWN:
-        if (cursor->y < field->height - 1 &&
+        if (cursor->y < get_game_field_height(field) - 1 &&
             cursor->x <= get_game_field_row_size(field, cursor->y + 1) - 1)
             cursor->y++;
         break;
@@ -119,19 +119,20 @@ void user_console_game_input(struct game_config *config) {
 }
 
 void display_console_available_numbers(game_field *field) {
-    int i, x, y, numbers[10];
-    field_cell cell;
+    int i, numbers[10];
+    vector2i pos;
+    field_cell *cell;
     
     for (i = 1; i < 10; i++)
         numbers[i] = 0;
 
     for (i = 0; i < field->count; i++) {
-        x = i % field->width;
-        y = i / field->width;
+        pos.x = i % field->width;
+        pos.y = i / field->width;
 
-        cell = field->table[y][x];
-        if (cell.is_available)
-            numbers[cell.value] = 1;
+        cell = get_game_field_cell(field, pos);
+        if (cell->is_available)
+            numbers[cell->value] = 1;
     }
 
     for (i = 1; i < 10; i++) {
@@ -143,35 +144,36 @@ void display_console_available_numbers(game_field *field) {
     printf("\n");
 }
 
-void print_field_cell(field_cell cell) {
+void print_field_cell(field_cell *cell) {
     const char *color;
 
-    if (!cell.is_available)
+    if (!cell->is_available)
         color = UNENABLE_COLOR;
-    else if (cell.is_highlited)
+    else if (cell->is_highlited)
         color = HIGHLITED_COLOR;
     else
         color = ENABLE_COLOR;
 
-    if (cell.is_selected && cell.is_cursor)
-        printf(SELECTED_CURSOR_PRINT, color, cell.value);
-    else if (cell.is_selected)
-        printf(SELECTED_PRINT, color, cell.value);
-    else if (cell.is_cursor)
-        printf(CURSOR_PRINT, color, cell.value);
+    if (cell->is_selected && cell->is_cursor)
+        printf(SELECTED_CURSOR_PRINT, color, cell->value);
+    else if (cell->is_selected)
+        printf(SELECTED_PRINT, color, cell->value);
+    else if (cell->is_cursor)
+        printf(CURSOR_PRINT, color, cell->value);
     else
-        printf(BASE_PRINT, color, cell.value);
+        printf(BASE_PRINT, color, cell->value);
 }
 
 
 void print_game_field(game_field *field) {
     int i, j, row_size;
 
-    for(i = 0; i < field->height; i++) {
+    for(i = 0; i < get_game_field_height(field); i++) {
         row_size = get_game_field_row_size(field, i);
         
         for(j = 0; j < row_size; j++) {
-            print_field_cell(field->table[i][j]);
+
+            print_field_cell(get_game_field_cell(field, create_vector2i(j, i)));
         }
 
         printf("\n");
@@ -208,7 +210,7 @@ void display_console_game_screen(struct game_config *config) {
     
     print_game_field(config->field);
 
-    for (i = field->height; i < MIN_FIELD_DISPLAY_HEIGHT; i++)
+    for (i = get_game_field_height(config->field); i < MIN_FIELD_DISPLAY_HEIGHT; i++)
         printf("\n");
 
     for (i = 0; i < field->width; i++)

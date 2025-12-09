@@ -178,7 +178,7 @@ void init_game_field(game_field *field) {
         values[i] = randshort(1, 9);
     }
 
-    while (field->height > 0) remove_game_field_row(field, 0);
+    while (get_game_field_height(field) > 0) remove_game_field_row(field, 0);
     
     add_values_game_field(field, values, INIT_CELLS_COUNT);
 }
@@ -187,7 +187,7 @@ void load_game(struct game_config *config) {
 
     /* free any previously allocated field to avoid memory leaks */
     if (config->field != NULL) {
-        free(config->field);
+        game_field_free(config->field);
     }
 
     /* attempt to load saved game data */
@@ -196,7 +196,7 @@ void load_game(struct game_config *config) {
     } else {
         game_cycle(config);
         
-        free(config->field);
+        game_field_free(config->field);
         config->field = NULL;
     }
 }
@@ -205,7 +205,7 @@ void start_game(struct game_config *config) {
     
     /* free any previously allocated field to avoid memory leaks */
     if (config->field != NULL) {
-        free(config->field);
+        game_field_free(config->field);
     }
     
     /* create a new game field with width 9 */
@@ -214,7 +214,7 @@ void start_game(struct game_config *config) {
     init_game_field(config->field);
     game_cycle(config);
 
-    free(config->field);
+    game_field_free(config->field);
     config->field = NULL;
 }
 

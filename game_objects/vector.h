@@ -215,6 +215,17 @@
  */
 #define VECTOR_get VECTOR_IMPL(get)
 
+/** @def VECTOR_head
+ *  @brief Return first element of vector
+ */
+#define VECTOR_head VECTOR_IMPL(head)
+
+/** @def VECTOR_tail
+ *  @brief Return first element of vector
+ */
+#define VECTOR_tail VECTOR_IMPL(tail)
+
+
 /** @def VECTOR_set      
  *  @brief Sets an element at a given index. 
  */
@@ -382,6 +393,36 @@ VECTOR_TYPE VECTOR_get (VECTOR_NAME *vector, size_t index) {
     }
     
     return vector->items[index];
+}
+
+/**
+ * @brief Retrieves the first element from the vector.
+ * 
+ * @param[in] vector Pointer to the VECTOR_NAME structure.
+ * 
+ * @return The element of type VECTOR_TYPE stored at the first position.
+ * 
+ * @note
+ * - If the vector is clear, the function prints an error message
+ *   and terminates the program.
+ */
+VECTOR_TYPE VECTOR_head (VECTOR_NAME *vector) {
+    return VECTOR_get(vector, 0);
+}
+
+/**
+ * @brief Retrieves the last element from the vector.
+ * 
+ * @param[in] vector Pointer to the VECTOR_NAME structure.
+ * 
+ * @return The element of type VECTOR_TYPE stored at the last position.
+ * 
+ * @note
+ * - If the vector is clear, the function prints an error message
+ *   and terminates the program.
+ */
+VECTOR_TYPE VECTOR_tail (VECTOR_NAME *vector) {
+    return VECTOR_get(vector, vector->count - 1);
 }
 
 /**

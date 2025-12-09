@@ -49,20 +49,22 @@ void select_cell_style(field_cell *cell,
 void display_game_grid(game_field *field, int shift) {
     char text[2] = " ";
     int i, j, field_row;
-    vector2i field_cell_p;
+    vector2i field_cell_p, cell_index;
     MLV_Font *font = MLV_load_font(GAME_FONT_BOLD, 22);
     MLV_Color background_color, font_color;
 
     field_cell_p = create_vector2i(GAME_PADDING, GRID_VERTICAL_POS - shift);
     
-    for (j = 0; j < field->height; j++) {
+    for (j = 0; j < get_game_field_height(field); j++) {
 
         field_row = get_game_field_row_size(field, j);
         for (i = 0; i < field_row; i++) {
 
-            text[0] = '0' + field->table[j][i].value;
+            cell_index = create_vector2i(i, j);
 
-            select_cell_style(field->table[j] + i, &font_color, &background_color);
+            text[0] = '0' + get_game_field_cell(field, cell_index)->value;
+
+            select_cell_style(get_game_field_cell(field, cell_index), &font_color, &background_color);
                 
             MLV_draw_text_box_with_font(field_cell_p.x, field_cell_p.y, CELL_SIZE, CELL_SIZE,
                                         text, font,
@@ -191,10 +193,10 @@ void display_game_scroller(struct game_config *config) {
     float fill_procent;
     int max_shift_height, scrolle_size;
 
-    max_shift_height = config->field->height * CELL_SIZE - GRID_HEIGHT;
+    max_shift_height = get_game_field_height(config->field) * CELL_SIZE - GRID_HEIGHT;
     if (max_shift_height <= 0)
         max_shift_height = 1;
-    scrolle_size = ((float) (GRID_HEIGHT / CELL_SIZE) / config->field->height) * GRID_HEIGHT;
+    scrolle_size = ((float) (GRID_HEIGHT / CELL_SIZE) / get_game_field_height(config->field)) * GRID_HEIGHT;
     if (scrolle_size > GRID_HEIGHT)
         scrolle_size = GRID_HEIGHT;
 
@@ -251,7 +253,7 @@ void user_mlv_game_input(struct game_config* config) {
     MLV_Event event;
     MLV_Button_state curr_state;
     
-    int x, y, mouse_on_grid;
+    int x, y, mouse_on_grid, field_height;
     float dist_to_expand_btn, dist_to_help_btn;
     vector2i gridPos;
     game_field *field;
@@ -259,6 +261,8 @@ void user_mlv_game_input(struct game_config* config) {
     MATCH_TYPE user_match;
 
     field = config->field;
+
+    field_height = get_game_field_height(config->field);
 
     event = MLV_get_event(NULL, NULL, NULL,
                           NULL, NULL,
@@ -323,8 +327,8 @@ void user_mlv_game_input(struct game_config* config) {
         if (config->shift < 0)
             config->shift = 0;
 
-        if (config->field->height * CELL_SIZE <= config->shift + GRID_HEIGHT)
-            config->shift = config->field->height * CELL_SIZE - GRID_HEIGHT;
+        if (field_height * CELL_SIZE <= config->shift + GRID_HEIGHT)
+            config->shift = field_height * CELL_SIZE - GRID_HEIGHT;
 
     /* mouse motion event  */
     } else if (event == MLV_MOUSE_MOTION) {
@@ -333,7 +337,7 @@ void user_mlv_game_input(struct game_config* config) {
     }
 
     /* reset game shift if game grid is small */
-    if (config->field->height * CELL_SIZE < GRID_HEIGHT)
+    if (field_height * CELL_SIZE < GRID_HEIGHT)
         config->shift = 0;
 
     prev_state = curr_state;
