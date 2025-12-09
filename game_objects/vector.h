@@ -221,7 +221,7 @@
 #define VECTOR_head VECTOR_IMPL(head)
 
 /** @def VECTOR_tail
- *  @brief Return first element of vector
+ *  @brief Return last element of vector
  */
 #define VECTOR_tail VECTOR_IMPL(tail)
 
