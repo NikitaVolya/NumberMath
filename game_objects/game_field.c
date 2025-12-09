@@ -89,9 +89,11 @@ int remove_game_field_row(game_field *field, int index) {
     } else {
         row = field_table_remove(field->table, index);
 
-        for (i = 0; row->count; i++) {
+        for (i = 0; i < row->count; i++) {
             free(field_row_get(row, i));
         }
+
+        field->count -= row->count;
 
         field_row_free(row);
         res = 1;

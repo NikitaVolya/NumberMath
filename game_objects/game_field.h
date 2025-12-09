@@ -25,38 +25,38 @@
 #include"vector2i.h"
 
 struct field_row {
-    field_cell** items;
-    size_t count;
-    size_t capacity;
+    field_cell** items;              /**< Dynamic array of cell pointers within a single row. */
+    size_t count;                    /**< Current number of cells in the row. */
+    size_t capacity;                 /**< Allocated capacity of the row. */
 };
 typedef struct field_row field_row;
 
 struct field_table {
-    field_row** items;
-    size_t count;
-    size_t capacity;
+    field_row** items;              /**< Dynamic array of row pointers forming the grid. */
+    size_t count;                   /**< Current number of rows in the table. */
+    size_t capacity;                /**< Allocated capacity for rows. */
 };
 typedef struct field_table field_table;
 
 /**
- * @brief Represents the NumberMatch game field and its current state.
+ * @brief Represents the complete NumberMatch game field and its runtime state.
  *
- * The structure stores the grid of cells along with all gameplay-related
- * information such as score, stage, available actions, and field dimensions.
+ * This structure holds the dynamic grid of cells along with all gameplay-related
+ * counters such as score, stage progression, available hints, and additions.
  */
 struct game_field {
-    field_table *table;
-    
-    int score;        /**< Current player score. */
-    int count;        /**< Total number of active (available) cells. */
+    field_table *table;                 /**< 2D grid of game cells. */
 
-    unsigned short stage;              /**< Current stage (level) of the game. */
-    unsigned short width;              /**< Number of columns in the field. */
+    int score;                          /**< Current player score. */
+    int count;                          /**< Number of active (non-empty) cells. */
 
-    unsigned short hints_available;    /**< Number of hints currently available. */
-    unsigned short hints_max;          /**< Maximum number of hints allowed. */
+    unsigned short stage;               /**< Current game stage (level). */
+    unsigned short width;               /**< Number of columns in the field. */
 
-    unsigned short additions_available; /**< Number of additions currently available. */
+    unsigned short hints_available;     /**< Remaining hints available to the player. */
+    unsigned short hints_max;           /**< Maximum number of hints allowed. */
+
+    unsigned short additions_available; /**< Remaining additions (expansions) available. */
     unsigned short additions_max;       /**< Maximum number of additions allowed. */
 };
 
@@ -96,10 +96,40 @@ typedef enum MATCH_TYPE MATCH_TYPE;
  */
 game_field* create_new_game_field(short width);
 
+/**
+ * @brief Initializes the table of the game field.
+ *
+ * Allocates an empty field_table and assigns it to the given game_field.
+ * The table is created with zero initial rows.
+ *
+ * @param[in,out] field Pointer to the game_field to initialize.
+ */
 void init_game_field_table(game_field *field);
 
+/**
+ * @brief Returns the current height of the game field.
+ *
+ * The height corresponds to the number of rows stored in the field table.
+ *
+ * @param[in] field Pointer to the game_field.
+ * @return int Number of rows in the field.
+ */
 int get_game_field_height(game_field *field);
 
+/**
+ * @brief Adds a new cell to the game field, automatically creating rows as needed.
+ *
+ * This function appends a cell to the last row of the game field.  
+ * If the field has no rows yet, a new row is created.  
+ * If the last row is already full (based on field->width), a new row is created
+ * and the cell is added there.
+ *
+ * @param[in,out] field Pointer to the game_field structure being modified.
+ * @param[in]     cell  Pointer to the cell to add to the field.
+ *
+ * @note Rows grow automatically; the function ensures the field maintains a
+ *       rectangular structure defined by `field->width`.
+ */
 void add_cell_game_field(game_field *field, field_cell *cell);
 
 /**  
@@ -248,6 +278,13 @@ int check_game_row_is_clear(game_field *field, int index);
  */
 int check_game_field_is_clear(game_field *field);
 
+/**
+ * @brief Frees all memory associated with a game_field structure.
+ *
+ * @param[in] field Pointer to the game_field structure to free.
+ *
+ * @note After calling this function, the pointer becomes invalid and must not be used.
+ */
 void game_field_free(game_field *field);
 
 #endif
