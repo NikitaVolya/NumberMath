@@ -267,6 +267,15 @@
 
 /** @} */
 
+/**
+ * @def VECTOR_STRUCT_DEFINED
+ * @brief Include guard used to prevent multiple definitions of the vector structure.
+ *
+ * Ensures the generic VECTOR_NAME struct is defined only once when this header
+ * is included in multiple translation units.
+ */
+#ifndef VECTOR_STRUCT_DEFINED
+#define VECTOR_STRUCT_DEFINED
 
 /**
  * @brief Type definition for a generic dynamic vector.
@@ -285,6 +294,8 @@ struct VECTOR_NAME {
     size_t capacity;
 };
 typedef struct VECTOR_NAME VECTOR_NAME;
+
+#endif /* VECTOR_STRUCT_DEFINED */
 
 /**
  * @brief Creates and initializes a new vector instance.
