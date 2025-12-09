@@ -85,7 +85,7 @@ void MLV_show_ok_game_message(const char *text);
  * @param[in] text Null-terminated message string to display.
  *
  * @return GAME_MESSAGE_RESULT
- *         - GAME_MESSAGE_RESULT_OK   — Yes  
+ *         - GAME_MESSAGE_RESULT_YES   — Yes  
  *         - GAME_MESSAGE_RESULT_NO   — No  
  *         - GAME_MESSAGE_RESULT_NONE — Closed
  */

@@ -187,6 +187,17 @@ static void animate_slide(const char* old_page, const char* new_page, int direct
 
 void show_tutorial_screen() {
 
+    MLV_Event ev;
+    char buf[64];
+    int hover_left;
+    int hover_right;
+
+    int left_now;
+    int right_now;
+    int enter_now;
+    int esc_now;
+    int mouse_now;
+
     int page = 0;
     int running = 1;
     int mx = 0, my = 0;
@@ -214,17 +225,6 @@ void show_tutorial_screen() {
     arrow_right_x = GAME_WINDOW_WIDTCH - ARROW_W - 60;
 
     while (running) {
-
-        MLV_Event ev;
-        char buf[64];
-        int hover_left;
-        int hover_right;
-
-        int left_now;
-        int right_now;
-        int enter_now;
-        int esc_now;
-        int mouse_now;
 
         MLV_get_mouse_position(&mx, &my);
         hover_left  = hit_small(mx,my,arrow_left_x,arrow_left_y,ARROW_W,ARROW_H);
@@ -320,6 +320,10 @@ void show_tutorial_screen() {
    ============================ */
 
 void mlv_show_menu(struct game_config *config){
+    FILE *file;
+    MLV_Button_state curr_state, last_state;
+
+    int r, g, b;
 
     int mx = 0;
     int my = 0;
@@ -343,10 +347,9 @@ void mlv_show_menu(struct game_config *config){
 
     MLV_ctext_animations_start();
 
-    while(running){
+    last_state = MLV_RELEASED;
 
-        MLV_Event ev;
-        int r, g, b;
+    while(running){
 
         MLV_get_mouse_position(&mx,&my);
 
@@ -375,12 +378,20 @@ void mlv_show_menu(struct game_config *config){
 
         MLV_actualise_window();
 
-        ev = MLV_get_event(NULL,NULL,NULL,NULL,NULL,&mx,&my,NULL,NULL);
+        curr_state = MLV_get_mouse_button_state(MLV_BUTTON_LEFT);
 
-        if (ev == MLV_MOUSE_BUTTON) {
+        if (curr_state == MLV_PRESSED && last_state == MLV_RELEASED) {
 
             if (hit_button(mx,my,bx, play_y)) {
-                start_game(config);
+                file = fopen("save.bin", "r");
+                if (file == NULL) {
+                    start_game(config);
+                } else {
+                    fclose(file);
+                    if (MLV_show_yesno_game_message("Are you want to rewrite the save file?") == GAME_MESSAGE_RESULT_YES) {
+                        start_game(config);
+                    }
+                }
             }
 
             if (hit_button(mx,my,bx, load_y)) {
@@ -395,6 +406,8 @@ void mlv_show_menu(struct game_config *config){
                 running = 0;
             }
         }
+
+        last_state = curr_state;
     }
 
     MLV_ctext_animations_end();
