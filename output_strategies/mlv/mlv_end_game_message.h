@@ -1,3 +1,17 @@
+/**
+ * @file mlv_end_game_message.h
+ * @brief Utility functions for displaying modal message dialogs using MLV.
+ *
+ * The functions defined here handle:
+ * - Rendering of dialog boxes with consistent styling
+ * - Creation of standard buttons (OK, Yes, No, Close)
+ * - Mouse interaction and hover detection
+ * - Blocking event loops until user confirmation
+ *
+ * @note  
+ * These dialogs are modal: they pause the game flow until the user makes
+ * a choice. They rely on MLV's event polling and window-update functions.
+ */
 
 #include<MLV/MLV_all.h>
 #include"mlv_button.h"

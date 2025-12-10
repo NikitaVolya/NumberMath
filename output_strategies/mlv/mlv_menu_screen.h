@@ -1,3 +1,12 @@
+/**
+ * @file mlv_menu_screen.h
+ * @brief Menu and tutorial screen module for the NumberMatch game (MLV UI).
+ *
+ * @note  
+ * This file only declares rendering logic; it does not manage game state,
+ * which is handled externally by the caller.
+ */
+
 #ifndef MLV_MENU_SCREEN_H
 #define MLV_MENU_SCREEN_H
 
