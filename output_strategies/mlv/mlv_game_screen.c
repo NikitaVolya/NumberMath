@@ -238,7 +238,10 @@ void display_mlv_game_screen(struct game_config *config) {
     MLV_draw_ctext_animations();
         
     MLV_actualise_window();
+    
+    MLV_delay_according_to_frame_rate();
 
+    MLV_free_button(&exit_btn);
 }
 
 void show_score_message(int x, int y, int score) {
@@ -361,6 +364,6 @@ void user_mlv_game_input(struct game_config* config) {
 
     prev_state = curr_state;
     last_mouse_y = mouse_p.y;
-
-    MLV_delay_according_to_frame_rate();
+    
+    MLV_free_button(&exit_btn);
 }
