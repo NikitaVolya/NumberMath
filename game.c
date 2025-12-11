@@ -163,11 +163,17 @@ void game_cycle(struct game_config *config) {
             update_stage(config->field);
         }
 
-    } while (!check_game_is_over(config->field));
+    } while (!check_game_is_over(config->field) && !config->exit);
 
-    config->output->display_game(config);
+    
+    if (!config->exit) {
+        config->output->display_game(config);
 
-    config->output->end_game_message(config);
+        config->output->end_game_message(config);
+
+        remove("save.bin");
+    }
+    config->exit = 0;
 }
 
 void init_game_field(game_field *field) {

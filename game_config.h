@@ -36,8 +36,8 @@ struct game_config {
     vector2i cursor_p;                 /**< Current cursor position */
     vector2i selected_p;               /**< Position of selected cell (or -1, -1) */
     int shift;                         /**< Horizontal shift for UI layout */
+    int exit;                          /**< Flag to exit the game */
 };
-
 
 /**
  * @brief Allocates and initializes a new game configuration object.
