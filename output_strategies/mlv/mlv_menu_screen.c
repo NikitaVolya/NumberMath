@@ -15,10 +15,11 @@
 #define BASE_G 247
 #define BASE_B 229
 
-#define BTN_COLOR      MLV_rgba(0,0,128,255)
 #define BTN_HOVER      MLV_rgba(70,130,255,255)
 #define TEXT_COLOR     MLV_COLOR_BLUE
 #define BG_COLOR       MLV_rgba(44,170,201,255)
+
+#define draw_spiral_stars draw_intro_background
 
 #define ARROW_W 60
 #define ARROW_H 60
@@ -88,7 +89,7 @@ static void draw_background_stars(void){
     init_stars();
 
     /* dark blue base */
-    MLV_clear_window(MLV_rgba(15,25,70,255));
+    MLV_clear_window(MLV_rgba(12,16,35,255));
 
     /* -------- modes 1 & 2: stars -------- */
     if (background_mode == 1 || background_mode == 2) {
@@ -140,77 +141,55 @@ static void draw_background_stars(void){
         }
         return;
     }
-
-    /* -------- mode 4: shooting stars -------- */
+/* -------- mode 4: calm parallax glow -------- */
     if (background_mode == 4) {
 
-        static int meteor_x[12];
-        static int meteor_y[12];
-        static int meteor_dx[12];
-        static int meteor_dy[12];
-        static int meteor_len[12];
-        static int meteor_alive[12];
         static int init = 0;
+        static int px[60];
+        static int py[60];
+        static int layer[60];
+        static int phase[60];
 
-        int i, j;
+        int i;
 
         if (!init) {
-            for (i = 0; i < 12; i++) {
-                meteor_alive[i] = 0;
+            for (i = 0; i < 60; i++) {
+                px[i] = rand() % GAME_WINDOW_WIDTCH;
+                py[i] = rand() % GAME_WINDOW_HEIGHT;
+                layer[i] = 1 + rand() % 3;   /* depth layers */
+                phase[i] = rand() % 360;
             }
             init = 1;
         }
 
-        /* dark space base */
-        MLV_clear_window(MLV_rgba(15,25,70,255));
+        /* deep night background */
+        MLV_clear_window(MLV_rgba(14,18,40,255));
 
-        /* update meteors */
-        for (i = 0; i < 12; i++) {
+        for (i = 0; i < 60; i++) {
 
-            /* spawn chance */
-            if (!meteor_alive[i] && (rand() % 180) == 0) {
-                meteor_x[i] = rand() % GAME_WINDOW_WIDTCH;
-                meteor_y[i] = rand() % (GAME_WINDOW_HEIGHT / 2);
-                meteor_dx[i] = 6 + rand() % 3;
-                meteor_dy[i] = 4 + rand() % 2;
-                meteor_len[i] = 12 + rand() % 8;
-                meteor_alive[i] = 1;
-            }
+            int speed = layer[i];          /* farther = slower */
+            int radius = layer[i];         /* nearer = bigger */
 
-            if (meteor_alive[i]) {
+            px[i] += speed;
+            if (px[i] > GAME_WINDOW_WIDTCH)
+                px[i] = 0;
 
-                /* draw tail */
-                for (j = 0; j < meteor_len[i]; j++) {
+            phase[i] += 2;
+            if (phase[i] > 360) phase[i] = 0;
 
-                    int x = meteor_x[i] - meteor_dx[i] * j;
-                    int y = meteor_y[i] - meteor_dy[i] * j;
-
-                    int alpha = 200 - j * 12;
-                    if (alpha < 0) alpha = 0;
-
-                    if (x >= 0 && x < GAME_WINDOW_WIDTCH &&
-                        y >= 0 && y < GAME_WINDOW_HEIGHT) {
-
-                        MLV_draw_filled_circle(
-                            x, y, 1,
-                            MLV_rgba(220,230,255,alpha)
-                            );
-                    }
-                }
-
-                /* move meteor */
-                meteor_x[i] += meteor_dx[i];
-                meteor_y[i] += meteor_dy[i];
-
-                /* kill when offscreen */
-                if (meteor_x[i] > GAME_WINDOW_WIDTCH ||
-                    meteor_y[i] > GAME_WINDOW_HEIGHT) {
-                    meteor_alive[i] = 0;
-                }
-            }
+            MLV_draw_filled_circle(
+                px[i],
+                py[i],
+                radius,
+                MLV_rgba(
+                    160 + layer[i] * 20,
+                    180 + layer[i] * 15,
+                    255,
+                    80 + (int)(20 * sin(phase[i] * 0.017))
+                    )
+                );
         }
     }
-
 }
 
 /* ============================
@@ -366,7 +345,7 @@ static void animate_slide(const char* old_page, const char* new_page, int direct
     offset = 0;
     while (offset < GAME_WINDOW_WIDTCH) {
 
-        MLV_clear_window(MLV_COLOR_BEIGE);
+        MLV_clear_window(MLV_rgba(12,16,35,255));
 
         MLV_draw_text_box(
             40 - offset * direction,
@@ -454,7 +433,7 @@ void show_tutorial_screen() {
         hover_left  = hit_small(mx,my,arrow_left_x,arrow_left_y,ARROW_W,ARROW_H);
         hover_right = hit_small(mx,my,arrow_right_x,arrow_right_y,ARROW_W,ARROW_H);
 
-        MLV_clear_window(MLV_COLOR_BEIGE);
+        MLV_clear_window(MLV_rgba(12,16,35,255));
 
         MLV_draw_text_box(
             40, 40,
@@ -605,6 +584,52 @@ static int confirm_new_game(void){
         }
     }
 }
+/* ============================
+     INTRO BACKGROUND
+   ============================ */
+
+static void draw_intro_background(double t) {
+    int i;
+    int cx = GAME_WINDOW_WIDTCH / 2;
+    int cy = GAME_WINDOW_HEIGHT / 2;
+
+    /* deep space base */
+    MLV_clear_window(MLV_rgba(12,16,35,255));
+
+    /* drifting nebula dust */
+    for (i = 0; i < 140; i++) {
+
+        double dx = sin(t * 0.4 + i * 0.7) * 120.0;
+        double dy = cos(t * 0.3 + i * 0.9) * 80.0;
+
+        int x = cx + (int)dx + (i * 13) % GAME_WINDOW_WIDTCH;
+        int y = cy + (int)dy + (i * 17) % GAME_WINDOW_HEIGHT;
+
+        x %= GAME_WINDOW_WIDTCH;
+        y %= GAME_WINDOW_HEIGHT;
+        if (x < 0) x += GAME_WINDOW_WIDTCH;
+        if (y < 0) y += GAME_WINDOW_HEIGHT;
+
+        MLV_draw_filled_circle(
+            x, y,
+            2,
+            MLV_rgba(90, 120, 200, 35)
+        );
+    }
+
+    /* subtle stars (very light, very few) */
+    for (i = 0; i < 40; i++) {
+
+        int x = (i * 97) % GAME_WINDOW_WIDTCH;
+        int y = (i * 53) % GAME_WINDOW_HEIGHT;
+
+        MLV_draw_filled_circle(
+            x, y,
+            1,
+            MLV_rgba(200, 220, 255, 80)
+        );
+    }
+}
 
 /* ============================
      ANIMATED TITLE
@@ -640,8 +665,300 @@ static void draw_animated_title(const char* text, float phase){
         MLV_draw_text(x + i*cw,     y, buf, MLV_COLOR_WHITE);
     }
 }
+/* ============================
+   ANIMATED TITLE (CUSTOM Y)
+   ============================ */
+
+static void draw_animated_title_at_y(const char* text, float phase, int y){
+    int tw, th, cw;
+    int x, i;
+    char buf[2];
+
+    MLV_get_size_of_text(text,&tw,&th);
+    MLV_get_size_of_text("N",&cw,&th);
+
+    x = GAME_WINDOW_WIDTCH/2 - tw/2;
+
+    buf[1] = '\0';
+
+    for (i = 0; text[i]; i++) {
+
+        int p = (i + (int)(phase * 20.0f)) % 4;
+        MLV_Color c;
+
+        if      (p == 0) c = MLV_rgba(255,215,0,255);
+        else if (p == 1) c = MLV_rgba(0,255,255,255);
+        else if (p == 2) c = MLV_rgba(255,105,180,255);
+        else             c = MLV_rgba(173,216,230,255);
+
+        buf[0] = text[i];
+
+        MLV_draw_text(x + i*cw - 1, y, buf, c);
+        MLV_draw_text(x + i*cw + 1, y, buf, c);
+        MLV_draw_text(x + i*cw,     y, buf, MLV_COLOR_WHITE);
+    }
+}
+
+/* ============================
+   SPIRAL OF NUMBERS (→ 10)
+   ============================ */
+
+static void draw_number_spiral(double angle, double radius) {
+    int cx = GAME_WINDOW_WIDTCH / 2;
+    int cy = GAME_WINDOW_HEIGHT / 2;
+    int i;
+
+    /* number pairs summing to 10 */
+    const char* left_nums[]  = { "1", "2", "3", "4", "5" };
+    const char* right_nums[] = { "9", "8", "7", "6", "5" };
+    const int count = 5;
+
+    for (i = 0; i < count; i++) {
+
+        double a = angle + i * 0.9;
+        double r = radius - i * 35;
+
+        int xL = cx + (int)(cos(a) * r);
+        int yL = cy + (int)(sin(a) * r);
+
+        int xR = cx + (int)(cos(a + 0.4) * r);
+        int yR = cy + (int)(sin(a + 0.4) * r);
+
+        if (r > 0) {
+            MLV_draw_text(xL, yL, left_nums[i],  MLV_COLOR_WHITE);
+            MLV_draw_text(xR, yR, right_nums[i], MLV_COLOR_WHITE);
+        }
+    }
+}
+
+/* ============================
+   INTRO ANIMATION
+   ============================ */
+
+static void play_intro_animation(void) {
+    double spiral_angle = 0.0;
+    int frame, wait;
+    int cx = GAME_WINDOW_WIDTCH / 2 - 2;
+    int cy = GAME_WINDOW_HEIGHT / 2;
+    int xL, xR;
+
+    const int target_left  = GAME_WINDOW_WIDTCH / 2;
+    const int target_right = GAME_WINDOW_WIDTCH / 2;
+    const int speed = 2;
+
+    /* ========== 5 + 5 = 10 ========== */
+
+    xL = -80;
+    xR = GAME_WINDOW_WIDTCH + 80;
+
+    /* slide IN together */
+    while (xL < target_left || xR > target_right) {
+
+        if (xL < target_left)  xL += speed;
+        if (xR > target_right) xR -= speed;
+
+        draw_spiral_stars(spiral_angle);
+        spiral_angle += 0.05;
+
+        MLV_draw_text(xL, cy, "5", MLV_COLOR_WHITE);
+        MLV_draw_text(xR, cy, "5", MLV_COLOR_WHITE);
+
+        MLV_actualise_window();
+    }
+
+    /* hold numbers */
+    for (wait = 0; wait < 30; wait++) {
+        draw_spiral_stars(spiral_angle);
+        spiral_angle += 0.05;
+        MLV_draw_text(xL, cy, "5", MLV_COLOR_WHITE);
+        MLV_draw_text(xR, cy, "5", MLV_COLOR_WHITE);
+    }
+
+    /* show result */
+    for (wait = 0; wait < 40; wait++) {
+        draw_spiral_stars(spiral_angle);
+        spiral_angle += 0.05;
+        MLV_draw_text(cx, cy, "10", MLV_COLOR_YELLOW);
+        MLV_actualise_window();
+    }
+
+    /* ========== 6 + 4 = 10 (DIAGONAL) ========== */
+
+    {
+        int xTL, yTL;
+        int xBR, yBR;
+
+        xTL = -80;
+        yTL = -80;
+
+        xBR = GAME_WINDOW_WIDTCH + 40;
+        yBR = GAME_WINDOW_HEIGHT + 40;
+
+        /* slide diagonally */
+        while (xTL < cx || yTL < cy || xBR > cx || yBR > cy) {
+
+            if (xTL < cx) xTL += speed;
+            if (yTL < cy) yTL += speed;
+
+            if (xBR > cx) xBR -= speed;
+            if (yBR > cy) yBR -= speed;
+
+            draw_spiral_stars(spiral_angle);
+            spiral_angle += 0.05;
+
+            MLV_draw_text(xTL, yTL, "6", MLV_COLOR_WHITE);
+            MLV_draw_text(xBR, yBR, "4", MLV_COLOR_WHITE);
+
+            MLV_actualise_window();
+        }
+
+        /* hold numbers */
+        for (wait = 0; wait < 30; wait++) {
+            draw_spiral_stars(spiral_angle);
+            spiral_angle += 0.05;
+            MLV_draw_text(cx, cy, "6", MLV_COLOR_WHITE);
+            MLV_draw_text(cx, cy, "4", MLV_COLOR_WHITE);
+        }
+
+        /* show result */
+        for (wait = 0; wait < 40; wait++) {
+            draw_spiral_stars(spiral_angle);
+            spiral_angle += 0.05;
+            MLV_draw_text(cx, cy, "10", MLV_COLOR_YELLOW);
+            MLV_actualise_window();
+        }
+    }
+/* ========== 8 + 2 = 10 (DIAGONAL – OPPOSITE) ========== */
+
+    {
+        int xTR, yTR;
+        int xBL, yBL;
+
+        xTR = GAME_WINDOW_WIDTCH + 80;
+        yTR = -80;
+
+        xBL = -80;
+        yBL = GAME_WINDOW_HEIGHT + 80;
+
+        /* slide diagonally (opposite corners) */
+        while (xTR > cx || yTR < cy || xBL < cx || yBL > cy) {
+
+            if (xTR > cx) xTR -= speed;
+            if (yTR < cy) yTR += speed;
+
+            if (xBL < cx) xBL += speed;
+            if (yBL > cy) yBL -= speed;
+
+            draw_spiral_stars(spiral_angle);
+            spiral_angle += 0.05;
+
+            MLV_draw_text(xTR, yTR, "8", MLV_COLOR_WHITE);
+            MLV_draw_text(xBL, yBL, "2", MLV_COLOR_WHITE);
+
+            MLV_actualise_window();
+        }
+
+        /* hold numbers */
+        for (wait = 0; wait < 30; wait++) {
+            draw_spiral_stars(spiral_angle);
+            spiral_angle += 0.05;
+            MLV_draw_text(cx, cy, "8", MLV_COLOR_WHITE);
+            MLV_draw_text(cx, cy, "2", MLV_COLOR_WHITE);
+        }
+
+        /* show result */
+        for (wait = 0; wait < 40; wait++) {
+            draw_spiral_stars(spiral_angle);
+            spiral_angle += 0.05;
+            MLV_draw_text(cx, cy, "10", MLV_COLOR_YELLOW);
+            MLV_actualise_window();
+        }
+    }
+
+/* ========== 3 + 7 = 10 (TOP / BOTTOM) ========== */
+
+    int yTop, yBot;
+
+    xL = target_left;
+    xR = target_right;
+
+    yTop = -80;
+    yBot = GAME_WINDOW_HEIGHT + 80;
+
+/* slide vertically */
+    while (yTop < cy || yBot > cy) {
+
+        if (yTop < cy) yTop += speed;
+        if (yBot > cy) yBot -= speed;
+
+        draw_spiral_stars(spiral_angle);
+        spiral_angle += 0.05;
+
+        MLV_draw_text(xL, yTop, "3", MLV_COLOR_WHITE);
+        MLV_draw_text(xR, yBot, "7", MLV_COLOR_WHITE);
+
+        MLV_actualise_window();
+    }
+
+/* hold numbers */
+    for (wait = 0; wait < 30; wait++) {
+        draw_spiral_stars(spiral_angle);
+        spiral_angle += 0.05;
+        MLV_draw_text(xL, cy, "3", MLV_COLOR_WHITE);
+        MLV_draw_text(xR, cy, "7", MLV_COLOR_WHITE);
+    }
+    
+    for (wait = 0; wait < 40 ; wait++) {
+        draw_spiral_stars(spiral_angle);
+        spiral_angle += 0.05;
+        MLV_draw_text(cx, cy, "10", MLV_COLOR_YELLOW);
+        MLV_actualise_window();
+    }
+    
+/* ========== SPIRAL → 10 ========== */
+
+    {
+        double angle = 0.0;
+        double radius = 260.0;
+        int wait;
+
+        while (radius > 40.0) {
+
+            draw_spiral_stars(spiral_angle);
+
+            draw_number_spiral(angle, radius);
+
+            angle  += 0.05;   /* slower rotation */
+            radius -= 0.9;    /* slower collapse */
+
+            MLV_actualise_window();
+            MLV_delay_according_to_frame_rate();
+        }
 
 
+        /* final result → slide into menu title position (animated colors) */
+        {
+            int y_start = GAME_WINDOW_HEIGHT / 2;
+            int y_end   = GAME_WINDOW_HEIGHT / 6;
+            int y = y_start;
+            float phase = 0.0f;
+
+            while (y > y_end) {
+
+                draw_spiral_stars(spiral_angle);
+                spiral_angle += 0.05;
+                MLV_delay_according_to_frame_rate();
+
+                draw_animated_title_at_y("Number Match", phase, y);
+
+                phase += 0.02f;
+                y -= 2;
+
+                MLV_actualise_window();
+            }
+        }
+    }
+}
 /* ============================
            MAIN MENU
    ============================ */
@@ -668,6 +985,8 @@ void mlv_show_menu(struct game_config *config){
 
     MLV_change_frame_rate(FRAME_RATE);
 
+    play_intro_animation();
+    
     MLV_ctext_animations_start();
 
     while(running){
