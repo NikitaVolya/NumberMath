@@ -1,202 +1,87 @@
+/***********************************************
+ *                 HEADERS
+ ***********************************************/
 #include "mlv_menu_screen.h"
 #include <MLV/MLV_all.h>
 #include <stdlib.h>
 #include <math.h>
 
-/* ============================
-        CONSTANTS
-   ============================ */
 
-#define BTN_W  300
-#define BTN_H   80
-#define BTN_R   18
+/***********************************************
+ *                 CONSTANTS
+ ***********************************************/
 
+/* --- Button dimensions & styling --- */
+#define BTN_W   300
+#define BTN_H    80
+#define BTN_R    18
+
+/* --- Base color of animated UI fade (Menu) --- */
 #define BASE_R 255
 #define BASE_G 247
 #define BASE_B 229
 
-#define BTN_HOVER      MLV_rgba(70,130,255,255)
-#define TEXT_COLOR     MLV_COLOR_BLUE
-#define BG_COLOR       MLV_rgba(44,170,201,255)
+/* --- UI colors --- */
+#define BTN_HOVER   MLV_rgba(70,130,255,255)
+#define TEXT_COLOR  MLV_COLOR_BLUE
+#define BG_COLOR    MLV_rgba(44,170,201,255)
 
+/* --- Alias for intro background function (legacy name) --- */
 #define draw_spiral_stars draw_intro_background
 
+/* --- Arrow dimensions (tutorial navigation) --- */
 #define ARROW_W 60
 #define ARROW_H 60
 
-/* default background at launch */
+/* --- Default background mode at launch --- */
 #define BACKGROUND_MODE 2
-/* 1 = drifting stars
-   2 = twinkling stars
-   3 = nebula dust
-   4 = spiral galaxy */
+/*
+    1 = drifting stars
+    2 = twinkling stars
+    3 = nebula dust
+    4 = calm parallax glow
+*/
 
+/* Star count used for multiple background modes */
 #define STAR_COUNT 80
 
-/* ============================
-       BACKGROUND STATE
-   ============================ */
 
+/***********************************************
+ *       GLOBAL BACKGROUND / STAR STATE
+ ***********************************************/
+
+/* Initialization guard (avoids re-seeding stars each frame) */
 static int stars_init = 0;
 
-/* stars (modes 1 & 2) */
+/* --- Stars (background modes 1 & 2) --- */
 static int star_x[STAR_COUNT];
 static int star_y[STAR_COUNT];
 static int star_speed[STAR_COUNT];
 static int star_alpha[STAR_COUNT];
 static int star_alpha_dir[STAR_COUNT];
 
-/* dust (mode 3) */
+/* --- Nebula dust (background mode 3) --- */
 static int dust_x[STAR_COUNT];
 static int dust_y[STAR_COUNT];
 static int dust_dx[STAR_COUNT];
 
-/* spiral (mode 4) */
-static double spiral_angle = 0.0;
-
-/* runtime background mode (starts from macro default) */
+/* --- Current active background mode (runtime) --- */
 static int background_mode = BACKGROUND_MODE;
 
 
-/* ============================
-       STAR / BG INIT
-   ============================ */
+/***********************************************
+ *             TUTORIAL PAGE TEXT
+ ***********************************************/
 
-static void init_stars(void){
-    int i;
-    if (stars_init) return;
-
-    for (i = 0; i < STAR_COUNT; i++) {
-        /* stars (modes 1 & 2) */
-        star_x[i] = rand() % GAME_WINDOW_WIDTCH;
-        star_y[i] = rand() % GAME_WINDOW_HEIGHT;
-        star_speed[i] = 1 + rand() % 2;
-        star_alpha[i] = 80 + rand() % 140;
-        star_alpha_dir[i] = (rand() % 2) ? 1 : -1;
-
-        /* dust (mode 3) */
-        dust_x[i] = rand() % GAME_WINDOW_WIDTCH;
-        dust_y[i] = rand() % GAME_WINDOW_HEIGHT;
-        dust_dx[i] = (rand() % 3) - 1;  /* -1, 0, 1 */
-    }
-
-    stars_init = 1;
-}
-
-static void draw_background_stars(void){
-    int i;
-
-    init_stars();
-
-    /* dark blue base */
-    MLV_clear_window(MLV_rgba(12,16,35,255));
-
-    /* -------- modes 1 & 2: stars -------- */
-    if (background_mode == 1 || background_mode == 2) {
-
-        for (i = 0; i < STAR_COUNT; i++) {
-
-            MLV_draw_filled_circle(
-                star_x[i],
-                star_y[i],
-                1,
-                MLV_rgba(200,220,255,star_alpha[i])
-            );
-
-            if (background_mode == 1) {
-                /* drifting stars */
-                star_y[i] += star_speed[i];
-                if (star_y[i] >= GAME_WINDOW_HEIGHT)
-                    star_y[i] = 0;
-            }
-            else {
-                /* twinkling stars */
-                star_alpha[i] += star_alpha_dir[i] * 3;
-                if (star_alpha[i] > 220) star_alpha_dir[i] = -1;
-                if (star_alpha[i] < 60)  star_alpha_dir[i] = 1;
-            }
-        }
-        return;
-    }
-
-    /* -------- mode 3: nebula dust -------- */
-    if (background_mode == 3) {
-
-        for (i = 0; i < STAR_COUNT; i++) {
-
-            MLV_draw_filled_circle(
-                dust_x[i],
-                dust_y[i],
-                2,
-                MLV_rgba(180,200,255,60)
-            );
-
-            dust_y[i] += 1;
-            dust_x[i] += dust_dx[i];
-
-            if (dust_y[i] >= GAME_WINDOW_HEIGHT) {
-                dust_y[i] = 0;
-                dust_x[i] = rand() % GAME_WINDOW_WIDTCH;
-            }
-        }
-        return;
-    }
-/* -------- mode 4: calm parallax glow -------- */
-    if (background_mode == 4) {
-
-        static int init = 0;
-        static int px[60];
-        static int py[60];
-        static int layer[60];
-        static int phase[60];
-
-        int i;
-
-        if (!init) {
-            for (i = 0; i < 60; i++) {
-                px[i] = rand() % GAME_WINDOW_WIDTCH;
-                py[i] = rand() % GAME_WINDOW_HEIGHT;
-                layer[i] = 1 + rand() % 3;   /* depth layers */
-                phase[i] = rand() % 360;
-            }
-            init = 1;
-        }
-
-        /* deep night background */
-        MLV_clear_window(MLV_rgba(14,18,40,255));
-
-        for (i = 0; i < 60; i++) {
-
-            int speed = layer[i];          /* farther = slower */
-            int radius = layer[i];         /* nearer = bigger */
-
-            px[i] += speed;
-            if (px[i] > GAME_WINDOW_WIDTCH)
-                px[i] = 0;
-
-            phase[i] += 2;
-            if (phase[i] > 360) phase[i] = 0;
-
-            MLV_draw_filled_circle(
-                px[i],
-                py[i],
-                radius,
-                MLV_rgba(
-                    160 + layer[i] * 20,
-                    180 + layer[i] * 15,
-                    255,
-                    80 + (int)(20 * sin(phase[i] * 0.017))
-                    )
-                );
-        }
-    }
-}
-
-/* ============================
-       TUTORIAL PAGES (FR)
-   ============================ */
-
+/*
+ * tutorial_pages[]
+ * ---------------------------------------------------------
+ * Static French tutorial instructions displayed in the
+ * multi-page tutorial viewer. Each entry is one page.
+ */
 static const char* tutorial_pages[] = {
+
+    /* ------------------ Page 1 ------------------ */
     "Bienvenue dans Number Match !\n\n"
     "Le but du jeu est simple : effacer tous les chiffres du plateau.\n\n"
     "Pour cela, trouvez :\n"
@@ -205,6 +90,7 @@ static const char* tutorial_pages[] = {
     "Sélectionnez les chiffres un par un pour les rayer,\n"
     "et progressez jusqu’à effacer tout le plateau !\n",
 
+    /* ------------------ Page 2 ------------------ */
     "Règles essentielles :\n\n"
     "• Chaque paire trouvée vous fait gagner des points.\n"
     "• Lorsque toutes les cases d’une ligne disparaissent,\n"
@@ -215,6 +101,7 @@ static const char* tutorial_pages[] = {
     "  - diagonalement.\n\n"
     "Les diagonales opposées peuvent aussi former des paires !\n",
 
+    /* ------------------ Page 3 ------------------ */
     "Astuces pour progresser :\n\n"
     "• Pensez à regarder les chiffres séparés par des cases :\n"
     "  ils peuvent tout de même former une paire.\n\n"
@@ -223,6 +110,7 @@ static const char* tutorial_pages[] = {
     "  peuvent cacher une paire compatible.\n\n"
     "• Prenez votre temps et observez bien les motifs répétés.\n",
 
+    /* ------------------ Page 4 ------------------ */
     "Bonne chance et amusez-vous bien !\n\n"
     "Number Match est un jeu de logique et d’observation.\n"
     "Plus vous jouerez, plus vous repérerez les paires rapidement.\n"
@@ -230,59 +118,112 @@ static const char* tutorial_pages[] = {
 };
 
 
-/* ============================
-       HELPER FUNCTIONS
-   ============================ */
+/***********************************************
+ *         BASIC UI HELPER FUNCTIONS
+ ***********************************************/
 
-static int hit_button(int mx, int my, int x, int y){
-    return mx >= x && mx <= x + BTN_W && my >= y && my <= y + BTN_H;
+/*
+ * hit_button()
+ * ------------------------------------------------------
+ * Checks if the mouse (mx,my) intersects a main menu
+ * button located at (x,y) with fixed BTN_W × BTN_H size.
+ */
+static int hit_button(int mx, int my, int x, int y) {
+    return mx >= x && mx <= x + BTN_W &&
+           my >= y && my <= y + BTN_H;
 }
 
-static int hit_small(int mx,int my,int x,int y,int w,int h){
-    return mx>=x && mx<=x+w && my>=y && my<=y+h;
+
+/*
+ * hit_small()
+ * ------------------------------------------------------
+ * Generic hit-detection for rectangles of ANY size.
+ */
+static int hit_small(int mx, int my, int x, int y, int w, int h) {
+    return mx >= x && mx <= x + w &&
+           my >= y && my <= y + h;
 }
 
+
+/***********************************************
+ *        ROUNDED BUTTON DRAWING HELPERS
+ ***********************************************/
+
+/*
+ * draw_round_button()
+ * ------------------------------------------------------
+ * Draws a filled rectangle with rounded corners.
+ * Width/height are arbitrary; 'r' is corner radius.
+ */
 static void draw_round_button(int x, int y, int w, int h, int r, MLV_Color c) {
-    MLV_draw_filled_rectangle(x+r, y, w-2*r, h, c);
-    MLV_draw_filled_rectangle(x, y+r, w, h-2*r, c);
 
-    MLV_draw_filled_circle(x+r, y+r, r, c);
-    MLV_draw_filled_circle(x+w-r, y+r, r, c);
-    MLV_draw_filled_circle(x+r, y+h-r, r, c);
-    MLV_draw_filled_circle(x+w-r, y+h-r, r, c);
+    /* Center rectangle */
+    MLV_draw_filled_rectangle(x + r, y,     w - 2*r, h,       c);
+    MLV_draw_filled_rectangle(x,     y + r, w,       h - 2*r, c);
+
+    /* Corners */
+    MLV_draw_filled_circle(x + r,     y + r,     r, c);
+    MLV_draw_filled_circle(x + w - r, y + r,     r, c);
+    MLV_draw_filled_circle(x + r,     y + h - r, r, c);
+    MLV_draw_filled_circle(x + w - r, y + h - r, r, c);
 }
 
-static void draw_button(const char *label,int y,int hover){
+
+/*
+ * draw_button()
+ * ------------------------------------------------------
+ * Draws one of the 4 main menu buttons centered horizontally.
+ * Highlights when hovered.
+ */
+static void draw_button(const char *label, int y, int hover) {
+
     int tw, th;
-    int x;
+    int x = (GAME_WINDOW_WIDTCH - BTN_W) / 2;
 
-    x = (GAME_WINDOW_WIDTCH - BTN_W)/2;
-    draw_round_button(x, y, BTN_W, BTN_H, BTN_R, hover ? BTN_HOVER : BG_COLOR);
+    draw_round_button(x, y, BTN_W, BTN_H, BTN_R,
+                      hover ? BTN_HOVER : BG_COLOR);
+
     MLV_get_size_of_text(label, &tw, &th);
-    MLV_draw_text(x + BTN_W/2 - tw/2,
-                  y + BTN_H/2 - th/2,
-                  label,
-                  TEXT_COLOR);
+
+    MLV_draw_text(
+        x + BTN_W/2 - tw/2,
+        y + BTN_H/2 - th/2,
+        label,
+        TEXT_COLOR
+    );
 }
 
-/* ============================
-    BG TOGGLE BUTTON (TOP-RIGHT)
-   ============================ */
+
+/***********************************************
+ *     TOP-RIGHT BACKGROUND MODE TOGGLE BUTTON
+ ***********************************************/
+
 static int bg_mouse_before = 0;
 
-static int hit_bg_button(int mx, int my){
+/*
+ * hit_bg_button()
+ * ------------------------------------------------------
+ * Detects click region for "BG" toggle button.
+ */
+static int hit_bg_button(int mx, int my) {
     int x = GAME_WINDOW_WIDTCH - 60;
     int y = 20;
-    int w = 40;
-    int h = 40;
-    return hit_small(mx, my, x, y, w, h);
+    return hit_small(mx, my, x, y, 40, 40);
 }
 
-static void draw_bg_button(int mx, int my){
+
+/*
+ * draw_bg_button()
+ * ------------------------------------------------------
+ * Displays a small rounded button with the label “BG”.
+ */
+static void draw_bg_button(int mx, int my) {
+
     int x = GAME_WINDOW_WIDTCH - 60;
     int y = 20;
     int w = 40;
     int h = 40;
+
     int hover = hit_bg_button(mx, my);
 
     draw_round_button(
@@ -294,16 +235,20 @@ static void draw_bg_button(int mx, int my){
 }
 
 
-/* ============================
-        ARROW DRAWING
-   ============================ */
+/***********************************************
+ *                 ARROW DRAWING
+ ***********************************************/
 
+/*
+ * draw_left_arrow()
+ * ------------------------------------------------------
+ * Draws a simple filled triangle for tutorial navigation.
+ */
 static void draw_left_arrow(int x, int y, int hover) {
-    MLV_Color c;
+
+    MLV_Color c = hover ? MLV_COLOR_BLUE : MLV_COLOR_BLACK;
     int xs[3];
     int ys[3];
-
-    c = hover ? MLV_COLOR_BLUE : MLV_COLOR_BLACK;
 
     xs[0] = x + ARROW_W;
     xs[1] = x + ARROW_W;
@@ -316,12 +261,17 @@ static void draw_left_arrow(int x, int y, int hover) {
     MLV_draw_filled_polygon(xs, ys, 3, c);
 }
 
+
+/*
+ * draw_right_arrow()
+ * ------------------------------------------------------
+ * Mirror version of the left arrow.
+ */
 static void draw_right_arrow(int x, int y, int hover) {
-    MLV_Color c;
+
+    MLV_Color c = hover ? MLV_COLOR_BLUE : MLV_COLOR_BLACK;
     int xs[3];
     int ys[3];
-
-    c = hover ? MLV_COLOR_BLUE : MLV_COLOR_BLACK;
 
     xs[0] = x;
     xs[1] = x;
@@ -335,20 +285,33 @@ static void draw_right_arrow(int x, int y, int hover) {
 }
 
 
-/* ============================
-       SLIDE TRANSITION
-   ============================ */
+/***********************************************
+ *         SLIDE ANIMATION BETWEEN PAGES
+ ***********************************************/
 
-static void animate_slide(const char* old_page, const char* new_page, int direction) {
-    int offset;
+/*
+ * animate_slide()
+ * ------------------------------------------------------
+ * Performs a horizontal sliding transition between
+ * two tutorial pages.
+ *
+ * direction = +1  slide new page from right → left
+ * direction = -1  slide new page from left → right
+ */
+static void animate_slide(const char* old_page,
+                          const char* new_page,
+                          int direction)
+{
+    int offset = 0;
 
-    offset = 0;
     while (offset < GAME_WINDOW_WIDTCH) {
 
+        /* Background clear */
         MLV_clear_window(MLV_rgba(12,16,35,255));
 
+        /* OLD page sliding away */
         MLV_draw_text_box(
-            40 - offset * direction,
+            40 - offset * direction,      /* moves off-screen */
             40,
             GAME_WINDOW_WIDTCH - 80,
             GAME_WINDOW_HEIGHT - 120,
@@ -362,6 +325,7 @@ static void animate_slide(const char* old_page, const char* new_page, int direct
             MLV_VERTICAL_TOP
         );
 
+        /* NEW page sliding in */
         MLV_draw_text_box(
             40 + (GAME_WINDOW_WIDTCH - offset) * direction,
             40,
@@ -385,23 +349,211 @@ static void animate_slide(const char* old_page, const char* new_page, int direct
 }
 
 
-/* ============================
-        TUTORIAL SCREEN
-   ============================ */
+/***********************************************
+ *        BACKGROUND INITIALIZATION
+ ***********************************************/
 
+/*
+ * init_stars()
+ * ---------------------------------------------
+ * Initializes star & dust arrays ONCE.
+ * Used by background modes 1, 2, and 3.
+ */
+static void init_stars(void) {
+    int i;
+
+    /* Prevent reinitialization */
+    if (stars_init) return;
+
+    for (i = 0; i < STAR_COUNT; i++) {
+
+        /* --- Stars (Modes 1 & 2) --- */
+        star_x[i]         = rand() % GAME_WINDOW_WIDTCH;
+        star_y[i]         = rand() % GAME_WINDOW_HEIGHT;
+        star_speed[i]     = 1 + rand() % 2;
+        star_alpha[i]     = 80 + rand() % 140;
+        star_alpha_dir[i] = (rand() % 2) ? 1 : -1;
+
+        /* --- Dust particles (Mode 3) --- */
+        dust_x[i] = rand() % GAME_WINDOW_WIDTCH;
+        dust_y[i] = rand() % GAME_WINDOW_HEIGHT;
+        dust_dx[i] = (rand() % 3) - 1; /* -1, 0, or 1 */
+    }
+
+    stars_init = 1;
+}
+
+
+/***********************************************
+ *        BACKGROUND DRAWING (ALL MODES)
+ ***********************************************/
+
+/*
+ * draw_background_stars()
+ * ---------------------------------------------
+ * Called every frame by the main menu.
+ * Draws one of the 4 background modes depending
+ * on the global variable background_mode.
+ *
+ * Mode 1 — drifting stars
+ * Mode 2 — twinkling stars
+ * Mode 3 — falling nebula dust
+ * Mode 4 — calm multi-layer parallax glow
+ */
+static void draw_background_stars(void) {
+    int i;
+
+    /* Ensure star arrays are created */
+    init_stars();
+
+    /* Default deep-space background color */
+    MLV_clear_window(MLV_rgba(12,16,35,255));
+
+    /***********************************************
+     * MODE 1 & 2 — REGULAR STARS
+     ***********************************************/
+    if (background_mode == 1 || background_mode == 2) {
+
+        for (i = 0; i < STAR_COUNT; i++) {
+
+            /* Draw star */
+            MLV_draw_filled_circle(
+                star_x[i],
+                star_y[i],
+                1,
+                MLV_rgba(200,220,255,star_alpha[i])
+            );
+
+            /* --- Mode 1: drifting vertically --- */
+            if (background_mode == 1) {
+                star_y[i] += star_speed[i];
+                if (star_y[i] >= GAME_WINDOW_HEIGHT)
+                    star_y[i] = 0;
+            }
+
+            /* --- Mode 2: twinkling brightness --- */
+            else {
+                star_alpha[i] += star_alpha_dir[i] * 3;
+
+                if (star_alpha[i] > 220) star_alpha_dir[i] = -1;
+                if (star_alpha[i] < 60)  star_alpha_dir[i] =  1;
+            }
+        }
+        return;
+    }
+
+
+    /***********************************************
+     * MODE 3 — NEBULA DUST
+     ***********************************************/
+    if (background_mode == 3) {
+
+        for (i = 0; i < STAR_COUNT; i++) {
+
+            /* Soft glowing dust particle */
+            MLV_draw_filled_circle(
+                dust_x[i],
+                dust_y[i],
+                2,
+                MLV_rgba(180,200,255,60)
+            );
+
+            /* Downward drift + slight horizontal drift */
+            dust_y[i] += 1;
+            dust_x[i] += dust_dx[i];
+
+            /* Wrap particles back to the top */
+            if (dust_y[i] >= GAME_WINDOW_HEIGHT) {
+                dust_y[i] = 0;
+                dust_x[i] = rand() % GAME_WINDOW_WIDTCH;
+            }
+        }
+        return;
+    }
+
+
+    /***********************************************
+     * MODE 4 — PARALLAX GLOW PARTICLES
+     ***********************************************/
+    if (background_mode == 4) {
+
+        static int init = 0;
+        static int px[60];
+        static int py[60];
+        static int layer[60];
+        static int phase[60];
+
+        /* Initialize parallax layers once */
+        if (!init) {
+            for (i = 0; i < 60; i++) {
+                px[i]    = rand() % GAME_WINDOW_WIDTCH;
+                py[i]    = rand() % GAME_WINDOW_HEIGHT;
+                layer[i] = 1 + rand() % 3;   /* Depth layer: 1, 2, or 3 */
+                phase[i] = rand() % 360;
+            }
+            init = 1;
+        }
+
+        /* New dark base for this mode */
+        MLV_clear_window(MLV_rgba(14,18,40,255));
+
+        /* Draw glowing particles with parallax motion */
+        for (i = 0; i < 60; i++) {
+
+            int speed  = layer[i];  /* Layer controls speed */
+            int radius = layer[i];  /* Layer controls particle size */
+
+            px[i] += speed;
+
+            /* Wrap horizontally */
+            if (px[i] > GAME_WINDOW_WIDTCH)
+                px[i] = 0;
+
+            phase[i] += 2;
+            if (phase[i] > 360) phase[i] = 0;
+
+            /* Glow intensity oscillates with sine wave */
+            MLV_draw_filled_circle(
+                px[i],
+                py[i],
+                radius,
+                MLV_rgba(
+                    160 + layer[i] * 20,
+                    180 + layer[i] * 15,
+                    255,
+                    80 + (int)(20 * sin(phase[i] * 0.017))
+                )
+            );
+        }
+    }
+}
+/***********************************************
+ *               TUTORIAL SCREEN
+ ***********************************************
+ *
+ * show_tutorial_screen()
+ * ------------------------------------------------------
+ * Displays the 4-page French tutorial.
+ *
+ * Navigation:
+ *   ← / →         : previous / next page
+ *   mouse arrows  : click to change page
+ *   Enter / Esc   : exit tutorial
+ *
+ * Uses animate_slide() for page transitions.
+ */
 void show_tutorial_screen() {
 
     int page = 0;
     int running = 1;
     int mx = 0, my = 0;
 
-    int arrow_left_x;
-    int arrow_left_y;
-    int arrow_right_x;
-    int arrow_right_y;
+    int arrow_left_x, arrow_left_y;
+    int arrow_right_x, arrow_right_y;
 
     int nb_pages;
 
+    /* Edge-detection states for keyboard & mouse */
     int left_before  = 0;
     int right_before = 0;
     int enter_before = 0;
@@ -418,21 +570,18 @@ void show_tutorial_screen() {
 
     while (running) {
 
-        MLV_Event ev;
-        char buf[64];
-        int hover_left;
-        int hover_right;
-
-        int left_now;
-        int right_now;
-        int enter_now;
-        int esc_now;
+        int hover_left, hover_right;
+        int left_now, right_now, enter_now, esc_now;
         int mouse_now;
 
         MLV_get_mouse_position(&mx, &my);
-        hover_left  = hit_small(mx,my,arrow_left_x,arrow_left_y,ARROW_W,ARROW_H);
-        hover_right = hit_small(mx,my,arrow_right_x,arrow_right_y,ARROW_W,ARROW_H);
 
+        hover_left  = hit_small(mx,my,arrow_left_x, arrow_left_y, ARROW_W, ARROW_H);
+        hover_right = hit_small(mx,my,arrow_right_x,arrow_right_y,ARROW_W, ARROW_H);
+
+        /***********************************************
+         *               DRAW PAGE
+         ***********************************************/
         MLV_clear_window(MLV_rgba(12,16,35,255));
 
         MLV_draw_text_box(
@@ -449,11 +598,17 @@ void show_tutorial_screen() {
             MLV_VERTICAL_TOP
         );
 
-        sprintf(buf, "Page %d / %d", page+1, nb_pages);
-        MLV_draw_text(GAME_WINDOW_WIDTCH/2 - 40,
-                      GAME_WINDOW_HEIGHT - 120,
-                      buf,
-                      MLV_COLOR_BLUE);
+        {
+            char buf[64];
+            sprintf(buf, "Page %d / %d", page+1, nb_pages);
+
+            MLV_draw_text(
+                GAME_WINDOW_WIDTCH/2 - 40,
+                GAME_WINDOW_HEIGHT - 120,
+                buf,
+                MLV_COLOR_BLUE
+            );
+        }
 
         draw_left_arrow (arrow_left_x,  arrow_left_y,  hover_left);
         draw_right_arrow(arrow_right_x, arrow_right_y, hover_right);
@@ -466,10 +621,12 @@ void show_tutorial_screen() {
 
         MLV_actualise_window();
 
-        ev = MLV_get_event(NULL,NULL,NULL,NULL,NULL,&mx,&my,NULL,NULL);
+        /***********************************************
+         *               INPUT HANDLING
+         ***********************************************/
+        (void)MLV_get_event(NULL,NULL,NULL,NULL,NULL,&mx,&my,NULL,NULL);
 
-        /* ---------- EDGE-DETECTION KEYBOARD ---------- */
-
+        /* ---------- Keyboard ---------- */
         left_now  = (MLV_get_keyboard_state(MLV_KEYBOARD_LEFT)   == MLV_PRESSED);
         right_now = (MLV_get_keyboard_state(MLV_KEYBOARD_RIGHT)  == MLV_PRESSED);
         enter_now = (MLV_get_keyboard_state(MLV_KEYBOARD_RETURN) == MLV_PRESSED);
@@ -485,8 +642,7 @@ void show_tutorial_screen() {
             page++;
         }
 
-        if ((enter_now && !enter_before) ||
-            (esc_now   && !esc_before)) {
+        if ((enter_now && !enter_before) || (esc_now && !esc_before)) {
             running = 0;
         }
 
@@ -495,8 +651,7 @@ void show_tutorial_screen() {
         enter_before = enter_now;
         esc_before   = esc_now;
 
-        /* ---------- EDGE-DETECTION MOUSE ---------- */
-
+        /* ---------- Mouse ---------- */
         mouse_now = (MLV_get_mouse_button_state(MLV_BUTTON_LEFT) == MLV_PRESSED);
 
         if (mouse_now && !mouse_before) {
@@ -515,11 +670,9 @@ void show_tutorial_screen() {
         mouse_before = mouse_now;
     }
 }
-
-/* ============================
-     CONFIRM NEW GAME
-   ============================ */
-
+/***********************************************
+ *          CONFIRM NEW GAME POPUP
+ ***********************************************/
 static int confirm_new_game(void){
     int mx = 0, my = 0;
     int bx, by;
@@ -535,7 +688,6 @@ static int confirm_new_game(void){
 
     while (1) {
 
-        MLV_Event ev;
         int hover_yes, hover_no;
 
         MLV_get_mouse_position(&mx,&my);
@@ -543,6 +695,7 @@ static int confirm_new_game(void){
         hover_yes = hit_small(mx,my,yes_x,by+120,btn_w,btn_h);
         hover_no  = hit_small(mx,my,no_x ,by+120,btn_w,btn_h);
 
+        /* Dark overlay */
         MLV_draw_filled_rectangle(
             0,0,
             GAME_WINDOW_WIDTCH,
@@ -550,6 +703,7 @@ static int confirm_new_game(void){
             MLV_rgba(0,0,0,120)
         );
 
+        /* White box */
         MLV_draw_filled_rectangle(bx,by,420,200,MLV_COLOR_WHITE);
         MLV_draw_rectangle(bx,by,420,200,MLV_COLOR_BLACK);
 
@@ -560,14 +714,12 @@ static int confirm_new_game(void){
         );
 
         draw_round_button(
-            yes_x, by+120,
-            btn_w, btn_h, BTN_R,
+            yes_x, by+120, btn_w, btn_h, BTN_R,
             hover_yes ? BTN_HOVER : BG_COLOR
         );
 
         draw_round_button(
-            no_x, by+120,
-            btn_w, btn_h, BTN_R,
+            no_x, by+120, btn_w, btn_h, BTN_R,
             hover_no ? BTN_HOVER : BG_COLOR
         );
 
@@ -576,27 +728,25 @@ static int confirm_new_game(void){
 
         MLV_actualise_window();
 
-        ev = MLV_get_event(NULL,NULL,NULL,NULL,NULL,&mx,&my,NULL,NULL);
-
-        if (ev == MLV_MOUSE_BUTTON) {
+        if (MLV_get_mouse_button_state(MLV_BUTTON_LEFT) == MLV_PRESSED) {
             if (hover_yes) return 1;
             if (hover_no)  return 0;
         }
     }
 }
-/* ============================
-     INTRO BACKGROUND
-   ============================ */
-
+/***********************************************
+ *            INTRO BACKGROUND (NEBULA)
+ ***********************************************/
 static void draw_intro_background(double t) {
+
     int i;
     int cx = GAME_WINDOW_WIDTCH / 2;
     int cy = GAME_WINDOW_HEIGHT / 2;
 
-    /* deep space base */
+    /* Dark deep-space base */
     MLV_clear_window(MLV_rgba(12,16,35,255));
 
-    /* drifting nebula dust */
+    /* Nebula drifting particles */
     for (i = 0; i < 140; i++) {
 
         double dx = sin(t * 0.4 + i * 0.7) * 120.0;
@@ -607,6 +757,7 @@ static void draw_intro_background(double t) {
 
         x %= GAME_WINDOW_WIDTCH;
         y %= GAME_WINDOW_HEIGHT;
+
         if (x < 0) x += GAME_WINDOW_WIDTCH;
         if (y < 0) y += GAME_WINDOW_HEIGHT;
 
@@ -617,28 +768,21 @@ static void draw_intro_background(double t) {
         );
     }
 
-    /* subtle stars (very light, very few) */
+    /* Sparse stars */
     for (i = 0; i < 40; i++) {
-
         int x = (i * 97) % GAME_WINDOW_WIDTCH;
         int y = (i * 53) % GAME_WINDOW_HEIGHT;
-
-        MLV_draw_filled_circle(
-            x, y,
-            1,
-            MLV_rgba(200, 220, 255, 80)
-        );
+        MLV_draw_filled_circle(x, y, 1, MLV_rgba(200,220,255,80));
     }
 }
-
-/* ============================
-     ANIMATED TITLE
-   ============================ */
-
+/***********************************************
+ *           ANIMATED TITLE RENDERER
+ ***********************************************/
 static void draw_animated_title(const char* text, float phase){
     int tw, th, cw;
     int x, y, i;
     char buf[2];
+    buf[1] = '\0';
 
     MLV_get_size_of_text(text,&tw,&th);
     MLV_get_size_of_text("N",&cw,&th);
@@ -646,8 +790,6 @@ static void draw_animated_title(const char* text, float phase){
     x = GAME_WINDOW_WIDTCH/2 - tw/2;
     y = GAME_WINDOW_HEIGHT/6;
 
-    buf[1] = '\0';
-
     for (i = 0; text[i]; i++) {
 
         int p = (i + (int)(phase * 20.0f)) % 4;
@@ -665,22 +807,17 @@ static void draw_animated_title(const char* text, float phase){
         MLV_draw_text(x + i*cw,     y, buf, MLV_COLOR_WHITE);
     }
 }
-/* ============================
-   ANIMATED TITLE (CUSTOM Y)
-   ============================ */
-
 static void draw_animated_title_at_y(const char* text, float phase, int y){
     int tw, th, cw;
     int x, i;
     char buf[2];
+    buf[1] = '\0';
 
     MLV_get_size_of_text(text,&tw,&th);
     MLV_get_size_of_text("N",&cw,&th);
 
     x = GAME_WINDOW_WIDTCH/2 - tw/2;
 
-    buf[1] = '\0';
-
     for (i = 0; text[i]; i++) {
 
         int p = (i + (int)(phase * 20.0f)) % 4;
@@ -698,19 +835,14 @@ static void draw_animated_title_at_y(const char* text, float phase, int y){
         MLV_draw_text(x + i*cw,     y, buf, MLV_COLOR_WHITE);
     }
 }
-
-/* ============================
-   SPIRAL OF NUMBERS (→ 10)
-   ============================ */
-
 static void draw_number_spiral(double angle, double radius) {
+
     int cx = GAME_WINDOW_WIDTCH / 2;
     int cy = GAME_WINDOW_HEIGHT / 2;
     int i;
 
-    /* number pairs summing to 10 */
-    const char* left_nums[]  = { "1", "2", "3", "4", "5" };
-    const char* right_nums[] = { "9", "8", "7", "6", "5" };
+    const char* left_nums[]  = { "1","2","3","4","5" };
+    const char* right_nums[] = { "9","8","7","6","5" };
     const int count = 5;
 
     for (i = 0; i < count; i++) {
@@ -718,8 +850,8 @@ static void draw_number_spiral(double angle, double radius) {
         double a = angle + i * 0.9;
         double r = radius - i * 35;
 
-        int xL = cx + (int)(cos(a) * r);
-        int yL = cy + (int)(sin(a) * r);
+        int xL = cx + (int)(cos(a)       * r);
+        int yL = cy + (int)(sin(a)       * r);
 
         int xR = cx + (int)(cos(a + 0.4) * r);
         int yR = cy + (int)(sin(a + 0.4) * r);
@@ -730,21 +862,26 @@ static void draw_number_spiral(double angle, double radius) {
         }
     }
 }
-
-/* ============================
-   INTRO ANIMATION
-   ============================ */
-
+/***********************************************
+ *           FULL INTRO ANIMATION
+ ***********************************************/
 static void play_intro_animation(void) {
     double spiral_angle = 0.0;
-    int frame, wait;
-    int cx = GAME_WINDOW_WIDTCH / 2 - 2;
-    int cy = GAME_WINDOW_HEIGHT / 2;
-    int xL, xR;
+    int wait;
+    int cx;
+    int cy;
+    int xL;
+    int xR;
+    int target_left;
+    int target_right;
+    int speed;
 
-    const int target_left  = GAME_WINDOW_WIDTCH / 2;
-    const int target_right = GAME_WINDOW_WIDTCH / 2;
-    const int speed = 2;
+    cx = GAME_WINDOW_WIDTCH / 2 - 2;
+    cy = GAME_WINDOW_HEIGHT / 2;
+
+    target_left  = GAME_WINDOW_WIDTCH / 2;
+    target_right = GAME_WINDOW_WIDTCH / 2;
+    speed = 2;
 
     /* ========== 5 + 5 = 10 ========== */
 
@@ -783,10 +920,11 @@ static void play_intro_animation(void) {
     }
 
     /* ========== 6 + 4 = 10 (DIAGONAL) ========== */
-
     {
-        int xTL, yTL;
-        int xBR, yBR;
+        int xTL;
+        int yTL;
+        int xBR;
+        int yBR;
 
         xTL = -80;
         yTL = -80;
@@ -828,11 +966,13 @@ static void play_intro_animation(void) {
             MLV_actualise_window();
         }
     }
-/* ========== 8 + 2 = 10 (DIAGONAL – OPPOSITE) ========== */
 
+    /* ========== 8 + 2 = 10 (DIAGONAL – OPPOSITE) ========== */
     {
-        int xTR, yTR;
-        int xBL, yBL;
+        int xTR;
+        int yTR;
+        int xBL;
+        int yBL;
 
         xTR = GAME_WINDOW_WIDTCH + 80;
         yTR = -80;
@@ -875,52 +1015,53 @@ static void play_intro_animation(void) {
         }
     }
 
-/* ========== 3 + 7 = 10 (TOP / BOTTOM) ========== */
+    /* ========== 3 + 7 = 10 (TOP / BOTTOM) ========== */
+    {
+        int yTop;
+        int yBot;
 
-    int yTop, yBot;
+        xL = target_left;
+        xR = target_right;
 
-    xL = target_left;
-    xR = target_right;
+        yTop = -80;
+        yBot = GAME_WINDOW_HEIGHT + 80;
 
-    yTop = -80;
-    yBot = GAME_WINDOW_HEIGHT + 80;
+        /* slide vertically */
+        while (yTop < cy || yBot > cy) {
 
-/* slide vertically */
-    while (yTop < cy || yBot > cy) {
+            if (yTop < cy) yTop += speed;
+            if (yBot > cy) yBot -= speed;
 
-        if (yTop < cy) yTop += speed;
-        if (yBot > cy) yBot -= speed;
+            draw_spiral_stars(spiral_angle);
+            spiral_angle += 0.05;
 
-        draw_spiral_stars(spiral_angle);
-        spiral_angle += 0.05;
+            MLV_draw_text(xL, yTop, "3", MLV_COLOR_WHITE);
+            MLV_draw_text(xR, yBot, "7", MLV_COLOR_WHITE);
 
-        MLV_draw_text(xL, yTop, "3", MLV_COLOR_WHITE);
-        MLV_draw_text(xR, yBot, "7", MLV_COLOR_WHITE);
+            MLV_actualise_window();
+        }
 
-        MLV_actualise_window();
+        /* hold numbers */
+        for (wait = 0; wait < 30; wait++) {
+            draw_spiral_stars(spiral_angle);
+            spiral_angle += 0.05;
+            MLV_draw_text(xL, cy, "3", MLV_COLOR_WHITE);
+            MLV_draw_text(xR, cy, "7", MLV_COLOR_WHITE);
+        }
+
+        /* show result */
+        for (wait = 0; wait < 40 ; wait++) {
+            draw_spiral_stars(spiral_angle);
+            spiral_angle += 0.05;
+            MLV_draw_text(cx, cy, "10", MLV_COLOR_YELLOW);
+            MLV_actualise_window();
+        }
     }
 
-/* hold numbers */
-    for (wait = 0; wait < 30; wait++) {
-        draw_spiral_stars(spiral_angle);
-        spiral_angle += 0.05;
-        MLV_draw_text(xL, cy, "3", MLV_COLOR_WHITE);
-        MLV_draw_text(xR, cy, "7", MLV_COLOR_WHITE);
-    }
-    
-    for (wait = 0; wait < 40 ; wait++) {
-        draw_spiral_stars(spiral_angle);
-        spiral_angle += 0.05;
-        MLV_draw_text(cx, cy, "10", MLV_COLOR_YELLOW);
-        MLV_actualise_window();
-    }
-    
-/* ========== SPIRAL → 10 ========== */
-
+    /* ========== SPIRAL → 10 ========== */
     {
         double angle = 0.0;
         double radius = 260.0;
-        int wait;
 
         while (radius > 40.0) {
 
@@ -931,17 +1072,23 @@ static void play_intro_animation(void) {
             angle  += 0.05;   /* slower rotation */
             radius -= 0.9;    /* slower collapse */
 
+            spiral_angle += 0.05;
+
             MLV_actualise_window();
             MLV_delay_according_to_frame_rate();
         }
 
-
         /* final result → slide into menu title position (animated colors) */
         {
-            int y_start = GAME_WINDOW_HEIGHT / 2;
-            int y_end   = GAME_WINDOW_HEIGHT / 6;
-            int y = y_start;
-            float phase = 0.0f;
+            int y_start;
+            int y_end;
+            int y;
+            float phase;
+
+            y_start = GAME_WINDOW_HEIGHT / 2;
+            y_end   = GAME_WINDOW_HEIGHT / 6;
+            y = y_start;
+            phase = 0.0f;
 
             while (y > y_end) {
 
@@ -959,43 +1106,63 @@ static void play_intro_animation(void) {
         }
     }
 }
-/* ============================
-           MAIN MENU
-   ============================ */
 
+
+/***********************************************
+ *                 MAIN MENU
+ ***********************************************/
 void mlv_show_menu(struct game_config *config){
 
-    int mx = 0;
-    int my = 0;
-    int running = 1;
-    int tw, th;
+    int mx;
+    int my;
+    int running;
 
-    float fade = 0.001f;
-    int direction = 1;
+    float fade;
+    int direction;
 
-    int play_y = 230;
-    int load_y = 330;
-    int tut_y  = 430;
-    int quit_y = 530;
+    int play_y;
+    int load_y;
+    int tut_y;
+    int quit_y;
 
     int bx;
 
-    MLV_create_window("NumberMatch Menu","NumberMatch",
-                      GAME_WINDOW_WIDTCH,GAME_WINDOW_HEIGHT);
+    mx = 0;
+    my = 0;
+    running = 1;
+
+    fade = 0.001f;
+    direction = 1;
+
+    play_y = 230;
+    load_y = 330;
+    tut_y  = 430;
+    quit_y = 530;
+
+    MLV_create_window(
+        "NumberMatch Menu",
+        "NumberMatch",
+        GAME_WINDOW_WIDTCH,
+        GAME_WINDOW_HEIGHT
+    );
 
     MLV_change_frame_rate(FRAME_RATE);
 
     play_intro_animation();
-    
+
     MLV_ctext_animations_start();
 
-    while(running){
+    while (running) {
 
         MLV_Event ev;
-        int r, g, b;
+        int r;
+        int g;
+        int b;
+        int bg_mouse_now;
 
         MLV_get_mouse_position(&mx,&my);
-        int bg_mouse_now =
+
+        bg_mouse_now =
             (MLV_get_mouse_button_state(MLV_BUTTON_LEFT) == MLV_PRESSED);
 
         fade += 0.001f * direction;
@@ -1006,13 +1173,14 @@ void mlv_show_menu(struct game_config *config){
         g = BASE_G - (int)(fade*35);
         b = BASE_B - (int)(fade*10);
 
-        (void)r; (void)g; (void)b; /* kept to avoid warnings */
+        (void)r;
+        (void)g;
+        (void)b; /* kept to avoid warnings if not used later */
 
         /* background (modes 1–4) */
         draw_background_stars();
 
         /* Animated title */
-        (void)tw; (void)th;
         draw_animated_title("NUMBER MATCH", fade);
 
         bx = (GAME_WINDOW_WIDTCH - BTN_W)/2;
@@ -1027,7 +1195,8 @@ void mlv_show_menu(struct game_config *config){
         draw_button("QUITTER",          quit_y, hit_button(mx,my,bx,quit_y));
 
         MLV_actualise_window();
-/* BG button: edge-detected, NOT event-based */
+
+        /* BG button: edge-detected, NOT event-based */
         if (hit_bg_button(mx,my) && bg_mouse_now && !bg_mouse_before) {
             background_mode++;
             if (background_mode > 4)
@@ -1057,6 +1226,7 @@ void mlv_show_menu(struct game_config *config){
                 running = 0;
             }
         }
+
         bg_mouse_before = bg_mouse_now;
     }
 
