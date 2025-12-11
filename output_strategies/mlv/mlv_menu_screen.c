@@ -12,8 +12,8 @@
  ***********************************************/
 
 /* --- Button dimensions & styling --- */
-#define BTN_W   300
-#define BTN_H    80
+#define BTN_W   160
+#define BTN_H    60
 #define BTN_R    18
 
 /* --- Base color of animated UI fade (Menu) --- */
@@ -24,7 +24,7 @@
 /* --- UI colors --- */
 #define BTN_HOVER   MLV_rgba(70,130,255,255)
 #define TEXT_COLOR  MLV_COLOR_BLUE
-#define BG_COLOR    MLV_rgba(44,170,201,255)
+#define BG_COLOR    MLV_COLOR_BEIGE
 
 /* --- Alias for intro background function (legacy name) --- */
 #define draw_spiral_stars draw_intro_background
@@ -246,7 +246,7 @@ static void draw_bg_button(int mx, int my) {
  */
 static void draw_left_arrow(int x, int y, int hover) {
 
-    MLV_Color c = hover ? MLV_COLOR_BLUE : MLV_COLOR_BLACK;
+    MLV_Color c = hover ? MLV_COLOR_BLUE : MLV_COLOR_BEIGE;
     int xs[3];
     int ys[3];
 
@@ -269,7 +269,7 @@ static void draw_left_arrow(int x, int y, int hover) {
  */
 static void draw_right_arrow(int x, int y, int hover) {
 
-    MLV_Color c = hover ? MLV_COLOR_BLUE : MLV_COLOR_BLACK;
+    MLV_Color c = hover ? MLV_COLOR_BLUE : MLV_COLOR_BEIGE;
     int xs[3];
     int ys[3];
 
@@ -319,7 +319,7 @@ static void animate_slide(const char* old_page,
             9,
             MLV_COLOR_BLACK,
             MLV_COLOR_BLACK,
-            MLV_COLOR_WHITE,
+            MLV_COLOR_BEIGE,
             MLV_TEXT_LEFT,
             MLV_HORIZONTAL_CENTER,
             MLV_VERTICAL_TOP
@@ -335,7 +335,7 @@ static void animate_slide(const char* old_page,
             9,
             MLV_COLOR_BLACK,
             MLV_COLOR_BLACK,
-            MLV_COLOR_WHITE,
+            MLV_COLOR_BEIGE,
             MLV_TEXT_LEFT,
             MLV_HORIZONTAL_CENTER,
             MLV_VERTICAL_TOP
@@ -408,6 +408,7 @@ static void draw_background_stars(void) {
 
     /* Default deep-space background color */
     MLV_clear_window(MLV_rgba(12,16,35,255));
+    MLV_delay_according_to_frame_rate();
 
     /***********************************************
      * MODE 1 & 2 — REGULAR STARS
@@ -496,6 +497,7 @@ static void draw_background_stars(void) {
 
         /* New dark base for this mode */
         MLV_clear_window(MLV_rgba(14,18,40,255));
+        MLV_delay_according_to_frame_rate();
 
         /* Draw glowing particles with parallax motion */
         for (i = 0; i < 60; i++) {
@@ -592,7 +594,7 @@ void show_tutorial_screen() {
             9,
             MLV_COLOR_BLACK,
             MLV_COLOR_BLACK,
-            MLV_COLOR_WHITE,
+            MLV_COLOR_BEIGE,
             MLV_TEXT_LEFT,
             MLV_HORIZONTAL_CENTER,
             MLV_VERTICAL_TOP
@@ -792,7 +794,7 @@ static void draw_animated_title(const char* text, float phase){
 
     for (i = 0; text[i]; i++) {
 
-        int p = (i + (int)(phase * 20.0f)) % 4;
+        int p = (i + (int)(phase * 2.0f)) % 4;
         MLV_Color c;
 
         if      (p == 0) c = MLV_rgba(255,215,0,255);
@@ -820,7 +822,7 @@ static void draw_animated_title_at_y(const char* text, float phase, int y){
 
     for (i = 0; text[i]; i++) {
 
-        int p = (i + (int)(phase * 20.0f)) % 4;
+        int p = (i + (int)(phase * 2.0f)) % 4;
         MLV_Color c;
 
         if      (p == 0) c = MLV_rgba(255,215,0,255);
@@ -847,11 +849,11 @@ static void draw_number_spiral(double angle, double radius) {
 
     for (i = 0; i < count; i++) {
 
-        double a = angle + i * 0.9;
-        double r = radius - i * 35;
+        double a = angle + i * 0.4;
+        double r = radius - i * 10;
 
-        int xL = cx + (int)(cos(a)       * r);
-        int yL = cy + (int)(sin(a)       * r);
+        int xL = cx + (int)(cos(a) * r);
+        int yL = cy + (int)(sin(a) * r);
 
         int xR = cx + (int)(cos(a + 0.4) * r);
         int yR = cy + (int)(sin(a + 0.4) * r);
@@ -903,7 +905,7 @@ static void play_intro_animation(void) {
 
     target_left  = GAME_WINDOW_WIDTCH / 2;
     target_right = GAME_WINDOW_WIDTCH / 2;
-    speed = 2;
+    speed = 5;
 
     xL = -80;
     xR = GAME_WINDOW_WIDTCH + 80;
@@ -924,6 +926,7 @@ static void play_intro_animation(void) {
 
         draw_intro_skip_hint();
         MLV_actualise_window();
+        MLV_delay_according_to_frame_rate();
     }
 
     /* hold 5 + 5 */
@@ -953,6 +956,7 @@ static void play_intro_animation(void) {
 
         draw_intro_skip_hint();
         MLV_actualise_window();
+        MLV_delay_according_to_frame_rate();
     }
 
     /* 6 + 4 diagonal */
@@ -978,6 +982,7 @@ static void play_intro_animation(void) {
 
             draw_intro_skip_hint();
             MLV_actualise_window();
+            MLV_delay_according_to_frame_rate();
         }
 
         for (wait = 0; wait < 30; wait++) {
@@ -1003,6 +1008,7 @@ static void play_intro_animation(void) {
 
             draw_intro_skip_hint();
             MLV_actualise_window();
+            MLV_delay_according_to_frame_rate();
         }
     }
 
@@ -1029,6 +1035,7 @@ static void play_intro_animation(void) {
 
             draw_intro_skip_hint();
             MLV_actualise_window();
+            MLV_delay_according_to_frame_rate();
         }
 
         for (wait = 0; wait < 30; wait++) {
@@ -1056,6 +1063,7 @@ static void play_intro_animation(void) {
 
             draw_intro_skip_hint();
             MLV_actualise_window();
+            MLV_delay_according_to_frame_rate();
         }
     }
 
@@ -1079,6 +1087,7 @@ static void play_intro_animation(void) {
 
             draw_intro_skip_hint();
             MLV_actualise_window();
+            MLV_delay_according_to_frame_rate();
         }
 
         for (wait = 0; wait < 30; wait++) {
@@ -1106,6 +1115,7 @@ static void play_intro_animation(void) {
 
             draw_intro_skip_hint();
             MLV_actualise_window();
+            MLV_delay_according_to_frame_rate();
         }
     }
 
