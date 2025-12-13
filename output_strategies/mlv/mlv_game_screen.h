@@ -13,6 +13,7 @@
 #include"../output_config.h"
 #include"../../game_objects/vector2i.h"
 #include"../../game_objects/outils.h"
+#include"mlv_button.h"
 #include"mlv_custom_text_animation.h"
 
 /**

@@ -887,6 +887,10 @@ int confirm_new_game(void){
  * ==========================================================================*/
 
 void mlv_show_menu(struct game_config *config){
+    FILE *file;
+    MLV_Button_state curr_state, last_state;
+
+    int r, g, b;
 
     struct StarsState stars;
     struct DustState dust;

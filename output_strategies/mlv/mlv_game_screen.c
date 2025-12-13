@@ -49,20 +49,22 @@ void select_cell_style(field_cell *cell,
 void display_game_grid(game_field *field, int shift) {
     char text[2] = " ";
     int i, j, field_row;
-    vector2i field_cell_p;
+    vector2i field_cell_p, cell_index;
     MLV_Font *font = MLV_load_font(GAME_FONT_BOLD, 22);
     MLV_Color background_color, font_color;
 
     field_cell_p = create_vector2i(GAME_PADDING, GRID_VERTICAL_POS - shift);
     
-    for (j = 0; j < field->height; j++) {
+    for (j = 0; j < get_game_field_height(field); j++) {
 
         field_row = get_game_field_row_size(field, j);
         for (i = 0; i < field_row; i++) {
 
-            text[0] = '0' + field->table[j][i].value;
+            cell_index = create_vector2i(i, j);
 
-            select_cell_style(field->table[j] + i, &font_color, &background_color);
+            text[0] = '0' + get_game_field_cell(field, cell_index)->value;
+
+            select_cell_style(get_game_field_cell(field, cell_index), &font_color, &background_color);
                 
             MLV_draw_text_box_with_font(field_cell_p.x, field_cell_p.y, CELL_SIZE, CELL_SIZE,
                                         text, font,
@@ -191,10 +193,10 @@ void display_game_scroller(struct game_config *config) {
     float fill_procent;
     int max_shift_height, scrolle_size;
 
-    max_shift_height = config->field->height * CELL_SIZE - GRID_HEIGHT;
+    max_shift_height = get_game_field_height(config->field) * CELL_SIZE - GRID_HEIGHT;
     if (max_shift_height <= 0)
         max_shift_height = 1;
-    scrolle_size = ((float) (GRID_HEIGHT / CELL_SIZE) / config->field->height) * GRID_HEIGHT;
+    scrolle_size = ((float) (GRID_HEIGHT / CELL_SIZE) / get_game_field_height(config->field)) * GRID_HEIGHT;
     if (scrolle_size > GRID_HEIGHT)
         scrolle_size = GRID_HEIGHT;
 
@@ -211,6 +213,11 @@ void display_game_scroller(struct game_config *config) {
 
 
 void display_mlv_game_screen(struct game_config *config) {
+    MLV_Button exit_btn;
+
+    exit_btn = MLV_create_base_button("exit", 
+        create_vector2i(GAME_PADDING, CELL_SIZE / 2), 
+        create_vector2i(CELL_SIZE * 2, CELL_SIZE / 2));
         
     MLV_clear_window(MLV_COLOR_WHITE);
 
@@ -226,10 +233,15 @@ void display_mlv_game_screen(struct game_config *config) {
 
     display_game_scroller(config);
 
+    MLV_draw_button(&exit_btn, &mouse_p);
+
     MLV_draw_ctext_animations();
         
     MLV_actualise_window();
+    
+    MLV_delay_according_to_frame_rate();
 
+    MLV_free_button(&exit_btn);
 }
 
 void show_score_message(int x, int y, int score) {
@@ -247,18 +259,26 @@ void show_score_message(int x, int y, int score) {
 void user_mlv_game_input(struct game_config* config) {
     static MLV_Button_state prev_state = MLV_RELEASED;
     static int last_mouse_y = 0;
-    
-    MLV_Event event;
-    MLV_Button_state curr_state;
-    
-    int x, y, mouse_on_grid;
+
+    int x, y, mouse_on_grid, field_height;
     float dist_to_expand_btn, dist_to_help_btn;
     vector2i gridPos;
     game_field *field;
 
+    
     MATCH_TYPE user_match;
+    
+    MLV_Event event;
+    MLV_Button_state curr_state;
+    MLV_Button exit_btn;
 
+    exit_btn = MLV_create_base_button("exit", 
+        create_vector2i(GAME_PADDING, CELL_SIZE / 2), 
+        create_vector2i(CELL_SIZE * 2, CELL_SIZE / 2));
+   
     field = config->field;
+
+    field_height = get_game_field_height(config->field);
 
     event = MLV_get_event(NULL, NULL, NULL,
                           NULL, NULL,
@@ -293,6 +313,12 @@ void user_mlv_game_input(struct game_config* config) {
     /* click event  */
     if (curr_state == MLV_PRESSED && prev_state == MLV_RELEASED) {
 
+        if (MLV_mouse_is_on_button(&exit_btn, &mouse_p)) {
+            if (MLV_show_yesno_game_message("Are you want to exit the game?") == GAME_MESSAGE_RESULT_YES) {
+                config->exit = 1;
+            }
+        }
+
         /* check click on game grid  */
         if (mouse_on_grid) {
             user_match = user_game_select(config);
@@ -323,8 +349,8 @@ void user_mlv_game_input(struct game_config* config) {
         if (config->shift < 0)
             config->shift = 0;
 
-        if (config->field->height * CELL_SIZE <= config->shift + GRID_HEIGHT)
-            config->shift = config->field->height * CELL_SIZE - GRID_HEIGHT;
+        if (field_height * CELL_SIZE <= config->shift + GRID_HEIGHT)
+            config->shift = field_height * CELL_SIZE - GRID_HEIGHT;
 
     /* mouse motion event  */
     } else if (event == MLV_MOUSE_MOTION) {
@@ -333,11 +359,11 @@ void user_mlv_game_input(struct game_config* config) {
     }
 
     /* reset game shift if game grid is small */
-    if (config->field->height * CELL_SIZE < GRID_HEIGHT)
+    if (field_height * CELL_SIZE < GRID_HEIGHT)
         config->shift = 0;
 
     prev_state = curr_state;
     last_mouse_y = mouse_p.y;
-
-    MLV_delay_according_to_frame_rate();
+    
+    MLV_free_button(&exit_btn);
 }

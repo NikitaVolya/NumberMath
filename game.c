@@ -104,6 +104,7 @@ MATCH_TYPE user_game_select(struct game_config *config) {
         /* - If a valid match is found, removes both cells, updates the score,  
            clears completed rows, and repositions the cursor.  */
         } else if (match_res) {
+
             set_available_game_field_cell(field, *selected_p, 0);
             set_available_game_field_cell(field, *cursor_p, 0);
 
@@ -111,7 +112,7 @@ MATCH_TYPE user_game_select(struct game_config *config) {
                 remove_game_field_row(field, cursor_p->y);
                 match_res += CLEAR_LINE_MATCH;
                 
-                if (selected_p->y >= cursor_p->y)
+                if (selected_p->y > cursor_p->y)
                     selected_p->y--;
                 
                 cursor_p->y--;
@@ -163,11 +164,17 @@ void game_cycle(struct game_config *config) {
             update_stage(config->field);
         }
 
-    } while (!check_game_is_over(config->field));
+    } while (!check_game_is_over(config->field) && !config->exit);
 
-    config->output->display_game(config);
+    
+    if (!config->exit) {
+        config->output->display_game(config);
 
-    config->output->end_game_message(config);
+        config->output->end_game_message(config);
+
+        remove("save.bin");
+    }
+    config->exit = 0;
 }
 
 void init_game_field(game_field *field) {
@@ -178,7 +185,7 @@ void init_game_field(game_field *field) {
         values[i] = randshort(1, 9);
     }
 
-    while (field->height > 0) remove_game_field_row(field, 0);
+    while (get_game_field_height(field) > 0) remove_game_field_row(field, 0);
     
     add_values_game_field(field, values, INIT_CELLS_COUNT);
 }
@@ -187,7 +194,7 @@ void load_game(struct game_config *config) {
 
     /* free any previously allocated field to avoid memory leaks */
     if (config->field != NULL) {
-        free(config->field);
+        game_field_free(config->field);
     }
 
     /* attempt to load saved game data */
@@ -196,7 +203,7 @@ void load_game(struct game_config *config) {
     } else {
         game_cycle(config);
         
-        free(config->field);
+        game_field_free(config->field);
         config->field = NULL;
     }
 }
@@ -205,16 +212,16 @@ void start_game(struct game_config *config) {
     
     /* free any previously allocated field to avoid memory leaks */
     if (config->field != NULL) {
-        free(config->field);
+        game_field_free(config->field);
     }
     
     /* create a new game field with width 9 */
-    config->field = create_new_game_field(9);
+    config->field = create_new_game_field(GRID_WIDTH);
 
     init_game_field(config->field);
     game_cycle(config);
 
-    free(config->field);
+    game_field_free(config->field);
     config->field = NULL;
 }
 

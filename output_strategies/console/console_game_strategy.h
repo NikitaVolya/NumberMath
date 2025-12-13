@@ -87,7 +87,7 @@ void display_console_available_numbers(game_field *field);
  * @brief Prints a single field cell with console formatting and colors.
  * @param cell Field cell to display.
  */
-void print_field_cell(field_cell cell);
+void print_field_cell(field_cell *cell);
 
 /**
  * @brief Prints the entire game field to the console.

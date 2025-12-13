@@ -6,14 +6,12 @@
  * as well as the entire game field. It allows saving the current game progress to a file
  * and loading it back to resume the game.
  *
- * @see @ref game_field.h , @ref field_cell.h
  */
 
 #include<stdlib.h>
 #include<stdio.h>
 
-#include"game_objects/game_field.h"
-#include"game_objects/field_cell.h"
+#include"game_config.h"
 
 /**
  * @brief Saves a single field cell to a file in a compact format.

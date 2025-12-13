@@ -1,7 +1,15 @@
-#include<stdlib.h>
-#include<stdio.h>
-
 #include"game_field.h"
+
+#define VECTOR_TYPE field_cell*
+#define VECTOR_NAME field_row
+#define VECTOR_STRUCT_DEFINED
+#include "vector.h"
+
+#define VECTOR_TYPE field_row*
+#define VECTOR_NAME field_table
+#define VECTOR_STRUCT_DEFINED
+#include "vector.h"
+
 
 
 game_field* create_new_game_field(short width) {
@@ -15,13 +23,15 @@ game_field* create_new_game_field(short width) {
         res->stage = 1;
     
         res->width = width;
-        res->height = 0;
 
         res->hints_max = 5;
         res->hints_available = res->hints_max;
 
         res->additions_max = 5;
         res->additions_available = res->additions_max;
+
+        init_game_field_table(res);
+
     } else {
         res = NULL;
     }
@@ -29,47 +39,64 @@ game_field* create_new_game_field(short width) {
     return res;
 }
 
-void add_values_game_field(game_field *field, short *values, int number) {
-    int i, y, x;
+void init_game_field_table(game_field *field) {
+    field->table = field_table_create(0);
+}
 
-    if (field != NULL) {
-        for(i = 0; i < number; i++) {
-            y = field->count / field->width;
-            x = field->count % field->width;
+int get_game_field_height(game_field *field) {
+    return (int) field->table->count;
+}
 
-            field->table[y][x] = create_field_cell(values[i]);
-            field->count++;
+void add_cell_game_field(game_field *field, field_cell *cell) {
+    field_row *row;
+
+    if (field->table->count != 0) {
+        row = field_table_tail(field->table);
+
+        if (row->count >= field->width) {
+            row = field_row_create(0);
+            field_table_push(field->table, row);
         }
-    
-        field->height = field->count / field->width +
-            (field->count % field->width > 0 ? 1 : 0);
     } else {
-        printf("Warning! add_values_game_field argument field is NULL\n");
+        row = field_row_create(0);
+        field_table_push(field->table, row);
     }
+
+    field_row_push(row, cell);
+}
+
+void add_values_game_field(game_field *field, short *values, int number) {
+    field_cell *cell;
+    int i = 0;
+
+    for (i = 0; i < number; i++) {
+        cell = (field_cell*) malloc(sizeof(field_cell));
+        *cell = create_field_cell(values[i]);
+
+        add_cell_game_field(field, cell);
+    }
+
+    field->count += number;
 }
 
 int remove_game_field_row(game_field *field, int index) {
-    int res, i, j, next_row_size;
+    field_row *row;
+    int res;
+    size_t i;
 
-    if (index < 0 || index >= field->height) {
+    if (index < 0 || field->table->count <= (size_t) index) {
         res = 0;
-    } else if (index == field->height - 1) {
-        res = 1;
-        field->count -= get_game_field_row_size(field, index);
-        field->height -= 1;
     } else {
-        res = 1;
+        row = field_table_remove(field->table, index);
 
-        for(i = index; i < field->height; i++) {
-            next_row_size = get_game_field_row_size(field, i + 1);
-
-            for(j = 0; j < next_row_size; j++) {
-                field->table[i][j] = field->table[i + 1][j];
-            }
+        for (i = 0; i < row->count; i++) {
+            free(field_row_get(row, i));
         }
 
-        field->height -= 1;
-        field->count -= field->width;
+        field->count -= row->count;
+
+        field_row_free(row);
+        res = 1;
     }
     
     return res;
@@ -78,28 +105,26 @@ int remove_game_field_row(game_field *field, int index) {
 int get_game_field_row_size(game_field *field, int index) {
     int res;
 
-    if (index < 0 || field->height <= index) {
+    if (index < 0 || field->table->count <= (size_t) index) {
         res = 0;
-    } else if (index == field->height - 1) {
-        res = field->count - field->width * index;
     } else {
-        res = field->width;
-    }
+        res = (int) field_table_get(field->table, index)->count;
+    } 
 
     return res;
 }
 
 field_cell* get_game_field_cell(game_field *field, vector2i pos) {
     field_cell *res;
-    int row_size;
+    field_row *row;
 
-    row_size = get_game_field_row_size(field, pos.y);
-
-    if (pos.x < 0 || pos.x >= row_size ||
-        pos.y < 0 || pos.y >= field->height)
+    if (pos.x < 0 || pos.x >= get_game_field_row_size(field, pos.y) ||
+        pos.y < 0 || pos.y >= get_game_field_height(field))
         res = NULL;
-    else
-        res = &(field->table[pos.y][pos.x]);
+    else {
+        row = field_table_get(field->table, pos.y);
+        res = field_row_get(row, pos.x);
+    }
 
     return res;
 }
@@ -194,7 +219,7 @@ int find_match(game_field *field, vector2i *start_p, vector2i *end_p) {
     field_cell *cursor_cell, *tmp_c;
 
     res = 0;
-    for(i = 0; res == 0 && i < field->height; i++) {
+    for(i = 0; res == 0 && i < get_game_field_height(field); i++) {
         row_size = get_game_field_row_size(field, i);
 
         for(j = 0; res == 0 && j < row_size; j++) {
@@ -257,7 +282,7 @@ int find_match(game_field *field, vector2i *start_p, vector2i *end_p) {
                     tmp_c = get_game_field_cell(field, tmp_p);
 
                     if (tmp_c == NULL) {
-                        if (tmp_p.y < field->height - 1) {
+                        if (tmp_p.y < get_game_field_height(field) - 1) {
                             tmp_p.x = -1;
                             tmp_p.y++;
 
@@ -335,7 +360,7 @@ int check_match(game_field *field, vector2i start_p, vector2i end_p) {
                 res = DISTANCE_MATCH;
         /* Out of field — possibly move to next line */
         } else if (current_cell == NULL) {
-            if (next_line && current_p.y < field->height - 1) {
+            if (next_line && current_p.y < get_game_field_height(field) - 1) {
                 current_p.y += 1;
                 current_p.x = -1;
             } else {
@@ -356,7 +381,7 @@ int check_match(game_field *field, vector2i start_p, vector2i end_p) {
 int check_game_row_is_clear(game_field *field, int index) {
     int res, i, row_size;
 
-    if (index < 0 || field->height <= index) {
+    if (index < 0 || get_game_field_height(field) <= index) {
         res = 0;
     } else {
         res = 1;
@@ -378,7 +403,7 @@ int check_game_field_is_clear(game_field *field) {
 
     res = 1;
     
-    for (i = 0; res == 1 && i < field->height - 1; i++) {
+    for (i = 0; res == 1 && i < get_game_field_height(field) - 1; i++) {
         for (j = 0; res == 1 && j < field->width; j++) {
 
             tmp = create_vector2i(j, i);
@@ -390,10 +415,16 @@ int check_game_field_is_clear(game_field *field) {
     rest = field->count % field->width;
     for (j = 0; res == 1 && j < rest; j++) {
 
-        tmp = create_vector2i(j, field->height - 1);
+        tmp = create_vector2i(j, field->table->count - 1);
         if (get_available_game_field_cell(field, tmp))
                 res = 0;
     }
 
     return res;
+}
+
+
+void game_field_free(game_field *field) {
+    field_table_free(field->table);
+    free(field);
 }

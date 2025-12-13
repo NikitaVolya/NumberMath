@@ -1,5 +1,6 @@
 #include"serializer.h"
 
+
 int serialize_field_cell(field_cell *cell, FILE* file) {
     int res;
     short tmp;
@@ -47,7 +48,8 @@ field_cell deserialize_field_cell(FILE* file) {
 
 int serialize_game_field(game_field* field, const char* file_name) {
     FILE* file;
-    int res, i, x, y;
+    int res, i;
+    vector2i pos;
     unsigned short tmp;
 
     if ((file = fopen(file_name, "w")) == NULL) {
@@ -68,10 +70,10 @@ int serialize_game_field(game_field* field, const char* file_name) {
         fwrite(&tmp, sizeof(unsigned short) / 2, 1, file);
 
         for (i = 0; i < field->count; i++) {
-            y = i / field->width;
-            x = i % field->width;
+            pos.y = i / field->width;
+            pos.x = i % field->width;
             
-            serialize_field_cell(field->table[y] + x, file);
+            serialize_field_cell(get_game_field_cell(field, pos), file);
         }
 
 
@@ -83,9 +85,10 @@ int serialize_game_field(game_field* field, const char* file_name) {
 
 game_field* deserialize_game_field(const char* file_name) {
     FILE* file;
-    game_field* res;
+    game_field *res;
+    field_cell *cell;
     size_t file_size;
-    int i, x, y;
+    int i;
     unsigned short additions_data, hints_data;
 
     res = NULL;
@@ -111,8 +114,7 @@ game_field* deserialize_game_field(const char* file_name) {
                 free(res);
                 res = NULL;
             } else {
-                res->height = res->count / res->width +
-                    (res->count % res->width > 0 ? 1 : 0);
+                init_game_field_table(res);
 
                 res->additions_max = additions_data / 16 & 15;
                 res->additions_available = additions_data & 15;
@@ -121,11 +123,12 @@ game_field* deserialize_game_field(const char* file_name) {
                 res->hints_available = hints_data & 15;
                 
                 for (i = 0; i < res->count; i++) {
-                    y = i / res->width;
-                    x = i % res->width;
-                    res->table[y][x] = deserialize_field_cell(file);
-                }
 
+                    cell = (field_cell*) malloc(sizeof(field_cell));
+                    *cell = deserialize_field_cell(file);
+
+                    add_cell_game_field(res, cell);
+                }
                 
             }
         }

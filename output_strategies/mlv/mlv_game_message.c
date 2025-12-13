@@ -73,11 +73,11 @@ GAME_MESSAGE_RESULT MLV_show_yesno_game_message(const char *text) {
     MLV_Button_state mbutton_state;
 
     yes_btn = MLV_create_base_button("Yes",
-                                    create_vector2i(GAME_MESSAGE_POS_X + GAME_MESSAGE_WIDTH / 4 - GAME_MESSAGE_WIDTH / 3 - 20,
+                                    create_vector2i(GAME_MESSAGE_POS_X + GAME_MESSAGE_WIDTH / 2 - GAME_MESSAGE_WIDTH / 3 - 10,
                                                     GAME_MESSAGE_POS_Y + GAME_MESSAGE_HEIGHT / 2),
                                     create_vector2i(GAME_MESSAGE_WIDTH / 3, GAME_MESSAGE_HEIGHT / 4));
-    yes_btn = MLV_create_base_button("No",
-                                     create_vector2i(GAME_MESSAGE_POS_X + GAME_MESSAGE_WIDTH / 4 + GAME_MESSAGE_WIDTH / 3 + 20,
+    no_btn = MLV_create_base_button("No",
+                                     create_vector2i(GAME_MESSAGE_POS_X + GAME_MESSAGE_WIDTH / 2 + 10,
                                      GAME_MESSAGE_POS_Y + GAME_MESSAGE_HEIGHT / 2),
                                      create_vector2i(GAME_MESSAGE_WIDTH / 3, GAME_MESSAGE_HEIGHT / 4));
     close_btn = MLV_create_close_button();
@@ -111,8 +111,8 @@ GAME_MESSAGE_RESULT MLV_show_yesno_game_message(const char *text) {
 
         if (mbutton_state == MLV_PRESSED) {
             if (MLV_mouse_is_on_button(&yes_btn, &mouse_p))
-                res = GAME_MESSAGE_RESULT_OK;
-            if (MLV_mouse_is_on_button(&yes_btn, &mouse_p))
+                res = GAME_MESSAGE_RESULT_YES;
+            if (MLV_mouse_is_on_button(&no_btn, &mouse_p))
                 res = GAME_MESSAGE_RESULT_NO;
             if (MLV_mouse_is_on_button(&close_btn, &mouse_p))
                 res = GAME_MESSAGE_RESULT_NONE;
