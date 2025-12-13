@@ -9,120 +9,14 @@
 #include <math.h>
 
 /* ============================================================================
- *                                 CONSTANTS
- * ==========================================================================*/
-
-/** @name Menu button geometry */
-/** @{ */
-#define BTN_W 160
-#define BTN_H 60
-#define BTN_R 18
-/** @} */
-
-/** @name Base color components */
-/** @{ */
-#define BASE_R 255
-#define BASE_G 247
-#define BASE_B 229
-/** @} */
-
-/** @name UI colors */
-/** @{ */
-#define BTN_COLOR MLV_rgba(0,0,128,255)
-#define BTN_HOVER MLV_rgba(70,130,255,255)
-#define TEXT_COLOR MLV_COLOR_BLUE
-#define BG_COLOR   MLV_COLOR_BEIGE
-/** @} */
-
-/** @name Navigation & background constants */
-/** @{ */
-#define ARROW_W 60
-#define ARROW_H 60
-#define STAR_COUNT 80
-#define TUTORIAL_NB_PAGES 4
-/** @} */
-
-
-/* ============================================================================
- *                                   ENUMS
- * ==========================================================================*/
-
-/**
- * @enum BackgroundMode
- * @brief Available background animation modes.
- */
-enum BackgroundMode {
-    BG_DRIFTING = 1, /**< Stars drift downward */
-    BG_TWINKLING,    /**< Stars twinkle via alpha changes */
-    BG_NEBULA,       /**< Dust particles fall + slight horizontal drift */
-    BG_PARALLAX      /**< Parallax layered drifting particles */
-};
-
-/* ============================================================================
- *                              STATE STRUCTURES
- * ==========================================================================*/
-
-/**
- * @struct StarsState
- * @brief State for drifting/twinkling star background.
- */
-struct StarsState {
-    int x[STAR_COUNT];        /**< Star X positions */
-    int y[STAR_COUNT];        /**< Star Y positions */
-    int speed[STAR_COUNT];    /**< Vertical drift speed */
-    int alpha[STAR_COUNT];    /**< Current alpha */
-    int alpha_dir[STAR_COUNT];/**< Alpha direction (+1 or -1) */
-};
-
-/**
- * @struct DustState
- * @brief State for nebula dust background.
- */
-struct DustState {
-    int x[STAR_COUNT]; /**< Dust X positions */
-    int y[STAR_COUNT]; /**< Dust Y positions */
-    int dx[STAR_COUNT];/**< Horizontal drift (-1..+1) */
-};
-
-/**
- * @struct ParallaxState
- * @brief State for parallax background particles.
- */
-struct ParallaxState {
-    int init;      /**< 0 until initialized */
-    int px[60];    /**< Particle X positions */
-    int py[60];    /**< Particle Y positions */
-    int layer[60]; /**< Layer (1..3) controls size & speed */
-    int phase[60]; /**< Phase for alpha sinusoid */
-};
-
-/* ============================================================================
  *                           BASIC UI HELPER FUNCTIONS
  * ==========================================================================*/
 
-/**
- * @brief Test if the mouse position hits a standard menu button.
- * @param mx Mouse X
- * @param my Mouse Y
- * @param x  Button X (top-left)
- * @param y  Button Y (top-left)
- * @return 1 if hit, 0 otherwise
- */
 int hit_button(int mx, int my, int x, int y) {
     return mx >= x && mx <= x + BTN_W &&
            my >= y && my <= y + BTN_H;
 }
 
-/**
- * @brief Test if the mouse position hits a custom rectangle area.
- * @param mx Mouse X
- * @param my Mouse Y
- * @param x  Rect X (top-left)
- * @param y  Rect Y (top-left)
- * @param w  Rect width
- * @param h  Rect height
- * @return 1 if hit, 0 otherwise
- */
 int hit_small(int mx, int my, int x, int y, int w, int h) {
     return mx >= x && mx <= x + w &&
            my >= y && my <= y + h;
@@ -132,15 +26,6 @@ int hit_small(int mx, int my, int x, int y, int w, int h) {
  *                        ROUNDED BUTTON DRAWING HELPERS
  * ==========================================================================*/
 
-/**
- * @brief Draw a filled rounded rectangle using rectangles + circles.
- * @param x Top-left X
- * @param y Top-left Y
- * @param w Width
- * @param h Height
- * @param r Corner radius
- * @param c Fill color
- */
 void draw_round_button(int x, int y, int w, int h, int r, MLV_Color c) {
     MLV_draw_filled_rectangle(x + r, y,     w - 2*r, h,       c);
     MLV_draw_filled_rectangle(x,     y + r, w,       h - 2*r, c);
@@ -151,12 +36,6 @@ void draw_round_button(int x, int y, int w, int h, int r, MLV_Color c) {
     MLV_draw_filled_circle(x + w - r, y + h - r, r, c);
 }
 
-/**
- * @brief Draw a centered menu button (fixed size BTN_W x BTN_H) with label.
- * @param label Text to draw
- * @param y     Button Y (top-left)
- * @param hover Non-zero if hovered
- */
 void draw_button(const char *label, int y, int hover) {
     int tw, th;
     int x;
@@ -181,12 +60,6 @@ void draw_button(const char *label, int y, int hover) {
  *                   TOP-RIGHT BACKGROUND MODE TOGGLE BUTTON
  * ==========================================================================*/
 
-/**
- * @brief Hit-test for background mode toggle button ("BG") at top-right.
- * @param mx Mouse X
- * @param my Mouse Y
- * @return 1 if hit, 0 otherwise
- */
 int hit_bg_button(int mx, int my) {
     int x, y;
     x = GAME_WINDOW_WIDTCH - 60;
@@ -194,11 +67,6 @@ int hit_bg_button(int mx, int my) {
     return hit_small(mx, my, x, y, 40, 40);
 }
 
-/**
- * @brief Draw background toggle button ("BG") at top-right.
- * @param mx Mouse X
- * @param my Mouse Y
- */
 void draw_bg_button(int mx, int my) {
     int x, y, w, h;
     int hover;
@@ -222,12 +90,6 @@ void draw_bg_button(int mx, int my) {
  *                               ARROW DRAWING
  * ==========================================================================*/
 
-/**
- * @brief Draw a left arrow triangle used for tutorial navigation.
- * @param x     Arrow top-left X
- * @param y     Arrow top-left Y
- * @param hover Non-zero if hovered
- */
 void draw_left_arrow(int x, int y, int hover) {
     MLV_Color c;
     int xs[3];
@@ -246,12 +108,6 @@ void draw_left_arrow(int x, int y, int hover) {
     MLV_draw_filled_polygon(xs, ys, 3, c);
 }
 
-/**
- * @brief Draw a right arrow triangle used for tutorial navigation.
- * @param x     Arrow top-left X
- * @param y     Arrow top-left Y
- * @param hover Non-zero if hovered
- */
 void draw_right_arrow(int x, int y, int hover) {
     MLV_Color c;
     int xs[3];
@@ -274,12 +130,7 @@ void draw_right_arrow(int x, int y, int hover) {
  *                      SLIDE ANIMATION BETWEEN PAGES
  * ==========================================================================*/
 
-/**
- * @brief Animate a sliding transition between tutorial pages.
- * @param old_page  Text of current page
- * @param new_page  Text of next page
- * @param direction -1: slide to previous, +1: slide to next
- */
+
 void animate_slide(const char* old_page, const char* new_page, int direction) {
     int offset;
     offset = 0;
@@ -328,12 +179,6 @@ void animate_slide(const char* old_page, const char* new_page, int direction) {
  *                        BACKGROUND INITIALIZATION
  * ==========================================================================*/
 
-/**
- * @brief Initialize background states (stars, dust, parallax).
- * @param s Stars state (output)
- * @param d Dust state (output)
- * @param p Parallax state (output)
- */
 void init_background(struct StarsState* s, struct DustState* d, struct ParallaxState* p) {
     int i;
 
@@ -356,13 +201,6 @@ void init_background(struct StarsState* s, struct DustState* d, struct ParallaxS
  *                       BACKGROUND DRAWING (ALL MODES)
  * ==========================================================================*/
 
-/**
- * @brief Draw the animated background based on mode.
- * @param mode Background mode
- * @param s    Stars state
- * @param d    Dust state
- * @param p    Parallax state
- */
 void draw_background(
     enum BackgroundMode mode,
     struct StarsState* s,
@@ -379,6 +217,40 @@ void draw_background(
 
     if (mode == BG_DRIFTING || mode == BG_TWINKLING) {
 
+/*
+ Star background rendering:
+
+ BG DRIFTING = Stars move vertically downward
+ BG TWINKLING = static stars pulsating
+ BG NEBULA = slow moving dust
+ BG PARALLAX = multi layer stars with depth
+
+ mode: enum BackgroundMode
+
+ s: struct StarState*
+ _ used by BG_DRIFTING and BG_TWINKLING
+ _ contains star positions, speed, alpha values and alpha directions
+
+ d: struct DustState*
+ _ used by BG_NEBULA
+ _ contains drifting dust particle positions and horizontal offsets
+
+ p: struct ParallaxState*
+ _ used by BG_PARALLAX
+ _ contains layered stars with random speeds, phases and one time intialization
+
+ FUNCTION FLOW =
+ 1- Clear the window with dark blue space color
+
+ 2- depending on mode:
+ _ draw stars/dust/parallax points
+ - update positions and alpha values of stars
+ - wrap elements when they exit screen width and height
+
+ 3- apply frame rate pacing to ensure smooth animation independant of machine speed.
+ 
+*/
+        
         for (i = 0; i < STAR_COUNT; i++) {
 
             MLV_draw_filled_circle(
@@ -467,11 +339,6 @@ void draw_background(
  *                         ANIMATED TITLE RENDERER
  * ==========================================================================*/
 
-/**
- * @brief Draw animated title at a default Y position.
- * @param text  Title string
- * @param phase Animation phase (used to shift colors)
- */
 void draw_animated_title(const char* text, float phase){
     int tw, th, cw;
     int x, y, i;
@@ -505,12 +372,6 @@ void draw_animated_title(const char* text, float phase){
     }
 }
 
-/**
- * @brief Draw animated title at a specific Y position.
- * @param text  Title string
- * @param phase Animation phase (used to shift colors)
- * @param y     Y position for text
- */
 void draw_animated_title_at_y(const char* text, float phase, int y){
     int tw, th, cw;
     int x, i;
@@ -547,11 +408,6 @@ void draw_animated_title_at_y(const char* text, float phase, int y){
  *                           NUMBER SPIRAL DRAW
  * ==========================================================================*/
 
-/**
- * @brief Draw a small number spiral (used in intro collapse).
- * @param angle  Current angle
- * @param radius Current radius
- */
 void draw_number_spiral(double angle, double radius) {
     int cx, cy;
     int i;
@@ -590,18 +446,12 @@ void draw_number_spiral(double angle, double radius) {
  *                               INTRO SKIP HINT
  * ==========================================================================*/
 
-/**
- * @brief Check if ENTER is pressed to skip intro.
- * @return 1 if skip requested, 0 otherwise
- */
-int intro_skip_requested(void) {
+int intro_skip_requested() {
     return (MLV_get_keyboard_state(MLV_KEYBOARD_RETURN) == MLV_PRESSED);
 }
 
-/**
- * @brief Draw skip hint at bottom center.
- */
-void draw_intro_skip_hint(void) {
+
+void draw_intro_skip_hint() {
     int tw, th;
 
     MLV_get_size_of_text("(skip = ENTER)", &tw, &th);
@@ -618,10 +468,7 @@ void draw_intro_skip_hint(void) {
  *                           INTRO BACKGROUND (NEBULA)
  * ==========================================================================*/
 
-/**
- * @brief Draw intro nebula-like background (animated using time parameter).
- * @param t Time parameter / phase
- */
+
 void draw_intro_background(double t) {
     int i;
     int cx, cy;
@@ -667,9 +514,7 @@ void draw_intro_background(double t) {
  *                           FULL INTRO ANIMATION
  * ==========================================================================*/
 
-/**
- * @brief Play the full intro animation (skippable with ENTER).
- */
+
 void play_intro_animation(void) {
     double spiral_angle;
     int wait;
@@ -794,46 +639,32 @@ void play_intro_animation(void) {
  *                               TUTORIAL SCREEN
  * ==========================================================================*/
 
-/**
- * @brief Show the tutorial screen with multiple pages and slide transitions.
- *
- * Navigation:
- * - Left/Right arrows or LEFT/RIGHT keys
- * - ENTER or ESC exits tutorial
- */
+
 void show_tutorial_screen(void) {
 
-    /* ===== DECLARATIONS (C89: MUST BE FIRST) ===== */
+    /* ===== DECLARATIONS ===== */
     const char* tutorial_pages[TUTORIAL_NB_PAGES] = {
         "Bienvenue dans Number Match !\n\n"
-        "Le but du jeu est simple : effacer tous les chiffres du plateau.\n\n"
-        "Pour cela, trouvez :\n"
-        "• Deux chiffres identiques\n"
-        "• Ou deux chiffres dont la somme fait 10\n\n"
-        "Sélectionnez les chiffres un par un pour les rayer,\n"
-        "et progressez jusqu’à effacer tout le plateau !\n",
-
-        "Règles essentielles :\n\n"
-        "• Chaque paire trouvée vous fait gagner des points.\n"
-        "• Lorsque toutes les cases d’une ligne disparaissent,\n"
-        "  une nouvelle ligne peut apparaître selon les règles du jeu.\n\n"
-        "• Les paires peuvent se faire :\n"
-        "  - horizontalement\n"
-        "  - verticalement\n"
-        "  - diagonalement\n\n"
-        "Les diagonales opposées peuvent aussi former des paires !\n",
-
-        "Astuces pour progresser :\n\n"
-        "• Pensez à regarder les chiffres séparés par des cases :\n"
-        "  ils peuvent tout de même former une paire.\n\n"
-        "• Parfois, les chiffres alignés plus loin\n"
-        "  peuvent cacher une paire compatible.\n\n"
-        "• Prenez votre temps et observez bien les motifs répétés.\n",
-
-        "Bonne chance et amusez-vous bien !\n\n"
-        "Number Match est un jeu de logique et d’observation.\n"
-        "Plus vous jouerez, plus vous repérerez les paires rapidement.\n"
-        "Amusez-vous à optimiser vos choix et à battre vos scores !\n"
+        
+        "Le but est d'effacer tous les chiffres du plateau.  \n"
+        "\nTrouvez des paires de nombres égaux (1 et 1, 7 et 7).  \n"
+        "\nOu des paires dont la somme est égale à 10 (6 et 4).  \n"
+        "\nSélectionnez les nombres un par un pour les rayer.  \n"
+        "\nChaque paire trouvée vous fait gagner des points.  \n"
+        "\nEffacez tout le plateau pour remporter la partie !  ",
+        
+        "S’il ne reste plus de chiffres sur une ligne,  \n"
+        "\nelle sera supprimée et le reste fusionné.  \n"
+        "\nVérifiez toutes les directions possibles :  \n"
+        "\nles paires peuvent être horizontales,  \n"
+        "\nverticales ou même diagonales.  \n",
+        
+        "\nCherchez les chiffres séparés par des cases :  \n"
+        "\nles diagonales opposées peuvent former paires.  \n"
+        "\nVérifiez ligne par ligne : la fin d’une ligne  \n"
+        "\net le début de la suivante peuvent cacher paires.  ",
+    
+        "Bonne chance et amusez-vous bien!"
     };
 
     int page;
@@ -973,13 +804,7 @@ void show_tutorial_screen(void) {
  *                          CONFIRM NEW GAME POPUP
  * ==========================================================================*/
 
-/**
- * @brief Confirmation popup before starting a new game.
- *
- * Displays a modal overlay with Yes/No buttons.
- *
- * @return 1 if user clicked YES, 0 if user clicked NO
- */
+
 int confirm_new_game(void){
     int mx, my;
     int bx, by;
@@ -1061,15 +886,6 @@ int confirm_new_game(void){
  *                                 MAIN MENU
  * ==========================================================================*/
 
-/**
- * @brief Show the main menu window and handle user interactions.
- *
- * - Plays intro animation once
- * - Allows switching background modes via "BG" button
- * - Buttons: New game, Load game, Tutorial, Quit
- *
- * @param config Game configuration pointer (passed to start/load)
- */
 void mlv_show_menu(struct game_config *config){
 
     struct StarsState stars;
