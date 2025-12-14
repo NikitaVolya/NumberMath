@@ -310,8 +310,10 @@ void show_console_game_menu(struct game_config *config) {
     const int n = 4;
     int sel = 0;
     GAME_KEY key;
-    int i;
+    int i, best_score;
     int exit = 0;
+
+    best_score = deserialize_game_score("score.bin");
 
     while (!exit) {
         if (system("clear") != 0)
@@ -330,6 +332,9 @@ void show_console_game_menu(struct game_config *config) {
         printf("\n          ██║ ╚═╝ ██║██║  ██║   ██║   ╚██████╗██║  ██║");
         printf("\n          ╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝");
         printf("\n================================================================");
+
+        printf("\n  Best score: %d\n", best_score);
+
         for (i = 0; i < n; i++) {
             if (i == sel) printf("\n >%s<", items[i]);
             else printf("\n  %s", items[i]);
@@ -349,6 +354,7 @@ void show_console_game_menu(struct game_config *config) {
             break;
         case ENTER:
             execute_cosnole_game_action(config, sel, &exit);
+            best_score = deserialize_game_score("score.bin");
             break;
         default:
             break;
