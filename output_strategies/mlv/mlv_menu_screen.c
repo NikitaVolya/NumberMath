@@ -888,9 +888,6 @@ int confirm_new_game(void){
 
 void mlv_show_menu(struct game_config *config){
     FILE *file;
-    MLV_Button_state curr_state, last_state;
-
-    int r, g, b;
 
     struct StarsState stars;
     struct DustState dust;
@@ -912,6 +909,9 @@ void mlv_show_menu(struct game_config *config){
     int bx;
 
     int bg_mouse_before;
+
+    int bg_mouse_now;
+    int bx_center;
 
     MLV_create_window("NumberMatch Menu", "NumberMatch",
                       GAME_WINDOW_WIDTCH, GAME_WINDOW_HEIGHT);
@@ -940,9 +940,6 @@ void mlv_show_menu(struct game_config *config){
     MLV_ctext_animations_start();
 
     while (running) {
-
-        int bg_mouse_now;
-        int bx_center;
 
         fade += 0.001f * (float)direction;
         if (fade >= 1.0f) direction = -1;
@@ -983,8 +980,16 @@ void mlv_show_menu(struct game_config *config){
         if (bg_mouse_now && !bg_mouse_before) {
 
             if (hit_button(mx,my,bx,play_y)) {
+                file = fopen("save.bin", "r");
+
                 /* If you want "confirm before starting" swap order */
-                if (confirm_new_game()) {
+                if (file != NULL) {
+                    fclose(file);
+
+                    if (confirm_new_game()) {
+                        start_game(config);
+                    }
+                } else {
                     start_game(config);
                 }
             }
