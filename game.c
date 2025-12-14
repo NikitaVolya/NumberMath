@@ -104,6 +104,7 @@ MATCH_TYPE user_game_select(struct game_config *config) {
         /* - If a valid match is found, removes both cells, updates the score,  
            clears completed rows, and repositions the cursor.  */
         } else if (match_res) {
+
             set_available_game_field_cell(field, *selected_p, 0);
             set_available_game_field_cell(field, *cursor_p, 0);
 
@@ -111,7 +112,7 @@ MATCH_TYPE user_game_select(struct game_config *config) {
                 remove_game_field_row(field, cursor_p->y);
                 match_res += CLEAR_LINE_MATCH;
                 
-                if (selected_p->y >= cursor_p->y)
+                if (selected_p->y > cursor_p->y)
                     selected_p->y--;
                 
                 cursor_p->y--;
@@ -144,6 +145,7 @@ MATCH_TYPE user_game_select(struct game_config *config) {
 }
 
 void game_cycle(struct game_config *config) {
+    int best_score;
 
     serialize_game_field(config->field, "save.bin");
     
@@ -163,11 +165,22 @@ void game_cycle(struct game_config *config) {
             update_stage(config->field);
         }
 
-    } while (!check_game_is_over(config->field));
+    } while (!check_game_is_over(config->field) && !config->exit);
 
-    config->output->display_game(config);
+    
+    if (!config->exit) {
+        config->output->display_game(config);
 
-    config->output->end_game_message(config);
+        config->output->end_game_message(config);
+
+        best_score = deserialize_game_score("score.bin");
+        if (config->field->score > best_score) {
+            serialize_game_score("score.bin", config->field->score);
+        }
+
+        remove("save.bin");
+    }
+    config->exit = 0;
 }
 
 void init_game_field(game_field *field) {
@@ -209,12 +222,12 @@ void start_game(struct game_config *config) {
     }
     
     /* create a new game field with width 9 */
-    config->field = create_new_game_field(9);
+    config->field = create_new_game_field(GRID_WIDTH);
 
     init_game_field(config->field);
     game_cycle(config);
 
-    game_field_free(config->field);
+    game_field_free(config->field); 
     config->field = NULL;
 }
 

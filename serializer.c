@@ -138,3 +138,32 @@ game_field* deserialize_game_field(const char* file_name) {
 
     return res;
 }
+
+int serialize_game_score(const char* file_name, int value) {
+    FILE *file;
+    int res;
+    
+    file = fopen(file_name, "w");
+
+    if (file == NULL) {
+        res = 0;
+    } else {
+        res = 1;
+
+        fwrite(&value, sizeof(int), 1, file);
+    }
+
+    return res;
+}
+
+int deserialize_game_score(const char* file_name) {
+    FILE *file;
+    int res;
+
+    file = fopen(file_name, "r");
+    if (file == NULL || (fread(&res, sizeof(int), 1, file) == 0)) {
+        res = 0;
+    }
+
+    return res;
+}

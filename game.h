@@ -13,6 +13,10 @@
 * @brief Number of initial cells to generate when initializing a new game field.
 */
 #define INIT_CELLS_COUNT 51
+/**
+* @brief Width of gird in a new game field.
+*/
+#define GRID_WIDTH 9
 
 #include<termios.h>
 #include<unistd.h>

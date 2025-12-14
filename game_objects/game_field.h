@@ -16,9 +16,6 @@
 #ifndef GAME_FIELD_H
 #define GAME_FIELD_H
 
-#define MAX_WIDTH 10
-#define MAX_HEIGHT 51 * 5 + 1
-
 #include<stdlib.h>
 #include<stdio.h>
 #include"field_cell.h"
