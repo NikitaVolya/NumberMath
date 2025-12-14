@@ -913,6 +913,13 @@ void mlv_show_menu(struct game_config *config){
     int bg_mouse_now;
     int bx_center;
 
+    int best_score;
+    char score_text[20];
+
+    best_score = deserialize_game_score("score.bin");
+    strcpy(score_text, "best score: ");
+    itos(score_text + 12, best_score, 8);
+
     MLV_create_window("NumberMatch Menu", "NumberMatch",
                       GAME_WINDOW_WIDTCH, GAME_WINDOW_HEIGHT);
 
@@ -953,6 +960,11 @@ void mlv_show_menu(struct game_config *config){
 
         /* Animated title */
         draw_animated_title("NUMBER MATCH", fade);
+        
+        if (best_score > 0)
+            MLV_draw_text(GAME_WINDOW_WIDTCH/2 - 63, 
+                          GAME_WINDOW_HEIGHT/6 + 50, 
+                          score_text, MLV_COLOR_WHITE);
 
         bx_center = (GAME_WINDOW_WIDTCH - BTN_W) / 2;
         bx = bx_center;
@@ -992,9 +1004,19 @@ void mlv_show_menu(struct game_config *config){
                 } else {
                     start_game(config);
                 }
+
+                /* update best score text */
+                best_score = deserialize_game_score("score.bin");
+                strcpy(score_text, "best score: ");
+                itos(score_text + 12, best_score, 8);
             }
             else if (hit_button(mx,my,bx,load_y)) {
                 load_game(config);
+
+                /* update best score text */
+                best_score = deserialize_game_score("score.bin");
+                strcpy(score_text, "best score: ");
+                itos(score_text + 12, best_score, 8);
             }
             else if (hit_button(mx,my,bx,tut_y)) {
                 show_tutorial_screen();

@@ -145,6 +145,7 @@ MATCH_TYPE user_game_select(struct game_config *config) {
 }
 
 void game_cycle(struct game_config *config) {
+    int best_score;
 
     serialize_game_field(config->field, "save.bin");
     
@@ -171,6 +172,11 @@ void game_cycle(struct game_config *config) {
         config->output->display_game(config);
 
         config->output->end_game_message(config);
+
+        best_score = deserialize_game_score("score.bin");
+        if (config->field->score > best_score) {
+            serialize_game_score("score.bin", config->field->score);
+        }
 
         remove("save.bin");
     }
@@ -221,7 +227,7 @@ void start_game(struct game_config *config) {
     init_game_field(config->field);
     game_cycle(config);
 
-    game_field_free(config->field);
+    game_field_free(config->field); 
     config->field = NULL;
 }
 
